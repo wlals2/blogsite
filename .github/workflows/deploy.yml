@@ -1,0 +1,50 @@
+name: Deploy Hugo Blog (Self-hosted)
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "content/**"
+      - "static/**"
+      - "themes/**"
+      - "layouts/**"
+      - "config.*"
+      - "hugo.*"
+
+concurrency:
+  group: hugo-deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: [ self-hosted, blog ]  # 러너 등록 시 부여한 라벨과 일치
+    environment: production
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Build (production)
+        env:
+          HUGO_ENV: production
+        run: hugo --minify
+
+      - name: Publish to nginx root
+        run: |
+          TARGET=/home/jimin/blogsite/public
+          mkdir -p "$TARGET"
+          rm -rf "$TARGET"/*
+          cp -r public/* "$TARGET"/
+
+      - name: Nginx health check & reload
+        run: |
+          sudo nginx -t
+          sudo systemctl reload nginx || true
+          curl -fsS http://127.0.0.1/ >/dev/null || true
