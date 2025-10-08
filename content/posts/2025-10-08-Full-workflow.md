@@ -89,7 +89,7 @@ ssh -T git@github.com
 cat ~/actions-runner/.runner | grep serverUrl
 
 # 출력:
-# "serverUrl": "https://pipelinesghubeus8.actions.githubusercontent.com/..."
+# "serverUrl": "https://pipelines-ghubeus**.actions.githubusercontent.com/[TOKEN]..."
 # → HTTPS 사용! SSH 아님!
 ```
 
@@ -233,7 +233,7 @@ cat ~/actions-runner/.runner | grep serverUrl
   │       └─ index.html  ← 새 글!
   └─ deploy.txt
 
-  https://blog.jiminhome.shop/posts/my-post/
+  https://blog.example.com/posts/my-post/
   → 새 글 접속 가능! 🎉
 ```
 
@@ -385,16 +385,16 @@ sudo vim /etc/nginx/sites-enabled/blog
 ```nginx
 server {
     listen 80;
-    server_name blog.jiminhome.shop;
+    server_name blog.example.com;
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name blog.jiminhome.shop;
+    server_name blog.example.com;
 
-    ssl_certificate /etc/letsencrypt/live/blog.jiminhome.shop/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/blog.jiminhome.shop/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/blog.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/blog.example.com/privkey.pem;
 
     root /var/www/blog;
     index index.html;
