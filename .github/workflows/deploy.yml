@@ -36,20 +36,26 @@ jobs:
         env:
           HUGO_ENV: production
         run: |
+          set -euxo pipefail
           hugo --minify
-          echo "== built files =="
+          echo "== built files sample =="
           find public -maxdepth 2 -type f | head
+          echo "html_count=$(find public -name '*.html' | wc -l)"
 
+      # 배포 표식은 '복사 전에' 만들어야 서버에 올라감
+      - name: Stamp deploy info
+        run: |
+          printf "source=ci\ntime=%s\ncommit=%s\nrun_id=%s\n" \
+            "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "${GITHUB_SHA::7}" "$GITHUB_RUN_ID" \
+            > public/deploy.txt
 
       - name: Deploy to nginx root (local copy)
         run: |
-	    rm -rf /var/www/blog/*
-	    rsync -a --delete public/ /var/www/blog/
-	    ls -l /var/www/blog | head   # 확인용 로그
-	    sudo systemctl reload nginx
-      
-      - name: Stamp deploy info
-        run: |
-	    printf "source=ci\ntime=%s\ncommit=%s\n" \
-    	      "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "${GITHUB_SHA::7}" > public/deploy.txt
+          set -euxo pipefail
+          sudo mkdir -p /var/www/blog
+          sudo chown -R jimin:www-data /var/www/blog
+          rsync -ah --delete public/ /var/www/blog/
+          ls -l /var/www/blog | head
+          sudo nginx -t
+          sudo systemctl reload nginx
 

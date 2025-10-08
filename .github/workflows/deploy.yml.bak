@@ -1,4 +1,4 @@
-name: Deploy Hugo Blog (Self-hosted)
+name: Deploy Hugo Blog (self-hosted)
 
 on:
   push:
@@ -10,7 +10,6 @@ on:
       - "layouts/**"
       - "config.*"
       - "hugo.*"
-   workflow_dispatch:
 
 concurrency:
   group: hugo-deploy-production
@@ -18,16 +17,17 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [ self-hosted, blog ]  # 러너 등록 시 부여한 라벨과 일치
-    environment: production
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
 
-      - uses: peaceiris/actions-hugo@v3
+      - name: Setup Hugo (extended)
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
@@ -35,17 +35,21 @@ jobs:
       - name: Build (production)
         env:
           HUGO_ENV: production
-        run: hugo --minify
-
-      - name: Publish to nginx root
         run: |
-          TARGET=/home/jimin/blogsite/public
-          mkdir -p "$TARGET"
-          rm -rf "$TARGET"/*
-          cp -r public/* "$TARGET"/
+          hugo --minify
+          echo "== built files =="
+          find public -maxdepth 2 -type f | head
 
-      - name: Nginx health check & reload
+
+      - name: Deploy to nginx root (local copy)
         run: |
-          sudo nginx -t
-          sudo systemctl reload nginx || true
-          curl -fsS http://127.0.0.1/ >/dev/null || true
+	    rm -rf /var/www/blog/*
+	    rsync -a --delete public/ /var/www/blog/
+	    ls -l /var/www/blog | head   # 확인용 로그
+	    sudo systemctl reload nginx
+      
+      - name: Stamp deploy info
+        run: |
+	    printf "source=ci\ntime=%s\ncommit=%s\n" \
+    	      "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "${GITHUB_SHA::7}" > public/deploy.txt
+
