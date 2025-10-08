@@ -1,4 +1,4 @@
-name: Deploy Hugo Blog (Self-hosted)
+name: Deploy Hugo Blog (SSH)
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       - "layouts/**"
       - "config.*"
       - "hugo.*"
-   workflow_dispatch:
+  workflow_dispatch: {}     # 수동 실행 버튼
 
 concurrency:
   group: hugo-deploy-production
@@ -18,16 +18,18 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [ self-hosted, blog ]  # 러너 등록 시 부여한 라벨과 일치
-    environment: production
+    runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: production
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - uses: peaceiris/actions-hugo@v3
+      - name: Setup Hugo (extended)
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
@@ -37,15 +39,23 @@ jobs:
           HUGO_ENV: production
         run: hugo --minify
 
-      - name: Publish to nginx root
+      - name: Prepare SSH
         run: |
-          TARGET=/home/jimin/blogsite/public
-          mkdir -p "$TARGET"
-          rm -rf "$TARGET"/*
-          cp -r public/* "$TARGET"/
+          install -m 600 /dev/null ~/.ssh/id_deploy
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Publish to /home/jimin/blogsite/public
+        run: |
+          RSYNC_SSH="ssh -i ~/.ssh/id_deploy -p ${{ secrets.SSH_PORT }}"
+          # 목적지 폴더 보장
+          $RSYNC_SSH ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p /home/jimin/blogsite/public"
+          rsync -avz --delete -e "$RSYNC_SSH" public/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/jimin/blogsite/public/
 
       - name: Nginx health check & reload
         run: |
-          sudo nginx -t
-          sudo systemctl reload nginx || true
-          curl -fsS http://127.0.0.1/ >/dev/null || true
+          ssh -i ~/.ssh/id_deploy -p "${{ secrets.SSH_PORT }}" \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "sudo nginx -t && sudo systemctl reload nginx || true"
+

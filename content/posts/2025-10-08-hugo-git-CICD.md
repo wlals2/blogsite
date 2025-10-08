@@ -1,8 +1,8 @@
 ---
-title: "GitHub Actions를 이용한 Hugo 블로그 자동 배포 구축기"
+title: "내 기술 블로그 구축기 ③ GitHub Actions를 이용한 Hugo 블로그 자동 배포 구축기"
 date: 2025-10-08
 tags: ["hugo", "github-actions", "nginx", "cicd", "devops"]
-series: ["infra-note"]
+series: ["내 기술 블로그 구축기"]
 draft: false
 ---
 
