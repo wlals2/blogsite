@@ -1,0 +1,13 @@
+# Hugo build output
+/public/
+/resources/
+/hugo_stats.json
+
+# OS / IDE files
+.DS_Store
+*.log
+
+# Private data
+*.pem
+.env
+
