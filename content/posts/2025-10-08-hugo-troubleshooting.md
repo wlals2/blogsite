@@ -3,7 +3,8 @@ title: "Hugo 블로그 자동배포 트러블슈팅 기록"
 date: 2025-10-08T19:00:00+09:00
 draft: false
 tags: ["Hugo", "CI/CD", "GitHub Actions", "Nginx", "Let's Encrypt"]
-categories: ["Infra", "DevOps"]
+categories: ["Infra", "DevOps","Blog"]
+series: ["내 기술 블로그 구축기"]
 ---
 
 # Hugo + Nginx + GitHub Actions 자동배포 트러블슈팅

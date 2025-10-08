@@ -10,7 +10,6 @@ on:
       - "layouts/**"
       - "config.*"
       - "hugo.*"
-  workflow_dispatch: {}     # 수동 실행 버튼
 
 concurrency:
   group: hugo-deploy-production
@@ -18,7 +17,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     timeout-minutes: 15
     environment: production
 
