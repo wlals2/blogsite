@@ -110,7 +110,7 @@ sudo ufw reload
 ```bash
 \\192.168.1.10\blogshare
 ```
-
+---
 ### ✅ 결론
 - NAS 마운트는 백업·저장소 중심으로,
 Samba 공유는 실시간 협업용(Windows↔Ubuntu)으로,
