@@ -5,6 +5,7 @@ draft: false
 tags: ["Hugo", "CI/CD", "GitHub Actions", "Nginx", "Let's Encrypt"]
 categories: ["Infra", "DevOps","Blog"]
 series: ["내 기술 블로그 구축기"]
+weight: 99
 ---
 
 # Hugo + Nginx + GitHub Actions 자동배포 트러블슈팅

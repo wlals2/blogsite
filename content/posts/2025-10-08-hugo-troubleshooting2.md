@@ -5,6 +5,7 @@ draft: false
 tags: ["Hugo", "CI/CD", "GitHub Actions", "Self-hosted Runner", "Troubleshooting"]
 categories: ["Infra", "DevOps", "Blog"]
 series: ["내 기술 블로그 구축기"]
+weight: 98
 ---
 
 # Hugo 블로그 자동배포가 안 될 때: Self-hosted Runner 트러블슈팅
