@@ -1,4 +1,4 @@
-name: Deploy Hugo Blog (SSH)
+name: Deploy Hugo Blog (self-hosted)
 
 on:
   push:
@@ -19,13 +19,12 @@ jobs:
   deploy:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 15
-    environment: production
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
 
       - name: Setup Hugo (extended)
         uses: peaceiris/actions-hugo@v3
@@ -36,25 +35,28 @@ jobs:
       - name: Build (production)
         env:
           HUGO_ENV: production
-        run: hugo --minify
+        run: |
+          hugo --minify
+          echo "== built files =="
+          find public -maxdepth 2 -type f | head
+
+      - name: Deploy to nginx root (local copy)
+        run: |
+          rm -rf /home/jimin/blogsite/public/*
+          cp -a public/* /home/jimin/blogsite/public/
+          sudo systemctl reload nginx
 
       - name: Prepare SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY:  ${{ secrets.SSH_KEY }}
         run: |
+          mkdir -p ~/.ssh
           install -m 600 /dev/null ~/.ssh/id_deploy
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy
-          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Publish to /home/jimin/blogsite/public
-        run: |
-          RSYNC_SSH="ssh -i ~/.ssh/id_deploy -p ${{ secrets.SSH_PORT }}"
-          # 목적지 폴더 보장
-          $RSYNC_SSH ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p /home/jimin/blogsite/public"
-          rsync -avz --delete -e "$RSYNC_SSH" public/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/jimin/blogsite/public/
-
-      - name: Nginx health check & reload
-        run: |
-          ssh -i ~/.ssh/id_deploy -p "${{ secrets.SSH_PORT }}" \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "sudo nginx -t && sudo systemctl reload nginx || true"
+          printf "%s" "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          touch ~/.ssh/known_hosts
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
 
