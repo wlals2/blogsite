@@ -10,6 +10,7 @@ on:
       - "layouts/**"
       - "config.*"
       - "hugo.*"
+   workflow_dispatch:
 
 concurrency:
   group: hugo-deploy-production
