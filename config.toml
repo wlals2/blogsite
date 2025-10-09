@@ -5,6 +5,10 @@ languageCode = "ko-kr"
 defaultContentLanguage = "ko"
 enableRobotsTXT = true
 googleAnalytics = ""
+enableGitInfo = true
+
+[frontmatter]
+  date = [":git", ":fileModTime", "date", "publishDate", "lastmod"]
 
 [pagination]
   pagerSize = 10
