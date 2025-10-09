@@ -50,6 +50,12 @@ enableGitInfo = true
     [[params.profileMode.buttons]]
       name = "Series"
       url = "/series/"
+    [[params.profileMode.buttons]]
+      name = "Study"
+      url = "/study/"
+    [[params.profileMode.buttons]]
+      name = "Troubleshooting"
+      url = "/troubleshooting/"
   
   [[params.socialIcons]]
     name = "github"
