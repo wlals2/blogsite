@@ -4,7 +4,6 @@ date: 2025-10-08T21:00:00+09:00
 draft: false
 tags: ["NAS", "Samba", "Linux", "Ubuntu", "네트워크스토리지"]
 categories: ["Infra", "Storage"]
-weight: 97
 ---
 
 ## 💡 개요

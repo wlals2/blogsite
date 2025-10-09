@@ -5,7 +5,6 @@ tags: ["hugo", "github-actions", "nginx", "cicd", "devops"]
 categories: ["DevOps", "Blog"]
 series: ["내 기술 블로그 구축기"]
 draft: false
-weight: 100
 ---
 
 ## 1. 목표

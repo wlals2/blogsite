@@ -1,0 +1,81 @@
+baseURL = "https://blog.jiminhome.shop/"
+title = "지민 기술 블로그"
+theme = "PaperMod"
+languageCode = "ko-kr"
+defaultContentLanguage = "ko"
+enableRobotsTXT = true
+googleAnalytics = ""
+
+[pagination]
+  pagerSize = 10
+
+[minify]
+  minifyOutput = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[params]
+  env = "production"
+  defaultTheme = "auto"
+  showReadingTime = true
+  showBreadCrumbs = true
+  showCodeCopyButtons = true
+  showPostNavLinks = true
+  showWordCount = true
+  mainSections = ["posts"]
+  
+  [params.profileMode]
+    enabled = true
+    title = "Hi there 👋"
+    subtitle = "Welcome to my blog"
+    imageUrl = ""
+    imageTitle = ""
+    imageWidth = 120
+    imageHeight = 120
+    
+    [[params.profileMode.buttons]]
+      name = "Posts"
+      url = "/posts/"
+    [[params.profileMode.buttons]]
+      name = "Tags"
+      url = "/tags/"
+    [[params.profileMode.buttons]]
+      name = "Archives"
+      url = "/archives/"
+    [[params.profileMode.buttons]]
+      name = "Series"
+      url = "/series/"
+  
+  [[params.socialIcons]]
+    name = "github"
+    url  = "https://github.com/"
+
+[taxonomies]
+  tag = "tags"
+  category = "categories"
+  series = "series"
+
+[[menu.main]]
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
+  weight = 1
+
+[[menu.main]]
+  identifier = "tags"
+  name = "Tags"
+  url = "/tags/"
+  weight = 2
+
+[[menu.main]]
+  identifier = "archives"
+  name = "Archives"
+  url = "/archives/"
+  weight = 3
+
+[[menu.main]]
+  identifier = "series"
+  name = "Series"
+  url = "/series/"
+  weight = 4

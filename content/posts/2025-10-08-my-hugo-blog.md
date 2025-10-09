@@ -6,7 +6,6 @@ categories: ["DevOps", "Blog"]
 tags: ["Hugo", "Static Site", "PaperMod", "Markdown"]
 series: ["내 기술 블로그 구축기"]
 summary: "Hugo를 설치하고 PaperMod 테마를 적용한 뒤, 새 포스트를 작성하는 기본 명령어와 폴더 구조를 정리했습니다."
-weight: 101
 ---
 
 ## 💡 개요

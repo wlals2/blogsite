@@ -5,7 +5,6 @@ draft: false
 tags: ["Hugo", "CI/CD", "GitHub Actions", "Self-hosted Runner", "SSH", "Nginx", "DevOps"]
 categories: ["Infra", "DevOps", "Blog"]
 series: ["내 기술 블로그 구축기"]
-weight: 90
 ---
 
 # 🚀 개요

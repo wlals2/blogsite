@@ -4,6 +4,7 @@ theme = "PaperMod"
 languageCode = "ko-kr"
 defaultContentLanguage = "ko"
 enableRobotsTXT = true
+googleAnalytics = ""
 
 [pagination]
   pagerSize = 10
@@ -11,11 +12,9 @@ enableRobotsTXT = true
 [minify]
   minifyOutput = true
 
-# 홈에 JSON 출력(검색/리스트용)
 [outputs]
   home = ["HTML", "RSS", "JSON"]
 
-# ── PaperMod 핵심 파라미터 ──
 [params]
   env = "production"
   defaultTheme = "auto"
@@ -25,45 +24,38 @@ enableRobotsTXT = true
   showPostNavLinks = true
   showWordCount = true
   mainSections = ["posts"]
-
-  # (데모처럼) 상단 프로필/히어로 블록
+  
   [params.profileMode]
     enabled = true
     title = "Hi there 👋"
     subtitle = "Welcome to my blog"
-    imageUrl = ""        # 원하면 /images/profile.png 등 넣기
+    imageUrl = ""
     imageTitle = ""
     imageWidth = 120
     imageHeight = 120
-
+    
     [[params.profileMode.buttons]]
       name = "Posts"
       url = "/posts/"
-
     [[params.profileMode.buttons]]
       name = "Tags"
       url = "/tags/"
-
     [[params.profileMode.buttons]]
       name = "Archives"
       url = "/archives/"
-
     [[params.profileMode.buttons]]
       name = "Series"
       url = "/series/"
-
-  # 소셜 아이콘(원하면 채우기)
+  
   [[params.socialIcons]]
     name = "github"
     url  = "https://github.com/"
 
-# Taxonomies (데모 메뉴용)
 [taxonomies]
   tag = "tags"
   category = "categories"
   series = "series"
 
-# 상단 메뉴
 [[menu.main]]
   identifier = "posts"
   name = "Posts"
@@ -87,4 +79,3 @@ enableRobotsTXT = true
   name = "Series"
   url = "/series/"
   weight = 4
-

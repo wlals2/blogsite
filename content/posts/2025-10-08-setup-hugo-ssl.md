@@ -6,7 +6,6 @@ categories: ["DevOps", "Blog"]
 tags: ["Hugo", "Nginx", "Let's Encrypt", "Cloudflare", "Ubuntu"]
 series: ["내 기술 블로그 구축기"]
 summary: "Ubuntu에서 Hugo 블로그를 구축하고 Let's Encrypt 인증서를 적용해 HTTPS를 완성하는 과정을 정리했습니다."
-weight: 102
 ---
 
 ## 💡 개요
