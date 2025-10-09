@@ -27,7 +27,7 @@ enableGitInfo = true
   showCodeCopyButtons = true
   showPostNavLinks = true
   showWordCount = true
-  mainSections = ["posts"]
+  mainSections = ["posts", "study", "troubleshooting"]
   
   [params.profileMode]
     enabled = true
@@ -83,3 +83,15 @@ enableGitInfo = true
   name = "Series"
   url = "/series/"
   weight = 4
+
+[[menu.main]]
+  identifier = "study"
+  name = "Study"
+  url = "/study/"
+  weight = 5
+
+[[menu.main]]
+  identifier = "troubleshooting"
+  name = "Troubleshooting"
+  url = "/troubleshooting/"
+  weight = 6
