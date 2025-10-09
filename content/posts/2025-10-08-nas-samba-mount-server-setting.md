@@ -7,7 +7,7 @@ categories: ["Infra", "Storage"]
 weight: 97
 ---
 
-## 개요
+## 💡 개요
 
 이번 글에서는 **Ubuntu 서버에 NAS 또는 Samba 공유를 연동하는 방법**을 정리합니다.  
 주 목적은 다음과 같습니다:
