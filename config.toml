@@ -27,7 +27,7 @@ enableGitInfo = true
   showCodeCopyButtons = true
   showPostNavLinks = true
   showWordCount = true
-  mainSections = ["posts", "study", "troubleshooting"]
+  mainSections = ["posts", "study"]
   
   [params.profileMode]
     enabled = true
@@ -53,10 +53,7 @@ enableGitInfo = true
     [[params.profileMode.buttons]]
       name = "Study"
       url = "/study/"
-    [[params.profileMode.buttons]]
-      name = "Troubleshooting"
-      url = "/troubleshooting/"
-  
+
   [[params.socialIcons]]
     name = "github"
     url  = "https://github.com/"
@@ -95,9 +92,3 @@ enableGitInfo = true
   name = "Study"
   url = "/study/"
   weight = 5
-
-[[menu.main]]
-  identifier = "troubleshooting"
-  name = "Troubleshooting"
-  url = "/troubleshooting/"
-  weight = 6
