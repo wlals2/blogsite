@@ -245,7 +245,7 @@ helm install company-infra /home/ubuntu/test/company-infra/
 > - → HostPort는   windows는 Container Port가아닌 local port로 접근 하게 해준다. Container 에서 직접 로컬이랑 포트 번호를 매칭 하기 때문이다.
 PVC  동적 프로비저닝을 정적 으로 바꾸어 실제 Linux 시스템 접근할 수 있게 하였다.
 
-![alt text](image.png)
+![alt text](samba.png)
 
 
 ### 🎤 이로써 우리는 K8s - Samba 실습을 맞추었다. PV/PVC 더 깊은 이해가 생겼을 거라 믿는다. 밑은 PV/PVC 간단하게 정리 한 것이다. 실습 정리를 서로 대입해 비교해보면 좋을 것 같다.
