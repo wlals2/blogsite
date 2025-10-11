@@ -1,5 +1,5 @@
 ---
-title: "Elasticsearch 기초: 색인과 역색인 이해하기"
+title: "Elasticsearch 기초: 구조 nested 이해하기"
 tags: ["Elasticsearch", "Inverted Index", "검색엔진", "색인"]
 categories: ["Elasticsearch", "Search Engine"]
 date: 2025-10-11T01:27:54-04:00
