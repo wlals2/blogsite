@@ -1,5 +1,5 @@
 ---
-title: "2025 10 12 Infra Helm Fin Arch2"
+title: "『온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤다』 — 『좀 더 고급으로 변하는 인프라 구조』 Helm, Values (fin)"
 date: 2025-10-11T22:55:33
 draft: false
 categories: ["DevOps", "Kubernetes", "GitOps"]
