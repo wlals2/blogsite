@@ -1,6 +1,6 @@
----
-title: "『온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤다』 — 『좀 더 고급으로 변하는 인프라 구조』 Helm, Values (1)"
-date: 2025-10-06T10:08:00
+d---
+title: "온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤다 — 좀 더 고급으로 변하는 인프라 구조 (Helm, Values 1)"
+date: 2025-10-10T00:50:00+09:00
 author: "늦찌민"
 slug: "infra-helm-values-1-samba-k8s"
 categories: ["Infrastructure", "Kubernetes", "Helm"]
@@ -245,7 +245,7 @@ helm install company-infra /home/ubuntu/test/company-infra/
 > - → HostPort는   windows는 Container Port가아닌 local port로 접근 하게 해준다. Container 에서 직접 로컬이랑 포트 번호를 매칭 하기 때문이다.
 PVC  동적 프로비저닝을 정적 으로 바꾸어 실제 Linux 시스템 접근할 수 있게 하였다.
 
-![Samba 트러블슈팅 다이어그램](samba.png)
+![alt text](samba.png)
 
 
 ### 🎤 이로써 우리는 K8s - Samba 실습을 맞추었다. PV/PVC 더 깊은 이해가 생겼을 거라 믿는다. 밑은 PV/PVC 간단하게 정리 한 것이다. 실습 정리를 서로 대입해 비교해보면 좋을 것 같다.

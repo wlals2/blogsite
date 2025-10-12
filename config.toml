@@ -3,6 +3,7 @@ title = "지민 기술 블로그"
 theme = "PaperMod"
 languageCode = "ko-kr"
 defaultContentLanguage = "ko"
+timeZone = "Asia/Seoul"
 enableRobotsTXT = true
 googleAnalytics = ""
 enableGitInfo = true

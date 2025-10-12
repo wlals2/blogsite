@@ -1,6 +1,6 @@
 ---
-title: "K8s Observability Stack 구축 및 mysqld-exporter 트러블슈팅"
-date: 2025-10-12T10:10:33-04:00
+title: "『온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤다』 — 『좀 더 고급으로 변하는 인프라 구조』 Helm, Values (5)"
+date: 2025-10-12T10:10:33+09:00
 draft: false
 categories: ["Kubernetes", "Monitoring"]
 tags: ["Grafana", "Prometheus", "Exporter", "Helm", "Troubleshooting"]
