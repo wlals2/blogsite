@@ -4,6 +4,7 @@ subtitle: "좀 더 고급으로 변하는 인프라 구조 - Helm, Values ②"
 date: 2025-07-02T13:30:00+09:00
 author: "늦찌민"
 tags: ["Kubernetes", "Helm", "EFK", "ELK", "Fluent Bit", "Troubleshooting"]
+series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---
 
 > 며칠 동안 **EFK**에 매달렸다.  

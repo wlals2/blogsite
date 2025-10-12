@@ -5,6 +5,7 @@ date: 2025-10-10T16:34:00+09:00
 author: "늦찌민"
 tags: ["Kubernetes", "Helm", "Nginx", "SFTP", "MySQL", "Troubleshooting"]
 description: "낯선 K8s 환경에서 Nginx, SFTP, MySQL을 Helm 기반으로 배포하며 겪은 시행착오와 해결 방법 정리"
+series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---
 
 낯선 환경에서 트러블슈팅하는 건 리눅스 나라에서 **K8s**로 이사 간 느낌이다.  

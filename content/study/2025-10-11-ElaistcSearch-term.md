@@ -6,6 +6,7 @@ categories: ["Elasticsearch", "Search Engine"]
 draft: false
 author: "늦찌민"
 description: "검색 엔진을 위한 제일 작은 단위 term"
+series: "ES구축기"
 ---
 
 ## 🔍 들어가며

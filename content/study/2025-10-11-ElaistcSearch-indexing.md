@@ -6,6 +6,7 @@ tags: ["Elasticsearch", "Inverted Index", "검색엔진", "색인"]
 draft: false
 author: "늦찌민"
 description: "기초적인 것부터 잡자 색인,역색인 feat Elasitcsearch"
+series: "ES구축기"
 ---
 ###  🔍 들어가며
 엘라스틱서치를 공부하다 보면 **색인(index)** 과 **역색인(inverted index)** 이라는 단어가 자주 등장합니다.  
