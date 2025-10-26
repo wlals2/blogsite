@@ -1,12 +1,12 @@
 ---
 title: "ES config 설정 부터 구조 까지 한번에 알아보자"
-date: 2025-10-12T10:58:39-04:00
+date: 2025-10-11T10:58:39
 draft: false
 categories: ["DevOps", "", "Elasticsearch","data-pipeline"]
 tags: ["Elasticsearch", "Json"]
 description: "ES의 Config 설정에 대해서 상세히 알아보자"
 author: "늦찌민"
-series: ["ES 구축기"]
+series: ["ES구축기"]
 ---
 
  ### ✅ 엘라스틱서치 데이터 색인 및 구조

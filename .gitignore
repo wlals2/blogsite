@@ -11,3 +11,7 @@
 *.pem
 .env
 
+
+# DDNS 관련 파일 (API Token 포함)
+update-cloudflare-ip.sh
+ddns.log
