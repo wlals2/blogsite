@@ -10,6 +10,7 @@ on:
       - "layouts/**"
       - "config.*"
       - "hugo.*"
+  workflow_dispatch:  # 수동 실행 가능하도록 추가
 
 concurrency:
   group: hugo-deploy-production
@@ -19,19 +20,19 @@ jobs:
   deploy:
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 15
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
-
+      
       - name: Setup Hugo (extended)
         uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
           extended: true
-
+      
       - name: Build (production)
         env:
           HUGO_ENV: production
@@ -41,21 +42,102 @@ jobs:
           echo "== built files sample =="
           find public -maxdepth 2 -type f | head
           echo "html_count=$(find public -name '*.html' | wc -l)"
-
+      
       # 배포 표식은 '복사 전에' 만들어야 서버에 올라감
       - name: Stamp deploy info
         run: |
           printf "source=ci\ntime=%s\ncommit=%s\nrun_id=%s\n" \
             "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "${GITHUB_SHA::7}" "$GITHUB_RUN_ID" \
             > public/deploy.txt
-
+      
+      # ========== 디버깅 단계 추가 ==========
+      - name: Pre-deployment Debug
+        run: |
+          echo "====== 1. 현재 작업 디렉토리 ======"
+          pwd
+          
+          echo "====== 2. public/ 디렉토리 확인 ======"
+          ls -lah public/ | head -15
+          
+          echo "====== 3. deploy.txt 내용 확인 ======"
+          cat public/deploy.txt
+          
+          echo "====== 4. index.html 존재 확인 ======"
+          if [ -f public/index.html ]; then
+            echo "✅ index.html exists"
+            wc -l public/index.html
+          else
+            echo "❌ index.html NOT found!"
+          fi
+          
+          echo "====== 5. 현재 /var/www/blog 상태 (배포 전) ======"
+          ls -lah /var/www/blog/ | head -10 || echo "디렉토리 없음"
+          
+          echo "====== 6. 현재 /var/www/blog/deploy.txt (배포 전) ======"
+          cat /var/www/blog/deploy.txt 2>/dev/null || echo "파일 없음"
+      
       - name: Deploy to nginx root (local copy)
         run: |
           set -euxo pipefail
+          
+          echo "====== 배포 시작 ======"
           sudo mkdir -p /var/www/blog
-          sudo chown -R jimin:www-data /var/www/blog
-          rsync -ah --delete public/ /var/www/blog/
-          ls -l /var/www/blog | head
+          
+          echo "====== rsync 실행 ======"
+          sudo rsync -avh --delete public/ /var/www/blog/
+          
+          echo "====== 권한 설정 ======"
+          sudo chown -R www-data:www-data /var/www/blog
+          sudo chmod -R 755 /var/www/blog
+          sudo find /var/www/blog -type f -exec chmod 644 {} \;
+          
+          echo "====== 배포 후 /var/www/blog 상태 ======"
+          ls -lah /var/www/blog | head -15
+          
+          echo "====== 배포 후 deploy.txt 내용 ======"
+          cat /var/www/blog/deploy.txt
+          
+          echo "====== nginx 설정 테스트 ======"
           sudo nginx -t
+          
+          echo "====== nginx 재시작 ======"
           sudo systemctl reload nginx
-
+          
+          echo "====== nginx 상태 확인 ======"
+          sudo systemctl status nginx --no-pager -l
+      
+      # ========== 배포 후 검증 ==========
+      - name: Post-deployment Verification
+        run: |
+          echo "====== 1. 파일 권한 확인 ======"
+          ls -la /var/www/blog/ | head -10
+          
+          echo "====== 2. 주요 파일 존재 확인 ======"
+          for file in index.html 404.html index.xml; do
+            if [ -f "/var/www/blog/$file" ]; then
+              echo "✅ $file exists ($(wc -c < /var/www/blog/$file) bytes)"
+            else
+              echo "❌ $file NOT found"
+            fi
+          done
+          
+          echo "====== 3. Nginx access log (최근 5줄) ======"
+          sudo tail -5 /var/log/nginx/access.log || echo "로그 없음"
+          
+          echo "====== 4. Nginx error log (최근 5줄) ======"
+          sudo tail -5 /var/log/nginx/error.log || echo "에러 없음"
+          
+          echo "====== 5. 로컬 curl 테스트 (HTTP) ======"
+          curl -sI http://localhost/ | head -5 || echo "로컬 HTTP 접속 실패"
+          
+          echo "====== 6. 로컬 curl 테스트 (HTTPS) ======"
+          curl -skI https://localhost/ -H "Host: blog.jiminhome.shop" | head -5 || echo "로컬 HTTPS 접속 실패"
+          
+          echo "====== 7. 실제 도메인 접속 테스트 ======"
+          sleep 2
+          curl -sI https://blog.jiminhome.shop/ | head -10 || echo "도메인 접속 실패"
+          
+          echo "====== 8. deploy.txt 원격 접속 테스트 ======"
+          curl -s https://blog.jiminhome.shop/deploy.txt || echo "deploy.txt 접속 실패"
+          
+          echo "✅ 검증 완료"
