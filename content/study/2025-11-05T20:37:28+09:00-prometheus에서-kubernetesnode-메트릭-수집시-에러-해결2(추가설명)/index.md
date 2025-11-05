@@ -6,6 +6,7 @@ categories: ["k8s","RBAC","prometheus"]
 tags: ["prometheus","troubleshooting","metric error","monitoring","CA","RBAC","k8s"]
 description: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결2(추가설명)"
 author: "늦찌민"
+series:  "k8s 개념 뿌시기"
 ---
 
 ## 메트릭 해결 및 추가 설명

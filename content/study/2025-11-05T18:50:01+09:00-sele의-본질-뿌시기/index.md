@@ -6,6 +6,7 @@ categories: ["k8s","selector",""]
 tags: ["k8s","pvc","pv","selector"]
 description: "Selector의 본질 뿌시기"
 author: "늦찌민"
+series:  "k8s 개념 뿌시기"
 ---
 
 ## K8s-Selector 뿌시기
@@ -111,3 +112,9 @@ selector:
 - 대부분은 matchLabels만으로 충분
 - matchExpressions는 Service에서 여러 Deployment 묶을 때 주로 사용
 - Deployment 자체는 보통 명확한 label 조합 사용
+
+### 정리 :
+
+> Selector = 필터 역할 \
+> 무엇을 필터링하고, 필터링 후 무엇을 할지는 리소스 종류가 결정 \
+> PVC/PV처럼 selector로 바인딩하는 것도 같은 원리!

@@ -6,6 +6,7 @@ categories: ["study","k8s","rbac"]
 tags: ["k8s","prometheus","monitoring","rbac","troubleshooting","tls"]
 description: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결"
 author: "늦찌민"
+series:  "k8s 개념 뿌시기"
 ---
 
 ## 문제 상황
@@ -19,7 +20,7 @@ Error scraping target: Get "https://CONTROL_PLANE_IP:10250/metrics":
 tls: failed to verify certificate: x509: cannot validate certificate 
 for CONTROL_PLANE_IP because it doesn't contain any IP SANs
 ```
-
+1
 **원인:** kubelet이 사용하는 자체 서명 인증서에 IP 주소가 SAN(Subject Alternative Name)에 포함되어 있지 않아서 발생
 
 **해결:** Prometheus 설정에서 TLS 검증 우회 옵션 추가
