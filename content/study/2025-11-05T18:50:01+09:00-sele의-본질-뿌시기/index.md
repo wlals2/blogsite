@@ -6,7 +6,7 @@ categories: ["k8s","selector",""]
 tags: ["k8s","pvc","pv","selector"]
 description: "Selector의 본질 뿌시기"
 author: "늦찌민"
-series:  "k8s 개념 뿌시기"
+series: ["K8s 개념 뿌시기"]
 ---
 
 ## K8s-Selector 뿌시기

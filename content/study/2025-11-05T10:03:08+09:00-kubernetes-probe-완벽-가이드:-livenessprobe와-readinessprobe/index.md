@@ -6,6 +6,7 @@ categories: ["k8s","ubuntu","nextcloud"]
 tags: ["k8s","probe","troubleshooting","study","health-check","nextcloud","error"]
 description: "Kubernetes Probe 완벽 가이드: livenessProbe와 readinessProbe"
 author: "늦찌민"
+series: ["K8s 개념 뿌시기"]
 ---
 
 ## Git Secret 노출 트러블슈팅 정리
@@ -171,6 +172,12 @@ EOF
 sleep 2
 kubectl get secret admin-user-token -n kubernetes-dashboard -o jsonpath='{.data.token}' | base64 -d
 ```
+
+| 작업                | ServiceAccount UID | 토큰     |
+| ----------------- | ------------------ | ------ |
+| Secret만 삭제        | 유지됨                | 동일한 토큰 |
+| ServiceAccount 삭제 | 변경됨                | 새로운 토큰 |
+
 
 ### 🎓 교훈
 

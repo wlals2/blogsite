@@ -6,7 +6,7 @@ categories: ["k8s","ReplicationContoller","Troubleshooting"]
 tags: ["k8s","ReplicationContoller","Troubleshooting"]
 description: "Kubernetes ReplicationContoller 트러블 슈팅 가이드"
 author: "늦찌민"
-series:  "k8s 개념 뿌시기"
+series: ["K8s 개념 뿌시기"]
 ---
 
 # Kubernetes ReplicationController 트러블슈팅 가이드

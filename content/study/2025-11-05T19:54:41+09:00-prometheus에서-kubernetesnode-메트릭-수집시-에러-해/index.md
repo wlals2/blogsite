@@ -6,7 +6,7 @@ categories: ["study","k8s","rbac"]
 tags: ["k8s","prometheus","monitoring","rbac","troubleshooting","tls"]
 description: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결"
 author: "늦찌민"
-series:  "k8s 개념 뿌시기"
+series: ["K8s 개념 뿌시기"]
 ---
 
 ## 문제 상황
