@@ -9,7 +9,7 @@ googleAnalytics = ""
 enableGitInfo = true
 
 [frontmatter]
-  date = [":git", ":fileModTime", "date", "publishDate", "lastmod"]
+  date = ["date", "publishDate", ":git", ":fileModTime", "lastmod"]
 
 [pagination]
   pagerSize = 10
