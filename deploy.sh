@@ -1,90 +1,37 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# ========================================
-# 설정
-# ========================================
-PROM_GATEWAY="localhost:9091"
-
-# ========================================
-# 1. 빌드 시작
-# ========================================
-echo "🚀 Hugo 빌드 시작..."
-BUILD_START=$(date +%s)
-
-# Hugo 빌드
-/snap/bin/hugo --minify --buildFuture
-
-echo "✓ Hugo 빌드 명령 완료"
-BUILD_END=$(date +%s)
-BUILD_DURATION=$((BUILD_END - BUILD_START))
-echo "✓ 빌드 시간 계산 완료: ${BUILD_DURATION}초"
-
-# ========================================
-# 2. 빌드 통계 수집
-# ========================================
-echo "📊 통계 수집 시작..."
-TOTAL_PAGES=$(find public -name "*.html" 2>/dev/null | wc -l)
-echo "✓ 페이지 수: ${TOTAL_PAGES}"
-
-TOTAL_SIZE=$(du -sb public 2>/dev/null | awk '{print $1}')
-echo "✓ 크기: ${TOTAL_SIZE} bytes"
-
-POST_COUNT=$(find content/post -name "index.md" 2>/dev/null | wc -l)
-echo "✓ 포스트: ${POST_COUNT}"
-
-STUDY_COUNT=$(find content/study -name "index.md" 2>/dev/null | wc -l)
-echo "✓ 스터디: ${STUDY_COUNT}"
-
-echo "✅ 빌드 완료!"
-echo "   - 소요 시간: ${BUILD_DURATION}초"
-echo "   - 총 페이지: ${TOTAL_PAGES}개"
-echo "   - 전체 크기: $((TOTAL_SIZE / 1024 / 1024))MB"
-echo "   - 포스트: ${POST_COUNT}개"
-echo "   - 스터디: ${STUDY_COUNT}개"
-
-# ========================================
-# 3. Prometheus로 메트릭 전송 (에러 무시)
-# ========================================
-echo "📊 메트릭 전송 중..."
-cat <<EOF | curl --max-time 5 --silent --show-error --data-binary @- http://${PROM_GATEWAY}/metrics/job/hugo_build || echo "⚠️  메트릭 전송 실패 (무시)"
-# TYPE hugo_build_duration_seconds gauge
-hugo_build_duration_seconds ${BUILD_DURATION}
-
-# TYPE hugo_build_timestamp gauge
-hugo_build_timestamp $(date +%s)
-
-# TYPE hugo_total_pages gauge
-hugo_total_pages ${TOTAL_PAGES}
-
-# TYPE hugo_total_size_bytes gauge
-hugo_total_size_bytes ${TOTAL_SIZE}
-
-# TYPE hugo_post_count gauge
-hugo_post_count ${POST_COUNT}
-
-# TYPE hugo_study_count gauge
-hugo_study_count ${STUDY_COUNT}
-
-# TYPE hugo_build_success gauge
-hugo_build_success 1
-EOF
-
-# ========================================
-# 4. 배포 (기존 로직)
-# ========================================
 echo "📦 배포 시작..."
+
+# 1. 디렉토리 생성
+sudo mkdir -p /var/www/blog
+
+# 2. 파일 복사
 echo "✓ rsync 실행 중..."
 sudo rsync -av --delete public/ /var/www/blog/
 echo "✓ rsync 완료"
 
+# 3. 소유권 변경 (www-data로 통일!)
 echo "✓ 권한 설정 중..."
 sudo chown -R www-data:www-data /var/www/blog
+sudo chmod -R 755 /var/www/blog
+sudo find /var/www/blog -type f -exec chmod 644 {} \;
 echo "✓ 권한 설정 완료"
 
+# 4. 파일 확인
+echo "✓ 배포된 파일 확인..."
+ls -lah /var/www/blog/ | head -10
+
+# 5. Nginx 설정 테스트
+echo "✓ nginx 설정 테스트 중..."
+sudo nginx -t
+
+# 6. Nginx 재시작
 echo "✓ nginx 재시작 중..."
 sudo systemctl reload nginx
 echo "✓ nginx 재시작 완료"
 
+# 7. 배포 확인
 echo "✅ 배포 완료!"
 echo "🌐 블로그: https://blog.jiminhome.shop"
+
+# 8. 접속 테스트
+echo "✓ 접속 테스트..."
+curl -I https://blog.jiminhome.shop || echo "⚠️  접속 테스트 실패"
