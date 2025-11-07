@@ -432,3 +432,10 @@ Cloudflare WARP Split Tunnel을 사용하면:
 **작성일**: 2025년 11월 3일  
 **최종 수정**: 2025년 11월 3일  
 **테스트 환경**: Windows 11, Cloudflare WARP 2025.8.0, cloudflared 2025.8.0
+
+
+
+
+
+
+
