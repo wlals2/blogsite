@@ -9,8 +9,6 @@ author: "늦찌민"
 series: ["EKS 뿌시고 정복하기"]
 ---
 
-# EKS 3-Tier 아키텍처 설계 여정: Auto Mode에서 실전 구성까지
-
 ## 들어가며
 
 Amazon EKS(Elastic Kubernetes Service)를 활용한 3-Tier 웹 아키텍처를 구축하면서 겪은 고민과 선택의 과정을 기록합니다. 특히 전통적인 Apache ProxyPass 방식에서 현대적인 Kubernetes Ingress 패턴으로의 전환, 그리고 보안을 고려한 실전 구성까지 다룹니다.
