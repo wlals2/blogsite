@@ -22,8 +22,9 @@ echo "🔐 비공개 콘텐츠 암호화"
 echo "======================="
 echo ""
 
-# 출력 디렉토리 생성
+# 출력 디렉토리 생성 (static과 public 둘 다)
 mkdir -p static/private-encrypted
+mkdir -p public/private-encrypted
 
 # content/private/ 아래의 모든 HTML 파일 암호화
 CONTENT_DIR="public/private"
@@ -40,23 +41,30 @@ find "$CONTENT_DIR" -name "index.html" | while read -r file; do
     rel_path="${file#$CONTENT_DIR/}"
     dir_name=$(dirname "$rel_path")
 
-    # 출력 파일명
+    # 출력 파일명 (static과 public 둘 다 생성)
+    # JavaScript가 /private-encrypted/디렉토리/index.html.enc 형식으로 요청하므로 맞춰줌
     if [ "$dir_name" = "." ]; then
-        output_file="static/private-encrypted/index.html.enc"
+        static_output="static/private-encrypted/index.html.enc"
+        public_output="public/private-encrypted/index.html.enc"
     else
         mkdir -p "static/private-encrypted/$dir_name"
-        output_file="static/private-encrypted/${dir_name}.enc"
+        mkdir -p "public/private-encrypted/$dir_name"
+        static_output="static/private-encrypted/${dir_name}/index.html.enc"
+        public_output="public/private-encrypted/${dir_name}/index.html.enc"
     fi
 
-    echo "암호화 중: $file → $output_file"
+    echo "암호화 중: $file → $static_output"
 
-    # AES-256-CBC 암호화
+    # AES-256-CBC 암호화 (static)
     openssl enc -aes-256-cbc \
         -in "$file" \
-        -out "$output_file" \
+        -out "$static_output" \
         -K "$PRIVATE_AES_KEY" \
         -iv "00000000000000000000000000000000" \
         -base64
+
+    # public에도 복사
+    cp "$static_output" "$public_output"
 done
 
 echo ""

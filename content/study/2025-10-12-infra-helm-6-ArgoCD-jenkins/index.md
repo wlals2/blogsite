@@ -98,7 +98,7 @@ controller:
   serviceType: NodePort
   nodePort: 30800        # 원하는 포트
   admin:
-    password: "jenkinsadmin"
+    password: "your-secure-password-here"  # 실제로는 강력한 비밀번호 사용
   persistence:
     enabled: true
     storageClass: "hostpath"    # 위에서 만든 StorageClass 이름
@@ -200,7 +200,7 @@ spec:
         }
     }
     environment {
-        IMAGE_NAME = "jjmin/myapp:1"
+        IMAGE_NAME = "your-dockerhub-username/myapp:1"  # 본인의 Docker Hub 계정으로 변경
     }
     stages {
         stage('Checkout Source') {
@@ -221,7 +221,7 @@ spec:
         stage('Push Docker Image') {
             steps {
                 container('docker') {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-jjmin2', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh """
                             echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
                             docker push \$IMAGE_NAME
@@ -250,7 +250,7 @@ spec:
     spec:
       containers:
         - name: myapp
-          image: jjmin/myapp:1
+          image: your-dockerhub-username/myapp:1  # 본인의 이미지로 변경
           ports:
             - containerPort: 3000
 ---
@@ -269,7 +269,7 @@ spec:
 ```
 ### 🔥 우리는 values.yaml 파일에 jenkins 비밀번호를 담아놓았기 때문에 그대로 사용하면된다.
 > **ID**: admin \
-**Passwd**: jenkinsadmin    접속하면된다. 
+**Passwd**: (values.yaml에 설정한 비밀번호)로 접속하면된다. 
 
 환경적인 변수 때문에 오류가 생길 수있다. 필자는 virtualbox에 git에 올리는 코드를 가져오는 방식을 사용하기에 scm을 사용하였다. jenkins 웹에서 코드를 작성하려 했으나 jenkins file만 존재할 뿐 우리는 deploy 등 다른 여분의 파일이 존재하기 때문에scm을 사용하였다.
 
@@ -323,12 +323,12 @@ CI jenkins를 통해 이미지 코드 배포를 완료했으니 이제 실제로
  
 
 - 에러:
-`ERROR: Could not find credentials matching dockerhub-jjmin2`
+`ERROR: Could not find credentials matching <your-credentials-id>`
 - 원인:
 `credentialsld` 오타 , `credentials` 추가 위치/종류 오류
 - 해결:
 jenkins 관리 > Credentials > (global) > Add Credentials 에서 Username with passwd로 정확히 생성
-`credentialsld`,`username`,`password` 정확히 입력해 생성해준다.
+`credentialsId` (Jenkinsfile에서 사용할 ID), `username` (Docker Hub ID), `password` (Docker Hub Token)를 정확히 입력해 생성해준다.
 🔥 글을 작성을 하면서 위에 작성해야하지 않을까라는 생각이 들었다.  이 설정이 없다면 정상적으로 돌아가지 않는다.
 만약 Jenkins 외부출력 로그에서 해당하는 오류 메시지가 나온다면 해보길 바란다.
 

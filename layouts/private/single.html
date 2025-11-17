@@ -16,32 +16,7 @@
             margin: 0 auto;
         }
 
-        #loading {
-            text-align: center;
-            padding: 100px 20px;
-        }
-
-        .spinner {
-            border: 4px solid rgba(0, 255, 0, 0.1);
-            border-top: 4px solid #00ff00;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         #content {
-            display: none;
-        }
-
-        #content.decrypted {
-            display: block;
             animation: fadeIn 0.5s;
         }
 
@@ -171,11 +146,6 @@
     </style>
 </head>
 <body>
-    <div id="loading">
-        <div class="spinner"></div>
-        <p>🔓 Decrypting content...</p>
-    </div>
-
     <div id="content">
         <a href="/private/" class="back-link">← Back to Private Area</a>
 
@@ -186,83 +156,24 @@
                 {{ if .Params.author }}
                     | ✍️ {{ .Params.author }}
                 {{ end }}
-                | 🔐 Encrypted
+                | 🔐 OTP Protected
             </div>
 
-            <!-- 암호화된 콘텐츠는 여기에 복호화되어 삽입됨 -->
-            <div id="decrypted-content"></div>
+            <!-- 실제 콘텐츠 -->
+            {{ .Content }}
         </article>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <script>
         // ========== 인증 확인 ==========
         const authToken = sessionStorage.getItem('private_auth');
         const authTime = parseInt(sessionStorage.getItem('auth_time') || '0');
-        const aesKey = sessionStorage.getItem('aes_key');
         const now = Date.now();
 
-        // 인증되지 않았거나 세션 만료됨
-        if (!authToken || !aesKey || (now - authTime) > 3600000) {
+        // 인증되지 않았거나 세션 만료됨 (1시간)
+        if (!authToken || (now - authTime) > 3600000) {
             window.location.href = '/private/';
         }
-
-        // ========== 콘텐츠 복호화 ==========
-        async function decryptContent() {
-            try {
-                // 현재 페이지 경로에서 암호화된 파일 경로 생성
-                const path = window.location.pathname;
-                const encryptedPath = path.replace('/private/', '/private-encrypted/') + 'index.html.enc';
-
-                // 암호화된 콘텐츠 로드
-                const response = await fetch(encryptedPath);
-                if (!response.ok) {
-                    throw new Error('Failed to load encrypted content');
-                }
-
-                const encryptedContent = await response.text();
-
-                // AES-256 복호화
-                const decrypted = CryptoJS.AES.decrypt(
-                    encryptedContent,
-                    CryptoJS.enc.Hex.parse(aesKey),
-                    {
-                        iv: CryptoJS.enc.Hex.parse('00000000000000000000000000000000'),
-                        mode: CryptoJS.mode.CBC,
-                        padding: CryptoJS.pad.Pkcs7
-                    }
-                );
-
-                const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
-
-                if (!decryptedText) {
-                    throw new Error('Decryption failed');
-                }
-
-                // HTML 파싱 및 콘텐츠 추출
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(decryptedText, 'text/html');
-                const mainContent = doc.querySelector('article') || doc.body;
-
-                // 복호화된 콘텐츠 삽입
-                document.getElementById('decrypted-content').innerHTML = mainContent.innerHTML;
-
-                // 로딩 숨기고 콘텐츠 표시
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('content').classList.add('decrypted');
-
-            } catch (error) {
-                console.error('Decryption error:', error);
-                document.getElementById('loading').innerHTML = `
-                    <p style="color: #ff0000;">❌ Failed to decrypt content</p>
-                    <p>Please <a href="/private/" style="color: #00ff00;">re-authenticate</a></p>
-                `;
-            }
-        }
-
-        // 페이지 로드 시 복호화 실행
-        decryptContent();
     </script>
 </body>
 </html>

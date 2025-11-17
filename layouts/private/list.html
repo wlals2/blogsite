@@ -320,7 +320,6 @@
         const MAX_ATTEMPTS = 5;
         const LOCKOUT_TIME = 300000; // 5분 (밀리초)
         const TOTP_SECRET = '{{ getenv "PRIVATE_TOTP_SECRET" }}'; // 빌드 시 환경변수로 주입
-        const AES_KEY = '{{ getenv "PRIVATE_AES_KEY" }}'; // 빌드 시 환경변수로 주입
 
         // Rate Limiting
         let attempts = parseInt(localStorage.getItem('auth_attempts') || '0');
@@ -425,7 +424,6 @@
                     // 인증 성공!
                     sessionStorage.setItem('private_auth', 'authenticated');
                     sessionStorage.setItem('auth_time', Date.now().toString());
-                    sessionStorage.setItem('aes_key', AES_KEY);
 
                     resetLockout();
                     showSuccess();
@@ -487,16 +485,20 @@
         async function loadContentList() {
             const contentList = document.getElementById('content-list');
 
-            // 암호화된 콘텐츠 목록
+            // Hugo에서 생성한 실제 페이지 목록
             const contents = [
-                { title: '🏗️ Architecture', url: '/private/architecture/' },
-                { title: '🔐 Secrets & Configs', url: '/private/secrets/' },
-                { title: '🌐 Network Topology', url: '/private/network/' }
+                {{ range .Pages }}
+                { title: '{{ .Title }}', url: '{{ .RelPermalink }}' },
+                {{ end }}
             ];
 
-            contentList.innerHTML = contents.map(item =>
-                `<li><a href="${item.url}">${item.title}</a></li>`
-            ).join('');
+            if (contents.length === 0) {
+                contentList.innerHTML = '<li style="color: #888;">No private content available yet</li>';
+            } else {
+                contentList.innerHTML = contents.map(item =>
+                    `<li><a href="${item.url}">${item.title}</a></li>`
+                ).join('');
+            }
         }
 
         // ========== 자동 포커스 ==========
