@@ -1,0 +1,44 @@
+services:
+  # Hugo 개발 서버 (실시간 미리보기)
+  hugo-dev:
+    image: klakegg/hugo:0.111.3-ext-alpine
+    container_name: hugo-dev
+    command: server --bind 0.0.0.0 --buildDrafts --buildFuture
+    volumes:
+      - ./:/src
+    ports:
+      - "1313:1313"
+    environment:
+      - HUGO_ENVIRONMENT=development
+    networks:
+      - dev-network
+
+  # Hugo 빌드 테스트 (프로덕션)
+  hugo-build:
+    image: klakegg/hugo:0.111.3-ext-alpine
+    container_name: hugo-build
+    command: --minify
+    volumes:
+      - ./:/src
+      - ./public-test:/src/public  # 빌드 결과물을 별도 폴더에
+    environment:
+      - HUGO_ENVIRONMENT=production
+    networks:
+      - dev-network
+
+  # Nginx로 빌드 결과 확인
+  nginx-test:
+    image: nginx:alpine
+    container_name: nginx-test
+    volumes:
+      - ./public-test:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - hugo-build
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
