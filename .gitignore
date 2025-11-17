@@ -11,6 +11,13 @@
 # Private data
 *.pem
 .env
+.env.local
+
+# Private content (암호화 전 원본)
+content/private/
+
+# 암호화된 콘텐츠는 Git에 포함 (배포용)
+# static/private-encrypted/
 
 
 # DDNS 관련 파일 (API Token 포함)
