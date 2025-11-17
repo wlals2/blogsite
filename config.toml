@@ -97,4 +97,9 @@ enableGitInfo = true
   name = "Study"
   url = "/study/"
   weight = 5
+
 buildFuture = true
+
+[security]
+  [security.funcs]
+    getenv = ['^HUGO_', '^CI$', '^PRIVATE_']

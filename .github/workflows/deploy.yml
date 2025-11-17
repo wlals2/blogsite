@@ -36,12 +36,25 @@ jobs:
       - name: Build (production)
         env:
           HUGO_ENV: production
+          PRIVATE_TOTP_SECRET: ${{ secrets.PRIVATE_TOTP_SECRET }}
+          PRIVATE_AES_KEY: ${{ secrets.PRIVATE_AES_KEY }}
         run: |
           set -euxo pipefail
           hugo --minify
           echo "== built files sample =="
           find public -maxdepth 2 -type f | head
           echo "html_count=$(find public -name '*.html' | wc -l)"
+
+      - name: Encrypt private content
+        env:
+          PRIVATE_AES_KEY: ${{ secrets.PRIVATE_AES_KEY }}
+        run: |
+          if [ -d "public/private" ]; then
+            echo "🔐 Encrypting private content..."
+            ./scripts/encrypt-private-content.sh
+          else
+            echo "ℹ️ No private content to encrypt"
+          fi
       
       # 배포 표식은 '복사 전에' 만들어야 서버에 올라감
       - name: Stamp deploy info
