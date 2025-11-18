@@ -1,0 +1,29 @@
+/* 한글 코드 블록 폰트 수정 */
+code, pre, pre code, .highlight pre, .highlight code {
+    font-family: 'Nanum Gothic Coding', 'Noto Sans Mono', 'Noto Sans Mono CJK KR', 'D2Coding', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    font-feature-settings: normal !important;
+}
+
+/* 한글이 포함된 코드 블록의 줄 높이 조정 */
+.highlight pre code {
+    line-height: 1.7 !important;
+    font-size: 0.95em !important;
+}
+
+/* 일반 텍스트와 코드의 간격 조정 */
+pre {
+    line-height: 1.7 !important;
+    overflow-x: auto;
+}
+
+/* 코드 블록 내부 간격 조정 */
+.highlight pre {
+    padding: 1em !important;
+}
+
+/* 인라인 코드 */
+code {
+    font-size: 0.9em !important;
+}

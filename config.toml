@@ -24,6 +24,16 @@ enableGitInfo = true
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true
+    [markup.goldmark.parser]
+      [markup.goldmark.parser.attribute]
+        block = true
+        title = true
+  [markup.highlight]
+    noClasses = false
+  # GoAT 다이어그램 비활성화 (한글 깨짐 방지)
+  [markup.goldmark.extensions]
+    [markup.goldmark.extensions.passthrough]
+      enable = false
 [params]
   env = "production"
   defaultTheme = "auto"
