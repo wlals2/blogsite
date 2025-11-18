@@ -1,0 +1,116 @@
+baseURL = "/"  # 상대 경로 사용
+title = "지민 기술 블로그 (Docker 테스트)"
+theme = "PaperMod"
+languageCode = "ko-kr"
+defaultContentLanguage = "ko"
+timeZone = "Asia/Seoul"
+enableRobotsTXT = true
+googleAnalytics = ""
+enableGitInfo = true
+
+[frontmatter]
+  date = ["date", "publishDate", ":git", ":fileModTime", "lastmod"]
+
+[pagination]
+  pagerSize = 10
+
+[minify]
+  minifyOutput = true
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+    [markup.goldmark.parser]
+      [markup.goldmark.parser.attribute]
+        block = true
+        title = true
+  [markup.highlight]
+    noClasses = false
+  # GoAT 다이어그램 비활성화 (한글 깨짐 방지)
+  [markup.goldmark.extensions]
+    [markup.goldmark.extensions.passthrough]
+      enable = false
+
+[params]
+  env = "development"  # 개발 모드로 변경
+  defaultTheme = "auto"
+  showReadingTime = true
+  showBreadCrumbs = true
+  showCodeCopyButtons = true
+  showPostNavLinks = true
+  showWordCount = true
+  mainSections = ["posts", "study"]
+
+  [params.profileMode]
+    enabled = true
+    title = "Hi there 👋 (Docker 테스트)"
+    subtitle = "Welcome to my blog"
+    imageUrl = ""
+    imageTitle = ""
+    imageWidth = 120
+    imageHeight = 120
+
+    [[params.profileMode.buttons]]
+      name = "Posts"
+      url = "/posts/"
+    [[params.profileMode.buttons]]
+      name = "Tags"
+      url = "/tags/"
+    [[params.profileMode.buttons]]
+      name = "Archives"
+      url = "/archives/"
+    [[params.profileMode.buttons]]
+      name = "Series"
+      url = "/series/"
+    [[params.profileMode.buttons]]
+      name = "Study"
+      url = "/study/"
+
+  [[params.socialIcons]]
+    name = "github"
+    url  = "https://github.com/"
+
+[taxonomies]
+  tag = "tags"
+  category = "categories"
+  series = "series"
+
+[[menu.main]]
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
+  weight = 1
+
+[[menu.main]]
+  identifier = "tags"
+  name = "Tags"
+  url = "/tags/"
+  weight = 2
+
+[[menu.main]]
+  identifier = "archives"
+  name = "Archives"
+  url = "/archives/"
+  weight = 3
+
+[[menu.main]]
+  identifier = "series"
+  name = "Series"
+  url = "/series/"
+  weight = 4
+
+[[menu.main]]
+  identifier = "study"
+  name = "Study"
+  url = "/study/"
+  weight = 5
+
+buildFuture = true
+
+[security]
+  [security.funcs]
+    getenv = ['^HUGO_', '^CI$', '^PRIVATE_']
