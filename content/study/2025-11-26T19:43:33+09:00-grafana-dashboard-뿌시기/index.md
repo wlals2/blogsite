@@ -9,25 +9,6 @@ author: "늦찌민"
 serises: [monitoring]
 ---
 
----
-title: "Prometheus + Grafana로 Nginx 블로그 모니터링 완벽 가이드"
-date: 2025-11-26T18:00:00+09:00
-draft: false
-tags:
-  - kubernetes
-  - prometheus
-  - grafana
-  - nginx
-  - monitoring
-  - devops
-  - homelab
-categories:
-  - Infrastructure
-  - Monitoring
-author: "Jimin"
-description: "Kubernetes 환경에서 Prometheus와 Grafana를 사용해 Nginx 블로그를 완벽하게 모니터링하는 방법. 메트릭 수집부터 대시보드 구성, 트러블슈팅까지 실전 경험 공유"
-toc: true
----
 
 ## 들어가며
 
