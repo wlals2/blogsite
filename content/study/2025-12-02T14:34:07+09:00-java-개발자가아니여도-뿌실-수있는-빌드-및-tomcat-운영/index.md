@@ -1,6 +1,6 @@
 ---
 title: "Java 빌드와 Tomcat 운영 완벽 가이드"
-date: 2025-12-02
+date: 2025-12-1T22:29:23
 draft: false
 tags: ["Java", "Tomcat", "Build", "DevOps", "Troubleshooting"]
 categories: ["Backend", "Infrastructure"]
