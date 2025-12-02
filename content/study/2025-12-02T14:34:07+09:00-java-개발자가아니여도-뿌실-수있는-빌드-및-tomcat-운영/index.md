@@ -1,6 +1,6 @@
 ---
 title: "Java 빌드와 Tomcat 운영 완벽 가이드"
-date: 2025-12-1T22:29:23
+date: 2025-12-1T22:29:23+09:00
 draft: false
 tags: ["Java", "Tomcat", "Build", "DevOps", "Troubleshooting"]
 categories: ["Backend", "Infrastructure"]
@@ -189,9 +189,7 @@ java $JAVA_OPTS \
 | **JAVA_HOME** | JDK 위치 지정 | 2순위 | `/usr/lib/jvm/java-17-openjdk-amd64` |
 | **PATH** | 명령어 검색 경로 | 3순위 | `/usr/bin:...` |
 
-{{< callout type="info" >}}
 **우선순위:** `JRE_HOME` > `JAVA_HOME` > `PATH`에서 java 검색
-{{< /callout >}}
 
 ### Tomcat 전용 환경 변수
 
@@ -358,9 +356,7 @@ grep "Deploying web application" logs/catalina.out
 mkdir -p logs temp
 ```
 
-{{< callout type="warning" >}}
 Tomcat은 `logs` 디렉토리를 자동으로 생성하지 않습니다!
-{{< /callout >}}
 
 ---
 
