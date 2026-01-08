@@ -27,3 +27,422 @@ pre {
 code {
     font-size: 0.9em !important;
 }
+
+/* ============================================
+   Jimin's DevOps Blog - Visual Enhancement
+   ============================================ */
+
+/* ============================================
+   Color Variables
+   ============================================ */
+:root {
+  --accent-color: #0ea5e9;
+  --accent-color-dark: #0284c7;
+  --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+  --card-bg: rgba(0, 0, 0, 0.02);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+.dark {
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   Homepage Hero - 임팩트 있는 첫인상
+   ============================================ */
+.profile {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.profile .profile_inner h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+
+.profile .profile_inner h2 {
+  font-size: 1.15rem;
+  line-height: 2;
+  opacity: 0.85;
+  max-width: 550px;
+  margin: 0 auto 2.5rem auto;
+  font-weight: 400;
+}
+
+/* Hero Buttons - 카드형 버튼 */
+.profile .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.profile .button {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile .button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.profile .button:hover {
+  color: white;
+  border-color: transparent;
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.profile .button:hover::before {
+  opacity: 1;
+}
+
+/* ============================================
+   Post Cards - 깔끔한 카드 UI
+   ============================================ */
+.post-entry {
+  background: var(--theme);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.post-entry:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-color);
+}
+
+.post-entry .entry-header h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  transition: color 0.2s ease;
+}
+
+.post-entry:hover .entry-header h2 {
+  color: var(--accent-color);
+}
+
+.post-entry .entry-content {
+  opacity: 0.75;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ============================================
+   Tags - 세련된 태그
+   ============================================ */
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.post-tags a {
+  background: var(--accent-color);
+  color: white !important;
+  padding: 0.35rem 0.9rem;
+  border-radius: 25px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.post-tags a:hover {
+  background: var(--accent-color-dark);
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+}
+
+/* ============================================
+   Tables - 현대적인 테이블
+   ============================================ */
+.post-content table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 2rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--card-border);
+}
+
+.post-content table th {
+  background: var(--accent-color);
+  color: white;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.post-content table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 0.95rem;
+}
+
+.post-content table tr:last-child td {
+  border-bottom: none;
+}
+
+.post-content table tr:hover td {
+  background: var(--card-bg);
+}
+
+/* Status icons in tables */
+.post-content table td:first-child {
+  text-align: center;
+  font-size: 1.3rem;
+}
+
+/* ============================================
+   Code Blocks - 깔끔한 코드 블록
+   ============================================ */
+.post-content pre {
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-sm);
+  margin: 1.5rem 0;
+}
+
+.post-content > code,
+.post-content p code,
+.post-content li code {
+  background: var(--card-bg);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.88em;
+  border: 1px solid var(--card-border);
+}
+
+/* ============================================
+   Navigation - 모던한 네비게이션
+   ============================================ */
+.nav {
+  backdrop-filter: blur(12px);
+  background: rgba(var(--theme-rgb), 0.85) !important;
+}
+
+#menu a {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+#menu a:hover,
+#menu a.active {
+  background: var(--card-bg);
+  color: var(--accent-color) !important;
+}
+
+/* ============================================
+   Social Icons - 호버 효과
+   ============================================ */
+.social-icons {
+  margin-top: 2rem;
+}
+
+.social-icons a {
+  margin: 0 0.75rem;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.social-icons a:hover {
+  color: var(--accent-color) !important;
+  transform: scale(1.3) translateY(-2px);
+  opacity: 1;
+}
+
+/* ============================================
+   TOC - 사이드 목차
+   ============================================ */
+.toc {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.toc .inner {
+  margin: 0;
+}
+
+.toc ul {
+  list-style: none;
+  padding-left: 1rem;
+}
+
+.toc a {
+  opacity: 0.75;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.toc a:hover {
+  color: var(--accent-color);
+  opacity: 1;
+}
+
+/* ============================================
+   Breadcrumbs
+   ============================================ */
+.breadcrumbs {
+  opacity: 0.6;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumbs a {
+  transition: color 0.2s ease;
+}
+
+.breadcrumbs a:hover {
+  color: var(--accent-color);
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.footer {
+  opacity: 0.5;
+  font-size: 0.85rem;
+  padding: 2rem 0;
+}
+
+/* ============================================
+   Page Header
+   ============================================ */
+.post-header .post-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.post-header .post-meta {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+/* ============================================
+   Blockquote
+   ============================================ */
+.post-content blockquote {
+  border-left: 4px solid var(--accent-color);
+  background: var(--card-bg);
+  padding: 1rem 1.5rem;
+  border-radius: 0 12px 12px 0;
+  margin: 1.5rem 0;
+  font-style: normal;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.profile {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.post-entry {
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.post-entry:nth-child(1) { animation-delay: 0.1s; }
+.post-entry:nth-child(2) { animation-delay: 0.2s; }
+.post-entry:nth-child(3) { animation-delay: 0.3s; }
+.post-entry:nth-child(4) { animation-delay: 0.4s; }
+.post-entry:nth-child(5) { animation-delay: 0.5s; }
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 768px) {
+  .profile .profile_inner h1 {
+    font-size: 2rem;
+  }
+
+  .profile .profile_inner h2 {
+    font-size: 1rem;
+  }
+
+  .profile .buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .profile .button {
+    width: 85%;
+    text-align: center;
+    padding: 0.9rem 1.5rem;
+  }
+
+  .post-header .post-title {
+    font-size: 1.6rem;
+  }
+}
