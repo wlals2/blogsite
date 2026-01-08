@@ -1,5 +1,5 @@
 baseURL = "https://blog.jiminhome.shop/"
-title = "Jimin's DevOps Journey"
+title = "지민 기술 블로그"
 theme = "PaperMod"
 languageCode = "ko-kr"
 defaultContentLanguage = "ko"
@@ -19,7 +19,7 @@ enableGitInfo = true
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
-
+  
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]
@@ -30,10 +30,10 @@ enableGitInfo = true
         title = true
   [markup.highlight]
     noClasses = false
+  # GoAT 다이어그램 비활성화 (한글 깨짐 방지)
   [markup.goldmark.extensions]
     [markup.goldmark.extensions.passthrough]
       enable = false
-
 [params]
   env = "production"
   defaultTheme = "auto"
@@ -42,92 +42,71 @@ enableGitInfo = true
   showCodeCopyButtons = true
   showPostNavLinks = true
   showWordCount = true
-  mainSections = ["til", "devops", "blog"]
-
-  # Home Page - Profile Mode
+  mainSections = ["posts", "study"]
+  
   [params.profileMode]
     enabled = true
-    title = "DevOps Engineer를 향한 여정"
-    subtitle = """
-AWS EKS 3-Tier + Multi-Cloud DR 프로젝트 진행 중
-
-현재 집중: Kubernetes, CI/CD, Infrastructure as Code
-단기 목표: DevOps 엔지니어 취업
-"""
+    title = "Hi there 👋"
+    subtitle = "Welcome to my blog"
     imageUrl = ""
     imageTitle = ""
     imageWidth = 120
     imageHeight = 120
-
+    
     [[params.profileMode.buttons]]
-      name = "About Me"
-      url = "/about/"
+      name = "Posts"
+      url = "/posts/"
     [[params.profileMode.buttons]]
-      name = "Projects"
-      url = "/projects/"
+      name = "Tags"
+      url = "/tags/"
     [[params.profileMode.buttons]]
-      name = "TIL"
-      url = "/til/"
-
-  # Home Info Mode (alternative - disabled)
-  [params.homeInfoParams]
-    Title = "DevOps Engineer를 향한 여정"
-    Content = """
-- AWS EKS 3-Tier Architecture 구축
-- Multi-Cloud DR (AWS + Azure)
-- CI/CD Pipeline (Jenkins + ArgoCD)
-"""
+      name = "Archives"
+      url = "/archives/"
+    [[params.profileMode.buttons]]
+      name = "Series"
+      url = "/series/"
+    [[params.profileMode.buttons]]
+      name = "Study"
+      url = "/study/"
 
   [[params.socialIcons]]
     name = "github"
-    url = "https://github.com/wlals2"
+    url  = "https://github.com/"
 
-  [[params.socialIcons]]
-    name = "email"
-    url = "mailto:your-email@example.com"
-
-# Taxonomies
 [taxonomies]
   tag = "tags"
   category = "categories"
   series = "series"
 
-# Main Menu - 목적 기반 구조
 [[menu.main]]
-  identifier = "about"
-  name = "About"
-  url = "/about/"
+  identifier = "posts"
+  name = "Posts"
+  url = "/posts/"
   weight = 1
-
-[[menu.main]]
-  identifier = "projects"
-  name = "Projects"
-  url = "/projects/"
-  weight = 2
-
-[[menu.main]]
-  identifier = "til"
-  name = "TIL"
-  url = "/til/"
-  weight = 3
-
-[[menu.main]]
-  identifier = "devops"
-  name = "DevOps"
-  url = "/devops/"
-  weight = 4
-
-[[menu.main]]
-  identifier = "blog"
-  name = "Blog"
-  url = "/blog/"
-  weight = 5
 
 [[menu.main]]
   identifier = "tags"
   name = "Tags"
   url = "/tags/"
-  weight = 6
+  weight = 2
+
+[[menu.main]]
+  identifier = "archives"
+  name = "Archives"
+  url = "/archives/"
+  weight = 3
+
+[[menu.main]]
+  identifier = "series"
+  name = "Series"
+  url = "/series/"
+  weight = 4
+
+[[menu.main]]
+  identifier = "study"
+  name = "Study"
+  url = "/study/"
+  weight = 5
 
 buildFuture = true
 
