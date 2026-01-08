@@ -49,10 +49,10 @@ enableGitInfo = true
     enabled = true
     title = "DevOps Engineer를 향한 여정"
     subtitle = "AWS EKS 3-Tier + Multi-Cloud DR 프로젝트 진행 중 | Kubernetes, CI/CD, IaC"
-    imageUrl = ""
-    imageTitle = ""
-    imageWidth = 120
-    imageHeight = 120
+    imageUrl = "/images/profile.png"
+    imageTitle = "Jimin - DevOps Engineer"
+    imageWidth = 150
+    imageHeight = 150
 
     [[params.profileMode.buttons]]
       name = "About Me"
