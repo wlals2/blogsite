@@ -42,7 +42,7 @@ enableGitInfo = true
   showCodeCopyButtons = true
   showPostNavLinks = true
   showWordCount = true
-  mainSections = ["til", "devops", "blog"]
+  mainSections = ["til", "devops", "posts", "study", "experience"]
 
   # Home Page - Profile Mode
   [params.profileMode]
@@ -113,16 +113,22 @@ enableGitInfo = true
   weight = 4
 
 [[menu.main]]
-  identifier = "blog"
-  name = "Blog"
-  url = "/blog/"
+  identifier = "experience"
+  name = "Experience"
+  url = "/posts/"
   weight = 5
+
+[[menu.main]]
+  identifier = "study"
+  name = "Study"
+  url = "/study/"
+  weight = 6
 
 [[menu.main]]
   identifier = "tags"
   name = "Tags"
   url = "/tags/"
-  weight = 6
+  weight = 7
 
 buildFuture = true
 
