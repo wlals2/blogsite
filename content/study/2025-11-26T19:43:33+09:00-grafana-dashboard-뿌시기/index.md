@@ -34,11 +34,13 @@ Nginx: blog.jiminhome.shop (Hugo)
 Prometheus: 이미 배포됨
 Grafana: 이미 배포됨
 Node Exporter: 이미 배포됨
+
 ```
 
 ## 전체 아키텍처
 
 ```
+
 Nginx (:80/443)
     ↓ stub_status
 Nginx Exporter (:9113)
@@ -46,6 +48,7 @@ Nginx Exporter (:9113)
 Prometheus (:9090)
     ↓ API
 Grafana (:3000)
+
 ```
 
 간단하죠? 하지만 이 과정에서 생각보다 많은 문제를 만났습니다.
@@ -85,14 +88,18 @@ server {
 
 ```bash
 curl http://localhost/nginx_status
+
 ```
 
 출력:
+
 ```
+
 Active connections: 1
 server accepts handled requests
  245 245 245
 Reading: 0 Writing: 1 Waiting: 0
+
 ```
 
 ✅ **stub_status가 정상 작동합니다!**
@@ -137,6 +144,7 @@ spec:
         ports:
         - name: metrics
           containerPort: 9113
+
 ```
 
 **핵심 포인트:**
@@ -148,12 +156,15 @@ spec:
 ```bash
 kubectl get pods -n monitoring -l app=nginx-exporter
 kubectl logs -n monitoring -l app=nginx-exporter
+
 ```
 
 메트릭 확인:
+
 ```bash
 curl http://<node-ip>:9113/metrics | grep nginx_up
 # nginx_up 1
+
 ```
 
 ---
@@ -182,6 +193,7 @@ scrape_configs:
         target_label: __address__
         regex: '([^:]+)(?::\d+)?'
         replacement: '${1}:9113'
+
 ```
 
 ### ConfigMap 업데이트 및 재시작
@@ -193,19 +205,24 @@ kubectl create configmap prometheus-config \
   kubectl apply -n monitoring -f -
 
 kubectl rollout restart -n monitoring deployment prometheus
+
 ```
 
 ### Prometheus UI 확인
 
 ```
+
 http://<prometheus-url>/targets
 → nginx-exporter (1/1 up) ✅
+
 ```
 
 쿼리 테스트:
+
 ```promql
 nginx_up
 # Result: 1
+
 ```
 
 ---
@@ -257,6 +274,7 @@ for panel in dashboard['panels']:
             if 'expr' in target:
                 for old, new in mappings.items():
                     target['expr'] = target['expr'].replace(old, new)
+
 ```
 
 ✅ **대시보드가 작동했습니다!**
@@ -268,10 +286,12 @@ for panel in dashboard['panels']:
 대시보드를 만들고 기뻐한 것도 잠시, **refresh할 때마다 값이 30% 이상 변동**하는 문제를 발견했습니다.
 
 ```
+
 15:00 → 가용성 50%
 15:01 → 가용성 90%
 15:02 → 가용성 30%
 심지어 -3%도 발생! 😱
+
 ```
 
 ### 원인 분석 1: avg_over_time + 데이터 부족
@@ -280,6 +300,7 @@ for panel in dashboard['panels']:
 
 ```promql
 avg_over_time(nginx_up[6h]) * 100
+
 ```
 
 **문제:**
@@ -288,7 +309,9 @@ avg_over_time(nginx_up[6h]) * 100
 - Prometheus가 빈 시간을 **0으로 계산**
 
 계산:
+
 ```
+
 현재: 15:00
 범위: 09:00 ~ 15:00 (6시간)
 
@@ -296,6 +319,7 @@ avg_over_time(nginx_up[6h]) * 100
 13:00~15:00 → nginx_up = 1
 
 평균 = (0×4 + 1×2) / 6 = 33.3%
+
 ```
 
 ### 원인 분석 2: Grafana의 reduceOptions
@@ -320,6 +344,7 @@ avg_over_time(nginx_up[6h]) * 100
 4. **다른 240개 포인트 → 다른 평균값**
 
 ```
+
 15:00 refresh:
   Range: 14:00 ~ 15:00
   240개 포인트 평균 = 50%
@@ -327,6 +352,7 @@ avg_over_time(nginx_up[6h]) * 100
 15:01 refresh:
   Range: 14:01 ~ 15:01  ← 1분 이동!
   240개 포인트 평균 = 52%
+
 ```
 
 ### 해결책: lastNotNull 사용
@@ -380,6 +406,7 @@ avg_over_time(nginx_up[6h]) * 100
    Query: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
    Calc: lastNotNull
    Unit: percent
+
 ```
 
 ### 그래프 패널 (5개)
@@ -398,8 +425,10 @@ avg_over_time(nginx_up[6h]) * 100
 
 **절대 규칙:**
 ```
+
 Stat 패널 = lastNotNull만 사용
 mean, sum 절대 금지
+
 ```
 
 ### 2. 단순한 쿼리가 최고
@@ -410,6 +439,7 @@ avg_over_time(nginx_up[6h]) * 100
 
 # ✅ 단순하고 안정적
 nginx_up * 100
+
 ```
 
 ### 3. Time Range ≠ Query Range
@@ -418,6 +448,7 @@ nginx_up * 100
 # Time Range: 그래프 X축 (화면 표시)
 # Query Range: 계산 범위 ([30m])
 avg_over_time(nginx_up[30m])
+
 ```
 
 이 둘은 **완전히 별개**입니다!
@@ -449,6 +480,7 @@ nginx_connections_writing       # 쓰기 중
 nginx_connections_waiting       # 대기 중 (keep-alive)
 nginx_connections_accepted      # 총 연결 (누적)
 nginx_http_requests_total       # 총 요청 (누적)
+
 ```
 
 ### System (node-exporter)
@@ -457,6 +489,7 @@ nginx_http_requests_total       # 총 요청 (누적)
 node_cpu_seconds_total          # CPU 시간
 node_memory_MemTotal_bytes      # 총 메모리
 node_memory_MemAvailable_bytes  # 사용 가능 메모리
+
 ```
 
 ---
@@ -508,6 +541,7 @@ node_memory_MemAvailable_bytes  # 사용 가능 메모리
   for: 1m
   annotations:
     summary: "블로그 다운!"
+
 ```
 
 ### 2. Response Code 분석 (선택)
@@ -521,6 +555,7 @@ node_memory_MemAvailable_bytes  # 사용 가능 메모리
 ```promql
 # 30일 가용성
 (sum_over_time(nginx_up[30d]) / count_over_time(nginx_up[30d])) * 100
+
 ```
 
 ---

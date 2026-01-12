@@ -48,6 +48,7 @@ my-hugo-blog/                   # 프로젝트 루트
 ├── .gitignore                  # Git 무시 파일 목록
 ├── .gitmodules                 # Git submodule 설정
 └── README.md                   # 프로젝트 설명
+
 ```
 
 ### 주요 디렉토리 역할
@@ -80,6 +81,7 @@ enableRobotsTXT = true
 googleAnalytics = ""  # GA 측정 ID (예: G-XXXXXXXXXX)
 enableGitInfo = true
 buildFuture = true
+
 ```
 
 **설명:**
@@ -95,6 +97,7 @@ buildFuture = true
 ```toml
 [frontmatter]
   date = ["date", "publishDate", ":git", ":fileModTime", "lastmod"]
+
 ```
 
 **Hugo는 날짜를 결정할 때 이 순서대로 확인합니다:**
@@ -112,6 +115,7 @@ buildFuture = true
 ```toml
 [pagination]
   pagerSize = 10  # 한 페이지당 표시할 글 개수
+
 ```
 
 ### 2.4 최소화 및 출력 형식
@@ -122,6 +126,7 @@ buildFuture = true
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]  # 홈페이지 출력 형식
+
 ```
 
 **출력 형식:**
@@ -136,6 +141,7 @@ buildFuture = true
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true  # HTML 태그 허용 (기본값: false)
+
 ```
 
 > **⚠️ 주의:** `unsafe = true`로 설정하면 마크다운 내 HTML 태그를 사용할 수 있지만, XSS 공격에 취약할 수 있습니다. 신뢰할 수 있는 콘텐츠만 작성하세요.
@@ -152,6 +158,7 @@ buildFuture = true
   showPostNavLinks = true
   showWordCount = true
   mainSections = ["posts", "study"]  # 메인 페이지에 표시할 섹션
+
 ```
 
 ### 2.7 프로필 모드 (PaperMod 테마)
@@ -175,6 +182,7 @@ buildFuture = true
   [[params.profileMode.buttons]]
     name = "Archives"
     url = "/archives/"
+
 ```
 
 ### 2.8 소셜 아이콘
@@ -191,6 +199,7 @@ buildFuture = true
 [[params.socialIcons]]
   name = "linkedin"
   url = "https://linkedin.com/in/yourusername"
+
 ```
 
 ### 2.9 Taxonomies (분류 체계)
@@ -200,6 +209,7 @@ buildFuture = true
   tag = "tags"
   category = "categories"
   series = "series"
+
 ```
 
 **사용 예시:**
@@ -237,6 +247,7 @@ series: ["Hugo 블로그 구축"]
   name = "Search"
   url = "/search/"
   weight = 4
+
 ```
 
 **weight**: 작을수록 먼저 표시됩니다.
@@ -251,11 +262,13 @@ series: ["Hugo 블로그 구축"]
 ```bash
 hugo new posts/my-first-post.md
 # content/posts/my-first-post.md 생성됨
+
 ```
 
 **방법 2: 수동 생성**
 ```bash
 touch content/posts/my-first-post.md
+
 ```
 
 ### 3.2 Frontmatter 작성
@@ -306,21 +319,25 @@ hugo -D
 
 # production 빌드 (draft 제외)
 hugo --minify
+
 ```
 
 ### 3.4 번들 페이지 (Page Bundle)
 
 **Leaf Bundle (권장):**
 ```
+
 content/posts/my-post/
 ├── index.md          # 메인 글
 ├── image1.jpg        # 이미지 1
 └── image2.png        # 이미지 2
+
 ```
 
 **사용 예시:**
 ```markdown
 ![이미지](image1.jpg)  # 상대 경로 사용 가능!
+
 ```
 
 ---
@@ -353,6 +370,7 @@ EOF
 # 테마 추가 (submodule)
 git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
 git submodule update --init --recursive
+
 ```
 
 ### 4.2 일상적인 워크플로우
@@ -373,6 +391,7 @@ git commit -m "Add: 새 글 작성 - Hugo 블로그 시작하기"
 # 4. GitHub에 푸시
 git push origin main
 # → GitHub Actions 자동 배포 시작!
+
 ```
 
 ### 4.3 테마 업데이트
@@ -385,6 +404,7 @@ git submodule update --remote --merge
 git add themes/PaperMod
 git commit -m "Update: PaperMod 테마 최신 버전으로 업데이트"
 git push origin main
+
 ```
 
 ---
@@ -444,6 +464,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
           cname: yourdomain.com  # 커스텀 도메인
+
 ```
 
 ### 5.2 Self-Hosted Runner 설정 (자체 서버)
@@ -465,6 +486,7 @@ tar xzf ./actions-runner-linux-x64-2.311.0.tar.gz
 # 4. 서비스로 등록
 sudo ./svc.sh install
 sudo ./svc.sh start
+
 ```
 
 **Self-Hosted용 deploy.yml:**
@@ -483,6 +505,7 @@ jobs:
           sudo chown -R www-data:www-data /var/www/blog
           sudo chmod -R 755 /var/www/blog
           sudo systemctl reload nginx
+
 ```
 
 ---
@@ -554,6 +577,7 @@ server {
 sudo ln -s /etc/nginx/sites-available/blog.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
+
 ```
 
 ### 6.2 Let's Encrypt SSL 인증서
@@ -567,6 +591,7 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 
 # 자동 갱신 확인
 sudo certbot renew --dry-run
+
 ```
 
 ### 6.3 배포 스크립트 (deploy.sh)
@@ -599,6 +624,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 echo "✅ 배포 완료!"
 echo "🔗 https://yourdomain.com"
+
 ```
 
 ---
@@ -610,19 +636,25 @@ echo "🔗 https://yourdomain.com"
 **체크리스트:**
 
 1. **Draft 확인**
+
 ```yaml
 draft: false  # true면 비공개
+
 ```
 
 2. **날짜 확인**
+
 ```yaml
 date: 2025-11-16T14:00:00+09:00  # 미래 날짜면 buildFuture: true 필요
+
 ```
 
 3. **Git 커밋/푸시 확인**
+
 ```bash
 git status
 git log origin/main..HEAD --oneline
+
 ```
 
 4. **GitHub Actions 확인**
@@ -645,6 +677,7 @@ sudo rsync -avh --delete public/ /var/www/blog/
 
 # 3. 브라우저 캐시 삭제
 Ctrl + Shift + Delete → 캐시 삭제
+
 ```
 
 ### 7.3 "날짜가 이상하게 표시돼요"
@@ -656,6 +689,7 @@ Ctrl + Shift + Delete → 캐시 삭제
 [frontmatter]
   date = ["date", "publishDate", ":git", ":fileModTime"]
   # frontmatter의 date 필드가 최우선!
+
 ```
 
 ### 7.4 "테마가 적용 안 돼요"
@@ -669,6 +703,7 @@ git submodule update --init --recursive
 
 # Submodule 상태 확인
 git submodule status
+
 ```
 
 ### 7.5 "빌드 시 에러 발생"
@@ -680,6 +715,7 @@ hugo --verbose
 # 캐시 삭제 후 재빌드
 rm -rf resources/ public/
 hugo --cleanDestinationDir
+
 ```
 
 ---
@@ -697,6 +733,7 @@ cwebp -q 80 input.jpg -o output.webp
 sudo apt install optipng jpegoptim
 jpegoptim --max=85 *.jpg
 optipng -o7 *.png
+
 ```
 
 **Frontmatter에서 여러 형식 지원:**
@@ -704,6 +741,7 @@ optipng -o7 *.png
 cover:
   image: "/images/cover.webp"
   fallback: "/images/cover.jpg"
+
 ```
 
 ### 8.2 Hugo 빌드 최적화
@@ -717,6 +755,7 @@ cover:
 
   [minify.tdewolff.css]
     precision = 2
+
 ```
 
 ### 8.3 CDN 사용 (Cloudflare)
@@ -742,13 +781,17 @@ cover:
 
 ```toml
 enableRobotsTXT = true
+
 ```
 
 생성된 `/robots.txt`:
+
 ```
+
 User-agent: *
 Disallow: /admin/
 Sitemap: https://yourdomain.com/sitemap.xml
+
 ```
 
 ### 9.2 Sitemap
@@ -761,6 +804,7 @@ Hugo는 자동으로 `sitemap.xml`을 생성합니다.
   changefreq = "weekly"
   filename = "sitemap.xml"
   priority = 0.5
+
 ```
 
 ### 9.3 Open Graph & Twitter Cards
@@ -783,6 +827,7 @@ cover:
 <meta property="og:image" content="{{ .Params.cover.image | absURL }}" />
 <meta property="og:url" content="{{ .Permalink }}" />
 <meta name="twitter:card" content="summary_large_image" />
+
 ```
 
 ---
@@ -818,6 +863,7 @@ curl https://yourdomain.com/index.xml
 curl https://yourdomain.com/sitemap.xml
 
 # 5. Lighthouse 점수 확인 (Chrome DevTools)
+
 ```
 
 ---

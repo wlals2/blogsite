@@ -24,6 +24,7 @@ AWS EKS 기반 3-Tier 웹 애플리케이션을 구축하고, Azure를 활용한
 ## 아키텍처
 
 ```
+
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         Route53 (DNS Failover)                        │
 │                   www.goupang.shop / dr.goupang.shop                 │
@@ -50,6 +51,7 @@ AWS EKS 기반 3-Tier 웹 애플리케이션을 구축하고, Azure를 활용한
 │  │   RDS   │  │
 │  └─────────┘  │
 └───────────────┘
+
 ```
 
 ---
@@ -86,6 +88,7 @@ strategy:
       - pause: {duration: 2m}
       - setWeight: 90
       - pause: {duration: 30s}
+
 ```
 
 **구현 결과**:
@@ -124,6 +127,7 @@ public class RedisSessionConfig {
 ### 5. CI/CD Pipeline
 
 ```
+
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │   GitHub     │────▶│   Jenkins    │────▶│     ECR      │
 │  (Source)    │     │   (Build)    │     │   (Image)    │
@@ -133,6 +137,7 @@ public class RedisSessionConfig {
 │   EKS Pod    │◀────│   ArgoCD     │◀────────────┘
 │  (Deploy)    │     │  (GitOps)    │
 └──────────────┘     └──────────────┘
+
 ```
 
 **빌드 시간**: ~10분 (Layer Cache 최적화)

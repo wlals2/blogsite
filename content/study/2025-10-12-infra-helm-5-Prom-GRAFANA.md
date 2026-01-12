@@ -16,6 +16,7 @@ Kubernetes 환경에서 **Grafana + Prometheus + Exporter** 기반 모니터링 
 
 ---
 ## ✅ values.yaml
+
 ```yaml
 prometheus:
   enabled: true
@@ -55,6 +56,7 @@ nginxexporter:
 mysqldexporter:
   enabled: true
   nodePort: 31004
+
 ```
 
 ## 🧩 Grafana 구성
@@ -91,8 +93,11 @@ spec:
           persistentVolumeClaim:
             claimName: grafana-pvc
 {{- end }}
+
 ```
+
 ### 📁 grafana-pvc.yaml
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -105,9 +110,11 @@ spec:
     requests:
       storage: {{ .Values.grafana.storage }}
   storageClassName: local-path
+
 ```
 
 ### 📁grafana-service.yaml
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -122,10 +129,12 @@ spec:
       nodePort: {{ .Values.grafana.nodePort }}
   selector:
     app: grafana
+
 ```
 ---
 ## 🧠 Prometheus 구성
 ### 📁 prometheus-configmap.yaml
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -135,9 +144,11 @@ metadata:
 data:
   prometheus.yml: |-
     {{ .Values.prometheus.config | nindent 4 }}
+
 ```
 
 ### 📁 prometheus-deployment.yaml
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -172,8 +183,11 @@ spec:
         - name: prometheus-config
           configMap:
             name: prometheus-config
+
 ```
+
 ### 📁 prometheus-PVC.yaml
+
 ```yaml
 {{- if .Values.prometheus.enabled }}
 apiVersion: v1
@@ -188,9 +202,11 @@ spec:
       storage: {{ .Values.prometheus.storage }}
   storageClassName: local-path
 {{- end }}
+
 ```
 
 ### 📁 prometheus-service.yaml
+
 ```yaml
 {{- if .Values.prometheus.enabled }}
 apiVersion: v1
@@ -207,9 +223,11 @@ spec:
   selector:
     app: prometheus
 {{- end }}
+
 ```
 
 ## 🛰 Exporter 구성
+
 ```yaml 
  # 📁 node-exporter-deployment.yaml
 {{- if .Values.nodeexporter.enabled }}
@@ -352,6 +370,7 @@ spec:
   selector:
     app: nginx-exporter
 {{- end }}
+
 ```
 ---
 
@@ -389,7 +408,9 @@ volumeMounts:
   - name: mycnf
     mountPath: /etc/mysql/my.cnf
     subPath: my.cnf
+
 ```
+
 →  여전히 Pod Crash 동일에러
 
 - Pod 내부에서 파일 확인
@@ -417,13 +438,18 @@ spec:
 # 실행 및 진입해서 확인
 kubectl apply -f busybox.yaml
 kubectl exec -it mycnf-debug -n company-infra -- cat /root/.my.cnf
+
 ```
+
 → 파일 정상확인 내용 문제는 없음
 ### 2. mysqld-exporter 버전 호환성 문제
+
 ```yaml
 # /home/ubuntu/test/company-infra/mysqld-exporter-deployment.yaml
 image: prom/mysqld-exporter:v0.14.0
+
 ```
+
 →  Pod는 Crash였으나 log 내용이 Permission Denied 에러로 바뀜 config 설정이 사라짐
 
 - **에러로그**
@@ -434,6 +460,7 @@ Error parsing my.cnf file=/root/.my.cnf err="failed reading ini file: open /root
 # /home/ubuntu/test/company-infra/templates/mysqld-exporter-deployment.yaml
 securityContext:
   runAsUser: 0
+
 ```
 
  

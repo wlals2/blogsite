@@ -47,6 +47,7 @@ code --version
 # 1.85.1
 # abc123def456...  <- 이게 COMMIT_ID (실제 값은 40자리 해시값)
 # x64
+
 ```
 
 #### 2단계: VSCode Server 다운로드
@@ -64,6 +65,7 @@ wget "https://update.code.visualstudio.com/commit:${COMMIT_ID}/server-linux-x64/
 
 # 또는 curl 사용
 curl -L "https://update.code.visualstudio.com/commit:${COMMIT_ID}/server-linux-x64/stable" -o vscode-server-linux-x64.tar.gz
+
 ```
 
 #### 3단계: SCP로 서버에 전송
@@ -84,6 +86,7 @@ Host internal-server
     IdentityFile ~/.ssh/your-internal-key.pem
     ProxyJump bastion
     Port 22
+
 ```
 
 **파일 전송:**
@@ -94,6 +97,7 @@ scp vscode-server-linux-x64.tar.gz internal-server:/tmp/
 
 # 또는 직접 명령어로 (실제 IP로 변경)
 scp -o ProxyJump=bastion vscode-server-linux-x64.tar.gz ubuntu@10.x.x.x:/tmp/
+
 ```
 
 #### 4단계: 서버에서 압축 해제
@@ -113,6 +117,7 @@ ls -la ~/.vscode-server/bin/${COMMIT_ID}
 
 # 임시 파일 삭제
 rm /tmp/vscode-server-linux-x64.tar.gz
+
 ```
 
 #### 전체 프로세스 자동화 스크립트
@@ -144,6 +149,7 @@ EOF
 rm vscode-server-linux-x64.tar.gz
 
 echo "Done! You can now connect with VSCode."
+
 ```
 
 ### 결과
@@ -180,6 +186,7 @@ Host internal-server
     ServerAliveInterval 60
     ServerAliveCountMax 10
     TCPKeepAlive yes
+
 ```
 
 **주요 설정 설명:**
@@ -195,6 +202,7 @@ Host internal-server
 ### 아키텍처
 
 ```
+
 [개발자 PC] 
     ↓ SSH (Port 22)
 [Application Load Balancer]
@@ -202,6 +210,7 @@ Host internal-server
 [Bastion Host (Public Subnet)]
     ↓ SSH
 [Private Instance (Private Subnet)]
+
 ```
 
 ### ALB 설정 포인트
@@ -241,6 +250,7 @@ ssh internal-server
 
 # 또는 -J 옵션 사용
 ssh -J bastion ubuntu@10.x.x.x
+
 ```
 
 ---
@@ -254,11 +264,14 @@ ssh -J bastion ubuntu@10.x.x.x
 ClientAliveInterval 60
 ClientAliveCountMax 10
 TCPKeepAlive yes
+
 ```
 
 설정 후 SSH 재시작:
+
 ```bash
 sudo systemctl restart sshd
+
 ```
 
 ### VSCode 설정 (`settings.json`)
@@ -278,6 +291,7 @@ sudo systemctl restart sshd
 rm -rf ~/.vscode-server
 
 # 재연결 시 자동으로 재설치됨
+
 ```
 
 ---
@@ -319,6 +333,7 @@ Bastion 환경에서 VSCode Remote SSH를 사용하기 위해서는 네트워크
 - Bastion 서버 접근은 특정 IP 대역으로 제한 권장
 
 🔑 **SSH 키 권한 설정:**
+
 ```bash
 # 키 파일 권한 설정
 chmod 400 ~/.ssh/your-bastion-key.pem
@@ -326,4 +341,5 @@ chmod 400 ~/.ssh/your-internal-key.pem
 
 # SSH 디렉토리 권한
 chmod 700 ~/.ssh
+
 ```

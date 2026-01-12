@@ -14,6 +14,7 @@ series: ["K8s 개념 뿌시기"]
 ## 문제 상황: RC가 replicas 3개를 생성하지 않는다?
 
 ### 초기 증상
+
 ```yaml
 apiVersion: v1
 kind: ReplicationController
@@ -32,15 +33,18 @@ spec:
       containers:
       - name: nginx-containers
         image: nginx:1.25
+
 ```
 
 위 RC를 생성했는데 pod가 2개만 생성되는 현상 발생:
+
 ```bash
 $ kubectl get pods
 NAME                         READY   STATUS    RESTARTS       AGE
 nginx-pod                    1/1     Running   1 (3h1m ago)   20h
 rc-nginx-5dgbn               1/1     Running   0              85s
 rc-nginx-tnwxs               1/1     Running   0              3m19s
+
 ```
 
 ---
@@ -58,11 +62,13 @@ RC는 다음과 같이 동작합니다:
 중요한 점은 **RC가 직접 생성한 pod만 관리하는 게 아니라**, selector label이 일치하는 **모든 pod를 관리 대상으로 인식**한다는 것입니다.
 
 ### 문제의 핵심
+
 ```bash
 # 기존에 존재하던 nginx-pod 확인
 $ kubectl get pod nginx-pod --show-labels
 NAME        READY   STATUS    RESTARTS   AGE   LABELS
 nginx-pod   1/1     Running   1          20h   app=web
+
 ```
 
 기존 `nginx-pod`가 `app=web` 레이블을 가지고 있었습니다!
@@ -82,6 +88,7 @@ nginx-pod   1/1     Running   1          20h   app=web
 ### 실험 설정
 
 RC가 3개의 pod를 관리하는 상태에서, 같은 레이블을 가진 전혀 다른 pod를 생성:
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -95,9 +102,11 @@ spec:
     image: jjmin/appjs
     ports:
     - containerPort: 8080
+
 ```
 
 ### 실험 결과
+
 ```bash
 $ kubectl apply -f pod-other.yaml
 pod/pod-other created
@@ -109,6 +118,7 @@ rc-nginx-5dgbn   1/1     Running       0          10m
 rc-nginx-tnwxs   1/1     Running       0          12m
 nginx-pod        1/1     Running       1          20h
 pod-other        0/1     Terminating   0          3s  # 즉시 삭제됨!
+
 ```
 
 **pod-other가 즉시 삭제되었습니다!**
@@ -147,15 +157,18 @@ RC가 사용하는 label selector는 해당 RC가 독점합니다. 같은 label�
 - **의도와 상관없이 RC에 종속됨**
 
 ### 2. 수동 생성 Pod와 RC는 공존 불가
+
 ```bash
 # RC가 app=web을 관리 중이라면
 # 이 label을 가진 pod는 수동으로 관리 불가능
 
 ✅ 가능: 다른 label 사용 (app=other)
 ❌ 불가능: 같은 label로 별도 pod 생성
+
 ```
 
 ### 3. Label 설계의 중요성
+
 ```yaml
 # 나쁜 예 - 너무 일반적
 selector:
@@ -167,6 +180,7 @@ selector:
   version: v1.25
   tier: frontend
   managed-by: rc-nginx
+
 ```
 
 더 구체적인 label을 사용하면:
@@ -179,6 +193,7 @@ selector:
 ## 해결 방법
 
 ### 방법 1: 기존 수동 생성 Pod 삭제
+
 ```bash
 # 수동으로 생성했던 pod 삭제
 $ kubectl delete pod nginx-pod
@@ -189,9 +204,11 @@ NAME             READY   STATUS    RESTARTS   AGE
 rc-nginx-5dgbn   1/1     Running   0          15m
 rc-nginx-tnwxs   1/1     Running   0          17m
 rc-nginx-xyz12   1/1     Running   0          5s   # 새로 생성됨
+
 ```
 
 ### 방법 2: 기존 Pod의 Label 변경
+
 ```bash
 # 기존 pod의 레이블 제거
 $ kubectl label pod nginx-pod app-
@@ -200,9 +217,11 @@ $ kubectl label pod nginx-pod app-
 $ kubectl label pod nginx-pod app=manual --overwrite
 
 # RC가 새 pod 생성
+
 ```
 
 ### 방법 3: 별도 Label 사용 (권장)
+
 ```yaml
 # 수동 관리용 pod는 다른 label 사용
 apiVersion: v1
@@ -215,18 +234,22 @@ spec:
   containers:
   - name: appjs-container
     image: jjmin/appjs
+
 ```
 
 ### 방법 4: Namespace 분리
+
 ```bash
 # 다른 namespace에서는 같은 label 사용 가능
 $ kubectl create namespace manual
 $ kubectl apply -f pod-other.yaml -n manual
+
 ```
 
 ---
 
 ## 디버깅 명령어 모음
+
 ```bash
 # 1. RC 상태 확인
 $ kubectl get rc rc-nginx
@@ -246,6 +269,7 @@ $ kubectl get events --sort-by='.lastTimestamp' | grep rc-nginx
 
 # 6. 특정 pod의 레이블 확인
 $ kubectl get pod <pod-name> --show-labels
+
 ```
 
 ---
@@ -260,6 +284,7 @@ $ kubectl get pod <pod-name> --show-labels
 | 롤백 | ❌ 불가능 | ✅ 가능 |
 | Template 관리 | ❌ Label만 확인 | ✅ Template 변경 감지 |
 | 업데이트 전략 | ❌ 없음 | ✅ 다양한 전략 |
+
 ```yaml
 # 현대적인 방식 - Deployment 사용 권장
 apiVersion: apps/v1
@@ -279,6 +304,7 @@ spec:
       containers:
       - name: nginx
         image: nginx:1.25
+
 ```
 
 ---

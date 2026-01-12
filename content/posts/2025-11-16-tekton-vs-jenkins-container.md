@@ -42,6 +42,7 @@ services:
     image: jenkins/jenkins:lts
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # 🔴 위험!
+
 ```
 
 **문제점:**
@@ -56,6 +57,7 @@ services:
 docker run --privileged --pid=host --net=host \
   -v /:/host alpine chroot /host /bin/bash
 # → 호스트 시스템 전체 접근 가능!
+
 ```
 
 #### 방법 2: DinD 컨테이너 (복잡도 증가)
@@ -75,6 +77,7 @@ services:
       DOCKER_TLS_CERTDIR: /certs
     volumes:
       - docker-certs:/certs
+
 ```
 
 **문제점:**
@@ -102,6 +105,7 @@ docker run --rm \
 
 # 결과: Permission Denied!
 # 이유: 컨테이너 내부의 uid 1000과 호스트의 uid 1000은 다른 사용자
+
 ```
 
 **해결 시도 1: user 옵션**
@@ -109,19 +113,24 @@ docker run --rm \
 services:
   jenkins:
     user: "${UID}:${GID}"  # 환경변수로 전달
+
 ```
+
 → Jenkins 내부 파일 권한 깨짐
 
 **해결 시도 2: chown 지옥**
 ```bash
 # 볼륨 마운트할 때마다
 docker run --rm -v /path:/data alpine chown -R 1000:1000 /data
+
 ```
+
 → 매번 수동 작업, 자동화 불가
 
 **해결 시도 3: 777 권한 (최악)**
 ```bash
 chmod -R 777 /home/jimin/blogsite  # 🔴 절대 안됨!
+
 ```
 
 ---
@@ -137,6 +146,7 @@ docker restart jenkins
 # → 모든 플러그인 재다운로드
 # → 의존성 해결 다시 시작
 # → 초기화 시간 5-10분
+
 ```
 
 #### 문제 2: 플러그인 충돌
@@ -153,6 +163,7 @@ plugins {
 Error: kubernetes:1.31.0 requires workflow-step-api:2.25
        but docker-workflow:1.28 requires workflow-step-api:2.24
        → 의존성 충돌!
+
 ```
 
 #### 문제 3: 플러그인 버전 관리
@@ -169,6 +180,7 @@ RUN jenkins-plugin-cli --plugins \
 # → Dockerfile 600줄 넘어감
 # → 빌드 시간 30분 이상
 # → 업데이트할 때마다 재빌드
+
 ```
 
 ---
@@ -182,6 +194,7 @@ services:
   jenkins:
     image: jenkins/jenkins:lts
     # volumes 없으면 → 재시작 시 모든 설정 삭제!
+
 ```
 
 **저장해야 할 데이터:**
@@ -199,6 +212,7 @@ volumes:
   - jenkins_plugins:/var/jenkins_home/plugins # 플러그인만 분리?
   - jenkins_jobs:/var/jenkins_home/jobs       # Job 설정만 분리?
   # → 관리 복잡도 증가
+
 ```
 
 #### 백업/복구 복잡도
@@ -212,6 +226,7 @@ docker exec jenkins tar xzf - < jenkins-backup.tar.gz
 
 # → Job 100개 있으면 tar 파일 수 GB
 # → 복구 시간 길어짐
+
 ```
 
 ---
@@ -277,6 +292,7 @@ USER jenkins
 # → 이미지 크기 2GB 넘어감
 # → 빌드 시간 10분+
 # → 버전 업데이트할 때마다 재빌드
+
 ```
 
 ---
@@ -304,6 +320,7 @@ Deploy     → Pod 생성 → 작업 완료 → Pod 삭제
            ↑ 각 Task마다 새로운 Pod
            ↑ 필요한 이미지만 사용
            ↑ 완료 후 자동 정리
+
 ```
 
 **Tekton의 철학:**
@@ -340,6 +357,7 @@ spec:
       # ✅ Docker 데몬 필요 없음!
       # ✅ privileged 필요 없음!
       # ✅ 보안 안전!
+
 ```
 
 **Kaniko 동작 원리:**
@@ -364,6 +382,7 @@ spec:
         buildah push myimage:latest docker://registry.example.com/myimage:latest
       # ✅ rootless 모드 지원
       # ✅ OCI 호환
+
 ```
 
 **Jenkins vs Tekton 이미지 빌드 비교:**
@@ -406,6 +425,7 @@ spec:
     - name: deploy
       image: bitnami/kubectl
       # → kubectl 권한만 (Git 접근 불가)
+
 ```
 
 **Jenkins는?**
@@ -420,6 +440,7 @@ pipeline {
   }
 }
 // → 한 Job이 뚫리면 모든 시크릿 노출 위험
+
 ```
 
 ---
@@ -455,6 +476,7 @@ spec:
         # ✅ Tekton Hub에서 제공
         # ✅ YAML로 정의
         # ✅ 재시작 필요 없음
+
 ```
 
 **차이점:**
@@ -483,6 +505,7 @@ kubectl get pipelineruns
 # → K8s가 알아서 관리
 # → 별도 볼륨 불필요
 # → 백업은 K8s 백업과 동일
+
 ```
 
 **실행 히스토리:**
@@ -500,6 +523,7 @@ NAME                  SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
 blog-deploy-run-1     True        Succeeded   5m          4m
 blog-deploy-run-2     True        Succeeded   3m          2m
 # → etcd에 저장 (자동 정리 가능)
+
 ```
 
 ---
@@ -524,6 +548,7 @@ services:
 
 volumes:
   jenkins_home:
+
 ```
 
 ```groovy
@@ -671,6 +696,7 @@ spec:
     - name: shared-workspace
       persistentVolumeClaim:
         claimName: hugo-workspace-pvc
+
 ```
 
 **장점:**
@@ -693,6 +719,7 @@ services:
       # 호스트 → 컨테이너
       - /home/jimin/blogsite:/workspace/blogsite
       # ↑ 권한 문제 발생 지점
+
 ```
 
 **문제:**
@@ -704,6 +731,7 @@ services:
 -rw-r--r-- 1 1000 1000 config.toml
 # ↑ UID는 같지만 username이 다름
 # → Jenkins가 쓰기 못함
+
 ```
 
 **해결 시도:**
@@ -714,6 +742,7 @@ services:
     volumes:
       - /home/jimin/blogsite:/workspace/blogsite
 # → Jenkins 내부 권한 깨짐
+
 ```
 
 ---
@@ -748,6 +777,7 @@ spec:
       workingDir: $(workspaces.source.path)
       # ✅ PVC 경로가 자동 마운트
       # ✅ Kubernetes가 권한 관리
+
 ```
 
 **Longhorn PVC 사용 시:**
@@ -764,6 +794,7 @@ git push
 # → PVC에 Git clone
 # → 최신 코드로 빌드
 # → 같은 PVC에 결과 저장
+
 ```
 
 ---
@@ -775,6 +806,7 @@ git push
 #### Jenkins
 
 ```
+
 ┌─────────────────────────────────────────┐
 │         Jenkins Master Container        │
 │  ┌───────────────────────────────────┐  │
@@ -793,11 +825,13 @@ git push
 └─────────────────────────────────────────┘
       ↑ 항상 실행 중 (메모리 상주)
       ↑ 재시작 시 플러그인 재로딩
+
 ```
 
 #### Tekton
 
 ```
+
 ┌────────────────────────────────────────────┐
 │       Tekton Controller (K8s 내부)         │
 │  - Pipeline 감시                           │
@@ -815,6 +849,7 @@ git push
    ↑                       ↑
    독립 실행              독립 실행
    필요한 이미지만        필요한 이미지만
+
 ```
 
 ---
@@ -831,6 +866,7 @@ CONTAINER   CPU %   MEM USAGE / LIMIT
 jenkins     5.2%    850MB / 2GB
 # ↑ 빌드 안 해도 항상 850MB 사용
 # ↑ 플러그인 많으면 1.5GB+
+
 ```
 
 #### Tekton
@@ -850,6 +886,7 @@ git-clone-pod       10m   20Mi   # Git 클론 중
 hugo-build-pod      50m   150Mi  # Hugo 빌드 중
 # ↑ 필요할 때만 Pod 생성
 # ↑ 완료 후 자동 삭제
+
 ```
 
 **비교:**
@@ -872,6 +909,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # ❌ Docker 전체 접근
     environment:
       - JENKINS_ADMIN_PASSWORD=admin  # ❌ 환경변수에 시크릿
+
 ```
 
 **공격 시나리오:**
@@ -905,6 +943,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         allowPrivilegeEscalation: false
+
 ```
 
 **공격 시도 시:**
@@ -923,6 +962,7 @@ steps:
 
       chroot /host
       # → 권한 없음 (Pod 격리)
+
 ```
 
 ---
@@ -940,6 +980,7 @@ sudo apt install jenkins
 # ✅ 안정적 운영
 # ✅ sudo 권한 사용 가능
 # ✅ /var/www/blog 직접 접근
+
 ```
 
 **Jenkinsfile:**
@@ -984,6 +1025,7 @@ kubectl apply -f hugo-pipeline.yaml
 
 # Gitea Webhook 설정
 # → Git push하면 자동 빌드
+
 ```
 
 **장점:**
@@ -1093,6 +1135,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 # 5. 접속
 # http://localhost:8080
+
 ```
 
 ### Tekton 체험하기
@@ -1109,6 +1152,7 @@ kubectl port-forward -n tekton-pipelines svc/tekton-dashboard 9097:9097
 
 # 4. 브라우저
 # http://localhost:9097
+
 ```
 
 ---

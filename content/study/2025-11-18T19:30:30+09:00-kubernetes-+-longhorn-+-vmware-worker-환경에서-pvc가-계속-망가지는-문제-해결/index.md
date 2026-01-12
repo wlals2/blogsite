@@ -36,6 +36,7 @@ pvc-zzz        detached   faulted
 $ kubectl describe pod grafana-xxx -n monitoring
 Events:
   Warning  FailedAttachVolume  volume pvc-xxx is not ready for workloads
+
 ```
 
 ---
@@ -47,14 +48,17 @@ Events:
 Longhorn은 고가용성을 위해 **기본 2개의 replica**를 다른 노드에 분산 저장합니다.
 
 ```
+
 Grafana PVC 생성 시:
 ├─ Worker1에 replica 1 생성 ✅
 └─ Worker2에 replica 2 생성 ✅
+
 ```
 
 ### 2. VMware Worker를 껐다 켰을 때 발생하는 일
 
 ```
+
 1. VM 종료
    └─ Worker1의 kubelet 프로세스 종료
 
@@ -75,6 +79,7 @@ Grafana PVC 생성 시:
 
 5. Pod 시작 실패
    └─ "volume is not ready for workloads" 에러
+
 ```
 
 ### 3. Kubernetes Health Check 메커니즘
@@ -91,6 +96,7 @@ $ kubectl describe node k8s-worker1
 Conditions:
   Type     Status  LastHeartbeatTime
   Ready    True    2025-11-18 19:18:50  # ← 마지막 heartbeat 시간
+
 ```
 
 VM이 꺼지면 kubelet 프로세스도 종료 → heartbeat 중단 → NotReady
@@ -118,6 +124,7 @@ VM이 꺼지면 kubelet 프로세스도 종료 → heartbeat 중단 → NotReady
 ### 전략: Control Plane을 주 스토리지 노드로 변경
 
 ```
+
 변경 전:
 ├─ Control Plane: 스토리지 X
 ├─ Worker1 (VMware): 주 스토리지 → 꺼지면 문제 💥
@@ -127,6 +134,7 @@ VM이 꺼지면 kubelet 프로세스도 종료 → heartbeat 중단 → NotReady
 ├─ Control Plane (/mnt/data): 주 스토리지 ✅ (항상 ON)
 ├─ Worker1 (VMware): 보조 스토리지 (optional)
 └─ Worker2 (VMware): 보조 스토리지 (optional)
+
 ```
 
 ### 1. Control Plane의 /mnt/data를 Longhorn 디스크로 추가
@@ -138,6 +146,7 @@ kubectl label node jimin-ab350m-gaming-3 \
 
 # Longhorn 노드 설정 수정
 kubectl -n longhorn-system edit node jimin-ab350m-gaming-3
+
 ```
 
 **수정 내용:**
@@ -151,6 +160,7 @@ spec:
       storageReserved: 10737418240  # 10GB 예약
   evictionRequested: false
   tags: []
+
 ```
 
 ### 2. Worker 노드의 스케줄링 우선순위 낮춤
@@ -158,11 +168,13 @@ spec:
 ```bash
 kubectl -n longhorn-system edit node k8s-worker1
 kubectl -n longhorn-system edit node k8s-worker2
+
 ```
 
 ```yaml
 spec:
   allowScheduling: false  # ← true를 false로 변경
+
 ```
 
 ### 3. 기존 faulted PVC 복구
@@ -177,6 +189,7 @@ kubectl delete pod -n hugo-system --all
 
 # Longhorn이 Control Plane에 새로운 replica 생성
 # Deployment가 자동으로 Pod 재생성
+
 ```
 
 **방법 B: 수동 replica 재빌드**
@@ -187,6 +200,7 @@ kubectl port-forward -n longhorn-system svc/longhorn-frontend 8080:80
 
 # 브라우저에서 localhost:8080 접속
 # 각 볼륨의 "Salvage" 또는 "Activate" 클릭
+
 ```
 
 ### 4. 기본 replica 개수 조정 (선택)
@@ -195,10 +209,12 @@ kubectl port-forward -n longhorn-system svc/longhorn-frontend 8080:80
 
 ```bash
 kubectl -n longhorn-system edit settings.longhorn.io default-replica-count
+
 ```
 
 ```yaml
 value: "1"  # 기본 2 → 1로 변경
+
 ```
 
 ---
@@ -230,6 +246,7 @@ $ kubectl get pods -A
 NAMESPACE     NAME                READY   STATUS    NODE
 monitoring    grafana-xxx         1/1     Running   k8s-worker1
 monitoring    prometheus-xxx      1/1     Running   k8s-worker2
+
 ```
 
 ---
@@ -242,6 +259,7 @@ monitoring    prometheus-xxx      1/1     Running   k8s-worker2
 sudo mkdir -p /mnt/data/longhorn
 sudo chown -R root:root /mnt/data/longhorn
 sudo chmod 700 /mnt/data/longhorn
+
 ```
 
 ### 2. Longhorn 백업 설정 (NFS/S3)
@@ -256,6 +274,7 @@ metadata:
 spec:
   backupTargetURL: s3://my-bucket@us-east-1/
   credentialSecret: aws-secret
+
 ```
 
 ### 3. 모니터링 설정
@@ -275,6 +294,7 @@ spec:
   endpoints:
   - port: manager
 EOF
+
 ```
 
 ---
@@ -303,14 +323,17 @@ EOF
 ## 대안 솔루션 (참고)
 
 ### A. Local Path Provisioner (간단)
+
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+
 ```
 - 각 노드의 로컬 디스크 사용
 - 복제 없음 (데이터 손실 위험)
 - VM 재시작해도 해당 노드의 데이터는 유지
 
 ### B. NFS Provisioner (안정적)
+
 ```bash
 # Control Plane에 NFS 서버 구성
 sudo apt install nfs-kernel-server
@@ -318,6 +341,7 @@ sudo mkdir -p /mnt/data/nfs
 sudo chown nobody:nogroup /mnt/data/nfs
 echo "/mnt/data/nfs *(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 sudo systemctl restart nfs-kernel-server
+
 ```
 - 모든 노드가 Control Plane의 NFS 공유 사용
 - 구조 단순, 성능 적당

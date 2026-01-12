@@ -60,6 +60,7 @@ POST shop-v1/_doc
 
 POST shop-v1/_doc
 { "product_name": "Apple iPhone 15 Pro" }
+
 ```
 
 - **검색/집계 (aggregate)**
@@ -122,6 +123,7 @@ filter 순서는 `lowcase` → `edge_ngrams_1_15`
 
 ```json
 ["samsung", "galaxy", "s23", "ultra"]
+
 ```
 
 **② edge_ngrams_1_15**
@@ -158,6 +160,7 @@ filter 순서는 `lowcase` → `edge_ngrams_1_15`
 Elasticsearch는 이 토큰들을 역색인된 토큰 목록에서 검색합니다.
 색인 시 이미 "gal" 과 "s23" 이라는 토큰들이 존재함
 따라서 "Galaxy S23 Ultra" 문서가 매칭됨 ✅
+
 ```
 
 ### ✅ min_gram / max_gram 조합의 의미

@@ -27,6 +27,7 @@ Hugo 블로그를 Self-hosted Runner로 자동배포하면서 가장 혼란스�
 ├── id_ed25519          # Git push/pull 인증용 (Private Key)
 ├── id_ed25519.pub      # GitHub에 등록 (Public Key)
 └── authorized_keys     # (Self-hosted에서는 불필요)
+
 ```
 
 ### Q: Git push할 때 SSH 키가 필요한가?
@@ -36,6 +37,7 @@ Hugo 블로그를 Self-hosted Runner로 자동배포하면서 가장 혼란스�
 #### Git SSH 인증 흐름
 
 ```
+
 ┌─────────────────┐      git push      ┌─────────────────┐
 │   개발자 PC     │─────────────────>│   GitHub.com    │
 │                 │                    │                 │
@@ -45,6 +47,7 @@ Hugo 블로그를 Self-hosted Runner로 자동배포하면서 가장 혼란스�
 └─────────────────┘                    └─────────────────┘
 
 용도: git push, git pull, git clone (SSH URL)
+
 ```
 
 **설정 방법**:
@@ -62,6 +65,7 @@ cat ~/.ssh/id_ed25519.pub
 # 4. 연결 테스트
 ssh -T git@github.com
 # 출력: Hi username! You've successfully authenticated...
+
 ```
 
 ### Q: Self-hosted Runner에 SSH 키가 필요한가?
@@ -71,6 +75,7 @@ ssh -T git@github.com
 #### Self-hosted Runner 인증 흐름
 
 ```
+
 ┌─────────────────────┐              ┌──────────────────┐
 │  Self-hosted Runner │              │  GitHub Actions  │
 │  (내 서버)          │              │                  │
@@ -81,6 +86,7 @@ ssh -T git@github.com
 └─────────────────────┘              └──────────────────┘
 
 인증: HTTPS + OAuth Token (SSH 키 사용 안 함)
+
 ```
 
 **확인**:
@@ -90,6 +96,7 @@ cat ~/actions-runner/.runner | grep serverUrl
 # 출력:
 # "serverUrl": "https://pipelines-ghubeus**.actions.githubusercontent.com/[TOKEN]..."
 # → HTTPS 사용! SSH 아님!
+
 ```
 
 ---
@@ -99,6 +106,7 @@ cat ~/actions-runner/.runner | grep serverUrl
 ### Runner가 Job을 받는 과정 (Long Polling)
 
 ```
+
 ┌────────────────────────────────────────────────────────┐
 │                    GitHub Actions                       │
 │                                                          │
@@ -123,6 +131,7 @@ cat ~/actions-runner/.runner | grep serverUrl
         │    sleep 1                  │
         │  done                       │
         └─────────────────────────────┘
+
 ```
 
 **핵심 포인트**:
@@ -137,6 +146,7 @@ cat ~/actions-runner/.runner | grep serverUrl
 ### 시나리오: 블로그 글 작성 → 자동 배포
 
 ```
+
 ┌──────────────────────────────────────────────────────────────┐
 │  Phase 1: 개발자가 글 작성 & Push                            │
 └──────────────────────────────────────────────────────────────┘
@@ -234,6 +244,7 @@ cat ~/actions-runner/.runner | grep serverUrl
 
   https://blog.example.com/posts/my-post/
   → 새 글 접속 가능! 🎉
+
 ```
 
 ---
@@ -262,6 +273,7 @@ git remote set-url origin git@github.com:username/my-hugo-blog.git
 # 5. 테스트
 ssh -T git@github.com
 git push origin main
+
 ```
 
 ### Step 2: Self-hosted Runner 설정
@@ -286,6 +298,7 @@ sudo ./svc.sh start
 
 # 4. 상태 확인
 systemctl status actions.runner.*
+
 ```
 
 ### Step 3: sudo 권한 설정
@@ -294,15 +307,19 @@ systemctl status actions.runner.*
 # 서버에서
 
 sudo visudo -f /etc/sudoers.d/github-runner
+
 ```
 
 내용:
+
 ```
+
 # GitHub Actions Runner
 username ALL=(ALL) NOPASSWD: /bin/mkdir -p /var/www/blog
 username ALL=(ALL) NOPASSWD: /usr/bin/chown -R username\:www-data /var/www/blog
 username ALL=(ALL) NOPASSWD: /usr/sbin/nginx -t
 username ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
+
 ```
 
 **보안 주의**:
@@ -312,6 +329,7 @@ username ALL=(ALL) NOPASSWD: ALL
 
 # ✅ 안전! 필요한 명령어만
 username ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
+
 ```
 
 ### Step 4: Workflow 파일 작성
@@ -372,15 +390,18 @@ jobs:
           rsync -ah --delete public/ /var/www/blog/
           sudo nginx -t
           sudo systemctl reload nginx
+
 ```
 
 ### Step 5: Nginx 설정
 
 ```bash
 sudo vim /etc/nginx/sites-enabled/blog
+
 ```
 
 내용:
+
 ```nginx
 server {
     listen 80;
@@ -407,6 +428,7 @@ server {
 ```bash
 sudo nginx -t
 sudo systemctl restart nginx
+
 ```
 
 ---
@@ -450,6 +472,7 @@ tail -f ~/actions-runner/_diag/Runner_*.log
 
 # 해결: Runner 재시작
 sudo systemctl restart actions.runner.*
+
 ```
 
 ### 문제 2: Workflow 실패 (sudo 권한)
@@ -463,6 +486,7 @@ sudo -l | grep NOPASSWD
 # 해결
 sudo visudo -f /etc/sudoers.d/github-runner
 # 필요한 명령어 추가
+
 ```
 
 ### 문제 3: paths 필터로 트리거 안 됨
@@ -485,6 +509,7 @@ on:
   push:
     branches: [ "main" ]
   workflow_dispatch:  # Actions 탭에서 수동 실행 버튼 생성
+
 ```
 
 ---
@@ -503,15 +528,18 @@ on:
     # 서버 2
     rsync -avz -e "ssh -i ~/.ssh/deploy_key" \
       public/ user@server2:/var/www/blog/
+
 ```
 
 이 경우 **SSH 키 필요**:
+
 ```bash
 # 서버에서 SSH 키 생성
 ssh-keygen -t ed25519 -f ~/.ssh/deploy_key
 
 # Public Key를 원격 서버에 등록
 ssh-copy-id -i ~/.ssh/deploy_key.pub user@server1
+
 ```
 
 ### 배포 알림 (Slack/Discord)
@@ -523,6 +551,7 @@ ssh-copy-id -i ~/.ssh/deploy_key.pub user@server1
     curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
       -H 'Content-Type: application/json' \
       -d '{"text":"✅ Blog deployed! Commit: ${{ github.sha }}"}'
+
 ```
 
 ### Rollback 기능
@@ -541,6 +570,7 @@ ssh-copy-id -i ~/.ssh/deploy_key.pub user@server1
   run: |
     sudo rm -rf /var/www/blog
     sudo mv /var/www/blog.backup /var/www/blog
+
 ```
 
 ---

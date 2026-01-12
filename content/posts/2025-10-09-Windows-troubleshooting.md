@@ -54,6 +54,7 @@ Docker Desktop for Windows를 한번이라도 설치했다면, 그 과정에서 
 
 1. VMware/VirtualBox 실행 시 아래 오류 발생:
    ```
+
    Virtualized AMD-V/RVI is not supported on this platform.
    Continue without virtualized AMD-V/RVI?
    ```
@@ -85,6 +86,7 @@ dism.exe /Online /Disable-Feature:Windows-Defender-ApplicationGuard
 
 # 하이퍼바이저 부트 비활성화
 bcdedit /set hypervisorlaunchtype off
+
 ```
 
 #### Windows 기능 켜기/끄기에서 체크 해제
@@ -102,11 +104,13 @@ bcdedit /set hypervisorlaunchtype off
 `regedit`를 실행하여 다음 레지스트리 값을 수정합니다:
 
 ```
+
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard
 → EnableVirtualizationBasedSecurity = 0 (DWORD)
 
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa
 → LsaCfgFlags = 0 (DWORD)
+
 ```
 
 > **참고**: 해당 키나 값이 없으면 생성 후 설정합니다.

@@ -20,10 +20,12 @@ PVC(PersistentVolumeClaim) 마이그레이션 중 발생한 문제들과 해결 
 ## 1. PVC가 삭제되지 않는 문제 (Terminating 상태)
 
 ### 증상
+
 ```bash
 $ kubectl get pvc -n monitoring
 NAME                  STATUS        AGE
 prometheus-data-pvc   Terminating   42h
+
 ```
 
 ### 원인: `pvc-protection` Finalizer
@@ -34,10 +36,12 @@ Kubernetes는 PVC가 Pod에 의해 사용 중일 때 삭제를 방지하기 위�
 metadata:
   finalizers:
     - kubernetes.io/pvc-protection
+
 ```
 
 **동작 원리:**
 ```
+
 kubectl delete pvc
        ↓
 Kubernetes: "Pod이 이 PVC 사용 중인가?"
@@ -45,11 +49,13 @@ Kubernetes: "Pod이 이 PVC 사용 중인가?"
     YES → Terminating 상태로 대기
        ↓
 Pod 종료 → finalizer 제거 → PVC 삭제 완료
+
 ```
 
 ### 해결 방법
 
 #### 방법 1: Pod 먼저 종료 (권장)
+
 ```bash
 # Deployment 스케일 다운
 kubectl scale deployment/myapp --replicas=0 -n mynamespace
@@ -59,13 +65,16 @@ kubectl wait --for=delete pod -l app=myapp -n mynamespace --timeout=60s
 
 # 이제 PVC 삭제 가능
 kubectl delete pvc mypvc -n mynamespace
+
 ```
 
 #### 방법 2: Finalizer 강제 제거 (주의!)
+
 ```bash
 # 데이터 손실 가능! 정말 필요한 경우에만 사용
 kubectl patch pvc mypvc -n mynamespace \
   -p '{"metadata":{"finalizers":null}}' --type=merge
+
 ```
 
 ---
@@ -84,6 +93,7 @@ kubectl scale --replicas=0 myapp  # 타입이 없음!
 # 올바른 방법
 kubectl scale deployment/myapp --replicas=0
 kubectl scale statefulset/myapp --replicas=0
+
 ```
 
 ### 해결 방법
@@ -106,6 +116,7 @@ STS=$(kubectl get sts -n $NS -o json | \
 if [ -n "$STS" ]; then
     kubectl scale statefulset/$STS --replicas=0 -n $NS
 fi
+
 ```
 
 ---
@@ -131,6 +142,7 @@ for i in {1..60}; do
     echo "대기 중... ($i/60)"
     sleep 2
 done
+
 ```
 
 ---
@@ -138,36 +150,46 @@ done
 ## 4. Migrator Pod이 Pending 상태
 
 ### 증상
+
 ```bash
 $ kubectl get pod pvc-migrator-xxx
 NAME                    STATUS
 pvc-migrator-xxx        Pending
+
 ```
 
 ### 원인들
 
 #### 4.1 PVC가 아직 다른 Pod에 마운트됨 (ReadWriteOnce)
+
 ```
+
 Warning  FailedScheduling  Pod requires PVC which is already bound
+
 ```
 
 **해결:** 기존 Pod 완전 종료 후 migrator 실행
 
 #### 4.2 StorageClass 문제
+
 ```
+
 Warning  ProvisioningFailed  config doesn't contain path on node
+
 ```
 
 **해결:** StorageClass 설정 확인
 ```bash
 kubectl get sc local-path-hdd -o yaml
 kubectl get configmap local-path-config -n kube-system -o yaml
+
 ```
 
 #### 4.3 노드 스케줄링 문제
 **해결:** Pod이 어느 노드에 스케줄링되는지 확인
 ```bash
 kubectl describe pod pvc-migrator-xxx | grep -A10 Events
+
 ```
 
 ---
@@ -175,8 +197,11 @@ kubectl describe pod pvc-migrator-xxx | grep -A10 Events
 ## 5. PVC 이름 변경 시 PV 바인딩 충돌
 
 ### 증상
+
 ```
+
 Warning  FailedBinding  volume already bound to a different claim
+
 ```
 
 ### 원인
@@ -185,19 +210,23 @@ Warning  FailedBinding  volume already bound to a different claim
 ### 해결 방법
 
 #### 방법 1: Deployment에서 새 PVC 이름 사용 (권장)
+
 ```bash
 # 새 PVC 이름 그대로 사용
 # deployment.yaml에서 volumes.persistentVolumeClaim.claimName 수정
 kubectl patch deployment myapp -n mynamespace \
   -p '{"spec":{"template":{"spec":{"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"myapp-data-pvc-new"}}]}}}}'
+
 ```
 
 #### 방법 2: PV 정리 후 재생성
+
 ```bash
 # Released 상태 PV 삭제
 kubectl delete pv pvc-xxx-xxx
 
 # 새 PVC 생성 (새 PV 자동 생성됨)
+
 ```
 
 ---
@@ -229,6 +258,7 @@ data:
         }
       ]
     }
+
 ```
 
 **주의:** `local-path-provisioner`는 StorageClass 파라미터를 통한 경로 설정을 지원하지 않음. ConfigMap을 통해 설정해야 함.
@@ -241,6 +271,7 @@ data:
 
 ```bash
 ./migrate-pvc.sh <namespace> <pvc-name> <new-storageclass> [size]
+
 ```
 
 ### 방법 B: 수동 마이그레이션 (권장)
@@ -315,6 +346,7 @@ kubectl scale deployment/$DEPLOY --replicas=1 -n $NAMESPACE
 
 # 10. 기존 PVC 삭제 (선택)
 kubectl delete pvc $PVC -n $NAMESPACE
+
 ```
 
 ---

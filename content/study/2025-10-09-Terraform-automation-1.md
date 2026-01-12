@@ -51,6 +51,7 @@ sudo apt install terraform
 
 # 설치 확인
 terraform -version
+
 ```
 
 ### AWS CLI 설치
@@ -63,6 +64,7 @@ sudo ./aws/install
 
 # 설치 확인
 aws --version
+
 ```
 
 ---
@@ -73,6 +75,7 @@ aws --version
 
 ```bash
 aws configure
+
 ```
 
 프롬프트에 맞게 다음 정보를 입력합니다:
@@ -94,6 +97,7 @@ aws configure
 
 ```bash
 aws sts get-caller-identity
+
 ```
 
 연결이 정상이면 `UserId`, `Account`, `Arn` 정보가 출력됩니다.
@@ -125,6 +129,7 @@ resource "aws_instance" "test" {
 terraform init   # Terraform 초기화
 terraform plan   # 생성될 구조 미리 확인
 terraform apply  # 클라우드 인프라 생성 시작
+
 ```
 
 ---
@@ -153,6 +158,7 @@ EC2 리눅스 인스턴스에 접속(SSH)할 때 **암호 대신 사용하는 �
 
 ```bash
 chmod 400 ~/tf-key.pem
+
 ```
 
 > **중요**: 이 권한이어야 SSH에서 보안 관련 오류가 발생하지 않습니다.
@@ -210,6 +216,7 @@ resource "aws_instance" "my_first_ec2" {
 ```bash
 terraform init
 terraform apply
+
 ```
 
 ### 🔥 주의사항
@@ -229,12 +236,14 @@ aws ec2 describe-instances \
   --filters "Name=tag:Name,Values=tf-first-ec2" \
   --query "Reservations[*].Instances[*].PublicIpAddress" \
   --output text
+
 ```
 
 ### SSH 접속
 
 ```bash
 ssh -i ~/tf-key.pem ubuntu@<EC2-퍼블릭-IP>
+
 ```
 
 ---
@@ -250,7 +259,9 @@ ssh -i ~/tf-key.pem ubuntu@<EC2-퍼블릭-IP>
 이번 오류는 **의존성 사이클** 때문에 발생하는 대표적인 Terraform 에러입니다.
 
 ```
+
 Error: Cycle: aws_instance.my_first_ec2, aws_security_group.allow_ssh
+
 ```
 
 ### 원인
@@ -261,6 +272,7 @@ Error: Cycle: aws_instance.my_first_ec2, aws_security_group.allow_ssh
 # 잘못된 예 (순환 참조)
 vpc_id = aws_instance.my_first_ec2.vpc_security_group_ids[0]
 vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+
 ```
 
 위와 같이 서로가 서로를 참조합니다.

@@ -19,6 +19,7 @@ series: ["내 기술 블로그 구축기"]
 git add .
 git commit -m "post: 새 글 작성"
 git push
+
 ```
 
 분명히 push는 성공하는데, 블로그에는 반영되지 않았습니다. 수동으로 `./deploy.sh`를 실행하면 정상 작동했습니다.
@@ -31,6 +32,7 @@ git push
 
 ```bash
 ps aux | grep "Runner.Listener" | grep -v grep
+
 ```
 
 **결과**: 아무것도 출력되지 않음 → **Runner가 중지된 상태**였습니다.
@@ -39,11 +41,14 @@ ps aux | grep "Runner.Listener" | grep -v grep
 
 ```bash
 tail ~/actions-runner/_diag/Runner_*.log
+
 ```
 
 ```
+
 [2025-10-08 10:32:47Z INFO Runner] Received Ctrl-C signal, stop Runner.Listener
 [2025-10-08 10:32:47Z INFO HostContext] Runner will be shutdown for UserCancelled
+
 ```
 
 Runner가 **수동으로 중지**되어 있었고, 재시작하지 않은 상태였습니다.
@@ -58,20 +63,24 @@ Runner가 **수동으로 중지**되어 있었고, 재시작하지 않은 상태
 cd ~/actions-runner
 sudo ./svc.sh install
 sudo ./svc.sh start
+
 ```
 
 ### 서비스 상태 확인
 
 ```bash
 systemctl status actions.runner.wlals2-my-hugo-blog.jimin-AB350M-Gaming-3.service
+
 ```
 
 ```
+
 ● actions.runner.wlals2-my-hugo-blog.jimin-AB350M-Gaming-3.service
      Loaded: loaded (...; enabled; vendor preset: enabled)
      Active: active (running) since Wed 2025-10-08 06:43:40 EDT
 
 Oct 08 06:43:41 jimin-AB350M-Gaming-3 runsvc.sh[24449]: ✓ Connected to GitHub
+
 ```
 
 ✅ **이제 Runner가 항상 실행됩니다!**
@@ -86,11 +95,14 @@ Runner를 재시작한 뒤 테스트로 push했지만, 워크플로우가 **실�
 
 ```bash
 grep "result.*Failed" ~/actions-runner/_diag/Worker_*.log -B 5
+
 ```
 
 ```
+
 [2025-10-08 10:35:18Z INFO ProcessInvokerWrapper] Finished process 24128 with exit code 1
 [2025-10-08 10:35:18Z INFO StepsRunner] Step result: Failed
+
 ```
 
 **"Deploy to nginx root" 단계에서 실패**했습니다.
@@ -107,16 +119,20 @@ grep "result.*Failed" ~/actions-runner/_diag/Worker_*.log -B 5
     rsync -ah --delete public/ /var/www/blog/
     sudo nginx -t
     sudo systemctl reload nginx
+
 ```
 
 현재 sudo 설정 확인:
 
 ```bash
 sudo -l | grep NOPASSWD
+
 ```
 
 ```
+
 (ALL) NOPASSWD: /bin/systemctl reload nginx
+
 ```
 
 → **nginx reload만 NOPASSWD**, 나머지는 비밀번호 필요 → **GitHub Actions에서 비밀번호를 입력할 수 없어 실패**
@@ -127,29 +143,35 @@ sudo -l | grep NOPASSWD
 
 ```bash
 sudo visudo -f /etc/sudoers.d/github-runner
+
 ```
 
 다음 내용 추가:
 
 ```
+
 # GitHub Actions Runner - Hugo blog deployment
 jimin ALL=(ALL) NOPASSWD: /bin/mkdir -p /var/www/blog
 jimin ALL=(ALL) NOPASSWD: /usr/bin/chown -R jimin\:www-data /var/www/blog
 jimin ALL=(ALL) NOPASSWD: /usr/sbin/nginx -t
 jimin ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
+
 ```
 
 ### 확인
 
 ```bash
 sudo -l | grep NOPASSWD
+
 ```
 
 ```
+
 (ALL) NOPASSWD: /bin/mkdir -p /var/www/blog
 (ALL) NOPASSWD: /usr/bin/chown -R jimin:www-data /var/www/blog
 (ALL) NOPASSWD: /usr/sbin/nginx -t
 (ALL) NOPASSWD: /bin/systemctl reload nginx
+
 ```
 
 ✅ **이제 모든 명령어를 비밀번호 없이 실행 가능!**
@@ -165,16 +187,20 @@ echo "자동 배포 최종 테스트 - $(date)" >> content/_test.md
 git add content/_test.md
 git commit -m "test: final auto-deploy test with sudo fix"
 git push
+
 ```
 
 ### (2) 워크플로우 실행 확인 (약 10-20초 후)
 
 ```bash
 tail ~/actions-runner/_diag/Worker_*.log | grep "Job result"
+
 ```
 
 ```
+
 [2025-10-08 10:47:07Z INFO JobRunner] Job result after all job steps finish: Succeeded
+
 ```
 
 ✅ **성공!**
@@ -183,13 +209,16 @@ tail ~/actions-runner/_diag/Worker_*.log | grep "Job result"
 
 ```bash
 cat /var/www/blog/deploy.txt
+
 ```
 
 ```
+
 source=ci
 time=2025-10-08T10:47:06Z
 commit=203977b
 run_id=18342156050
+
 ```
 
 ✅ **자동배포 완료!**
@@ -198,10 +227,12 @@ run_id=18342156050
 
 ```bash
 curl -s https://blog.jiminhome.shop/_test/ | grep "최종 테스트"
+
 ```
 
 ```html
 최종 테스트 - 2025-10-08 10:45 (sudo 권한 수정 후)
+
 ```
 
 ✅ **블로그에 정상 반영!**
@@ -222,27 +253,33 @@ curl -s https://blog.jiminhome.shop/_test/ | grep "최종 테스트"
 자동배포가 안 될 때 다음을 확인하세요:
 
 ### ✅ Runner 상태
+
 ```bash
 # Runner 프로세스 확인
 ps aux | grep Runner.Listener
 
 # 서비스 상태 확인
 systemctl status actions.runner.*
+
 ```
 
 ### ✅ 워크플로우 로그
+
 ```bash
 # Runner 로그
 tail -50 ~/actions-runner/_diag/Runner_*.log
 
 # Worker 로그 (실패 원인 확인)
 grep -i "error\|fail" ~/actions-runner/_diag/Worker_*.log
+
 ```
 
 ### ✅ sudo 권한
+
 ```bash
 # 현재 NOPASSWD 설정 확인
 sudo -l | grep NOPASSWD
+
 ```
 
 ### ✅ 워크플로우 트리거 조건
@@ -260,6 +297,7 @@ on:
       - "layouts/**"
       - "config.*"
       - "hugo.*"
+
 ```
 
 → **워크플로우 파일(`.github/workflows/deploy.yml`)만 수정하면 배포되지 않습니다!**
@@ -269,10 +307,12 @@ on:
 ## 💡 핵심 포인트
 
 ### 1. Runner는 서비스로 등록하자
+
 ```bash
 cd ~/actions-runner
 sudo ./svc.sh install
 sudo ./svc.sh start
+
 ```
 
 - ✅ 부팅 시 자동 시작
@@ -280,6 +320,7 @@ sudo ./svc.sh start
 - ✅ 자동 재시작 (크래시 시)
 
 ### 2. sudo 권한은 최소한으로, 명확하게
+
 ```bash
 # ❌ 나쁜 예: 모든 권한 허용
 jimin ALL=(ALL) NOPASSWD: ALL
@@ -287,6 +328,7 @@ jimin ALL=(ALL) NOPASSWD: ALL
 # ✅ 좋은 예: 필요한 명령어만 명시
 jimin ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx
 jimin ALL=(ALL) NOPASSWD: /usr/sbin/nginx -t
+
 ```
 
 ### 3. 워크플로우 트리거 조건 확인
@@ -312,6 +354,7 @@ git push
 
 # 3. 자동으로 배포됨! (10-20초 소요)
 # https://blog.jiminhome.shop 에서 즉시 확인 가능
+
 ```
 
 ---

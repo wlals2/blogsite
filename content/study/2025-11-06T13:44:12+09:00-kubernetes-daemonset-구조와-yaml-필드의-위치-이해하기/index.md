@@ -35,10 +35,11 @@ author: "늦찌민"
 ```bash
 kubectl explain pod.spec.nodeSelector
 kubectl explain ds.spec.template.spec.nodeSelector
+
 ```
+
 >### 📘 반대로 kubectl explain ds.spec에는 nodeSelector 항목이 없습니다.
 ---
-
 
 
 
@@ -68,8 +69,11 @@ spec.template.labels는 “내가 만들 Pod에는 이 라벨을 붙일게”
 ```bash
 kubectl explain ds.spec.selector
 kubectl explain ds.spec.template.metadata.labels
+
 ```
+
 ### 💡 예시
+
 ```yaml
 selector:
   matchLabels:
@@ -81,6 +85,7 @@ template:
       app: main
       tier: frontend
       rel: stable   # 추가 라벨은 OK
+
 ```
 ---
 ## 🧱 3. containers는 왜 항상 spec.template.spec.containers 아래 있어야 하나?
@@ -93,6 +98,7 @@ template:
 실제 실행되는 것은 Pod이므로 컨테이너는 Pod spec 내부에 있어야 합니다.
 
 ### 🧩 구조적으로 보면
+
 ```scss
 DaemonSet
 └─ spec (DaemonSetSpec)
@@ -100,15 +106,20 @@ DaemonSet
       ├─ metadata
       └─ spec (PodSpec)
          └─ containers[] (Container)
+
 ```
+
 즉, `container`는 **PodSpec의 필수 필드**이며,
 위 계층 구조를 벗어나면 쿠버네티스가 인식할 수 없습니다.
+
 ```bash
 kubectl explain ds.spec.template.spec.containers
 kubectl explain pod.spec.containers
+
 ```
 ---
 ### 🔍 마무리 정리
+
 | 항목                         | 올바른 위치                          | 이유                              |
 | -------------------------- | ------------------------------- | ------------------------------- |
 | nodeSelector               | `spec.template.spec`            | Pod 스케줄링 속성은 Pod spec 안에 있어야 함  |
@@ -120,6 +131,7 @@ kubectl explain pod.spec.containers
 > 스케줄링·라벨·컨테이너 같은 ‘실행 세부 정보’는 항상 Pod 스펙 안에 들어가야 한다.”
 
 ### ✅ 참고 명령어들
+
 ```bash
 kubectl explain ds.spec
 kubectl explain ds.spec.template

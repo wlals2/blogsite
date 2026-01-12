@@ -11,8 +11,10 @@ categories: ["DevOps"]
 Hugo 블로그를 실행하려고 했더니 다음과 같은 에러가 발생했습니다:
 
 ```
+
 WARN  Module "PaperMod" is not compatible with this Hugo version
 ERROR => hugo v0.146.0 or greater is required for hugo-PaperMod to build
+
 ```
 
 기존에 설치된 Hugo 버전은 v0.120.4였고, PaperMod 테마는 v0.146.0 이상을 요구하고 있었습니다.
@@ -29,6 +31,7 @@ sudo snap refresh hugo
 
 # 버전 확인
 hugo version
+
 ```
 
 업데이트 후 v0.146.0으로 정상 업그레이드 되었습니다.
@@ -40,7 +43,9 @@ hugo version
 Hugo v0.146.0에서는 `.Site.GoogleAnalytics`가 deprecated 되어 새로운 에러가 발생했습니다:
 
 ```
+
 error calling partial: can't evaluate field GoogleAnalytics in type page.Site
+
 ```
 
 **해결 방법:** `layouts/partials/google_analytics.html` 파일 수정
@@ -55,6 +60,7 @@ error calling partial: can't evaluate field GoogleAnalytics in type page.Site
 {{- with .Site.Config.Services.GoogleAnalytics.ID }}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ . }}"></script>
 {{- end }}
+
 ```
 
 ---
@@ -69,6 +75,7 @@ error calling partial: can't evaluate field GoogleAnalytics in type page.Site
 
 ```go
 {{- $pages = $pages.ByDate.Reverse }}
+
 ```
 
 이렇게 하면 최신 게시물이 맨 위로 올라옵니다.
@@ -84,6 +91,7 @@ enableGitInfo = true
 
 [frontmatter]
   date = [":git", ":fileModTime", "date", "publishDate", "lastmod"]
+
 ```
 
 이제 날짜 우선순위가 다음과 같이 설정됩니다:

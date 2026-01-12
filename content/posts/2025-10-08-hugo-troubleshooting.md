@@ -30,14 +30,17 @@ series: ["내 기술 블로그 구축기"]
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d blog.example.com -m admin@example.com --agree-tos -n
+
 ```
 
 정상적으로 발급되면 다음 경로에 인증서가 저장됩니다:
 
 ```
+
 /etc/letsencrypt/live/blog.example.com/
 ├── fullchain.pem
 └── privkey.pem
+
 ```
 
 ### 주의사항
@@ -45,7 +48,9 @@ sudo certbot --nginx -d blog.example.com -m admin@example.com --agree-tos -n
 nginx 설정을 root 권한 없이 테스트하면 다음 오류가 발생합니다.
 
 ```
+
 cannot load certificate ... Permission denied
+
 ```
 
 이는 정상입니다. `sudo nginx -t` 명령으로만 인증서 접근이 가능합니다.
@@ -60,6 +65,7 @@ hugo new site blogsite
 cd blogsite
 git init
 git submodule add https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
+
 ```
 
 `config.toml` 수정:
@@ -85,6 +91,7 @@ defaultContentLanguage = "ko"
   [params.homeInfoParams]
     Title = "지민 기술 블로그"
     Content = "인프라/클라우드/리눅스 관련 메모를 정리합니다. 🚀"
+
 ```
 
 ---
@@ -100,6 +107,7 @@ sudo rsync -av --delete public/ /var/www/blog/
 sudo systemctl reload nginx
 SH
 chmod +x deploy.sh
+
 ```
 
 403 오류 발생 시 `/var/www/blog` 권한을 확인하세요:
@@ -107,6 +115,7 @@ chmod +x deploy.sh
 ```bash
 sudo chown -R www-data:www-data /var/www/blog
 sudo chmod -R 755 /var/www/blog
+
 ```
 
 ---
@@ -125,6 +134,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/github_deploy -N ""
 cat ~/.ssh/github_deploy.pub >> ~/.ssh/authorized_keys
 chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys
 echo 'jimin ALL=(ALL) NOPASSWD: /bin/systemctl reload nginx' | sudo tee /etc/sudoers.d/gh-actions
+
 ```
 
 ### (2) GitHub Secrets 등록
@@ -174,6 +184,7 @@ jobs:
             public/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/jimin/blogsite/public/
           ssh -i ~/.ssh/id_deploy -p "${{ secrets.SSH_PORT }}" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "sudo nginx -t && sudo systemctl reload nginx"
+
 ```
 
 ### (4) 푸시 후 동작
@@ -182,6 +193,7 @@ jobs:
 git add .
 git commit -m "post: 자동배포 테스트"
 git push origin main
+
 ```
 
 → GitHub Actions에서 자동 빌드 & 배포 완료!
@@ -194,7 +206,9 @@ git push origin main
 ### ⚠️ 문제
 
 ```
+
 remote: Invalid username or token. Password authentication is not supported for Git operations.
+
 ```
 
 ### ✅ 해결 — SSH 연결로 변경
@@ -202,6 +216,7 @@ remote: Invalid username or token. Password authentication is not supported for 
 ```bash
 ssh-keygen -t ed25519 -C "your-email@example.com"
 cat ~/.ssh/id_ed25519.pub
+
 ```
 
 **GitHub → Settings → SSH and GPG keys → New SSH key** 등록 후 원격 URL 변경:
@@ -209,6 +224,7 @@ cat ~/.ssh/id_ed25519.pub
 ```bash
 git remote set-url origin git@github.com:wlals2/my-hugo-blog.git
 git push origin main
+
 ```
 
 이제 매번 토큰 입력 없이도 푸시됩니다.

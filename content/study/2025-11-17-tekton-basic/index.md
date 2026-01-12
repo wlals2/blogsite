@@ -53,6 +53,7 @@ Tekton은 **4가지 핵심 리소스**로 구성된다.
     - echo
   args:
     - "Hello World"
+
 ```
 
 **이게 뭐냐면:**
@@ -88,6 +89,7 @@ spec:
     - name: check-result
       image: ubuntu
       command: ["ls", "-la", "target/"]
+
 ```
 
 **이게 뭐냐면:**
@@ -135,6 +137,7 @@ spec:
       runAfter:
         - build
         - test
+
 ```
 
 **이게 뭐냐면:**
@@ -157,6 +160,7 @@ metadata:
 spec:
   pipelineRef:
     name: my-cicd-pipeline
+
 ```
 
 **이게 뭐냐면:**
@@ -170,6 +174,7 @@ spec:
 ## 🎯 전체 구조 정리 (머릿속에 그림 그리기)
 
 ```
+
 ┌─────────────────────────────────────────────────────┐
 │              PipelineRun (실행 명령)                 │
 │                      ↓                              │
@@ -186,6 +191,7 @@ spec:
 │              ↓          ↓          ↓                │
 │         (Pod 생성) (Pod 생성) (Pod 생성)            │
 └─────────────────────────────────────────────────────┘
+
 ```
 
 **핵심 원리:**
@@ -206,13 +212,16 @@ kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/
 
 # 설치 확인
 kubectl get pods -n tekton-pipelines
+
 ```
 
 **예상 결과:**
 ```
+
 NAME                                           READY   STATUS    RESTARTS   AGE
 tekton-pipelines-controller-xxxxx              1/1     Running   0          1m
 tekton-pipelines-webhook-xxxxx                 1/1     Running   0          1m
+
 ```
 
 모든 Pod가 `Running` 상태가 되어야 한다.
@@ -230,11 +239,14 @@ kubectl patch svc tekton-dashboard -n tekton-pipelines \
 
 # 접속 확인
 kubectl get svc -n tekton-pipelines
+
 ```
 
 **웹 브라우저 접속:**
 ```
+
 http://<Kubernetes-Node-IP>:32090
+
 ```
 
 예시: `http://<본인의-클러스터-IP>:32090`
@@ -251,6 +263,7 @@ sudo tar xvzf tkn_0.35.0_Linux_x86_64.tar.gz -C /usr/local/bin/ tkn
 
 # 설치 확인
 tkn version
+
 ```
 
 **유용한 명령어:**
@@ -259,6 +272,7 @@ tkn pipeline list           # Pipeline 목록
 tkn pipelinerun list        # 실행 기록
 tkn pipelinerun logs -f     # 실시간 로그
 tkn task list               # Task 목록
+
 ```
 
 
@@ -271,6 +285,7 @@ tkn task list               # Task 목록
 ```bash
 mkdir -p ~/test/tekton-practice
 cd ~/test/tekton-practice
+
 ```
 
 ### 파일 1: hello-task.yaml
@@ -298,6 +313,7 @@ spec:
       image: ubuntu
       command:
         - hostname
+
 ```
 
 **이 Task는:**
@@ -318,6 +334,7 @@ metadata:
 spec:
   taskRef:
     name: hello-task
+
 ```
 
 **이 TaskRun은:**
@@ -341,13 +358,16 @@ kubectl get taskruns
 
 # 5. 로그 확인
 kubectl logs -l tekton.dev/taskRun=hello-taskrun --all-containers
+
 ```
 
 **예상 출력:**
 ```
+
 안녕하세요! Tekton 첫 실습입니다!
 Sun Nov 17 12:00:00 UTC 2025
 hello-taskrun-pod-xxxxx
+
 ```
 
 
@@ -421,6 +441,7 @@ Tekton으로 똑같이 해볼 것이다.
 - ❌ Secret, Credential ID
 
 ### 예제 작성 시
+
 ```yaml
 # 나쁜 예
 password: "jenkinsadmin123"
@@ -429,6 +450,7 @@ image: jjmin/myapp:1
 # 좋은 예
 password: "your-secure-password"
 image: your-dockerhub-username/myapp:1
+
 ```
 
 **실습할 때는 본인의 실제 정보를 사용하되,

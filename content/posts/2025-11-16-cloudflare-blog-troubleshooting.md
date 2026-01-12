@@ -12,8 +12,10 @@ series: ["트러블슈팅"]
 블로그 접속 시 **공유기 관리 페이지**가 표시되거나 **522 에러** 발생
 
 ```
+
 https://blog.jiminhome.shop 접속
 → 공유기 관리 페이지 또는 522 Connection Timed Out
+
 ```
 
 ## 원인 분석
@@ -25,6 +27,7 @@ graph LR
     A[사용자] --> B[Cloudflare Tunnel]
     B --> C[내부 서버 Nginx:443]
     C --> D[블로그]
+
 ```
 
 **설정:**
@@ -38,6 +41,7 @@ graph LR
 **무엇이 바뀌었나?**
 
 #### A. Cloudflare Tunnel 설정 초기화
+
 ```yaml
 # 이전 (정상)
 ingress:
@@ -48,21 +52,27 @@ ingress:
 # 변경 후 (문제)
 ingress:
   - service: http_status:404  # 모든 요청에 404 반환
+
 ```
 
 **원인:** CI/CD 설정 또는 설정 파일 수정 중 ingress 규칙 삭제
 
 #### B. DNS 레코드 변경
+
 ```
+
 # 이전
 blog.jiminhome.shop → CNAME → <tunnel-id>.cfargotunnel.com
 
 # 변경 후
 blog.jiminhome.shop → A 레코드 → 122.46.102.190 (Proxy 모드)
+
 ```
 
 #### C. 공유기 포트 충돌
+
 ```
+
 외부 접속 → 122.46.102.190:443
             ↓
        공유기가 443 포트 사용 중 (관리 페이지)
@@ -70,6 +80,7 @@ blog.jiminhome.shop → A 레코드 → 122.46.102.190 (Proxy 모드)
        포트포워딩 규칙 없음
             ↓
        블로그 서버(192.168.1.187)로 전달 안 됨
+
 ```
 
 ## Cloudflare 연결 방식 비교
@@ -77,7 +88,9 @@ blog.jiminhome.shop → A 레코드 → 122.46.102.190 (Proxy 모드)
 ### 방법 1: Cloudflare Proxy (A 레코드)
 
 ```
+
 사용자 → Cloudflare (Proxy) → 외부 IP:443 → 공유기 포트포워딩 → 내부 서버
+
 ```
 
 **필요 조건:**
@@ -97,7 +110,9 @@ blog.jiminhome.shop → A 레코드 → 122.46.102.190 (Proxy 모드)
 ### 방법 2: Cloudflare Tunnel (CNAME)
 
 ```
+
 사용자 → Cloudflare → Tunnel (아웃바운드) → 내부 서버
+
 ```
 
 **필요 조건:**
@@ -130,6 +145,7 @@ curl -I https://localhost
 # 외부 접속 테스트
 curl -I https://blog.jiminhome.shop
 # HTTP/2 522 ❌
+
 ```
 
 **결론:** 내부는 정상, 외부 연결 문제
@@ -144,6 +160,7 @@ systemctl status cloudflared
 # Config 확인
 cat /etc/cloudflared/config.yml
 # ingress 규칙 없음! ❌
+
 ```
 
 **발견:** Tunnel은 실행 중이지만 ingress 규칙 없음
@@ -153,6 +170,7 @@ cat /etc/cloudflared/config.yml
 ```bash
 nslookup blog.jiminhome.shop
 # 172.67.191.32, 104.21.60.34 (Cloudflare Proxy IP)
+
 ```
 
 **의미:** A 레코드 + Proxy 모드 = 직접 원본 IP로 연결 시도
@@ -164,6 +182,7 @@ curl -Ik https://122.46.102.190
 # HTTP/1.1 200 OK
 # Content-Type: text/html
 # Content-Length: 272
+
 ```
 
 **결과:** 공유기 관리 페이지 응답 (블로그 아님)
@@ -186,10 +205,12 @@ ingress:
     originRequest:
       noTLSVerify: true  # 자체 서명 인증서 허용
   - service: http_status:404
+
 ```
 
 ```bash
 sudo systemctl restart cloudflared
+
 ```
 
 ### Step 2: DNS A 레코드 삭제
@@ -205,11 +226,14 @@ sudo systemctl restart cloudflared
 ```bash
 sudo cloudflared tunnel route dns 65759494-dae6-4287-b92d-02a918b34722 blog.jiminhome.shop
 # Added CNAME blog.jiminhome.shop ✅
+
 ```
 
 **자동 생성:**
 ```
+
 blog.jiminhome.shop → CNAME → 65759494-dae6-4287-b92d-02a918b34722.cfargotunnel.com
+
 ```
 
 ### Step 4: 확인
@@ -219,6 +243,7 @@ curl -I https://blog.jiminhome.shop
 # HTTP/2 200 ✅
 # server: cloudflare
 # cf-cache-status: DYNAMIC
+
 ```
 
 ## 포트 제약사항
@@ -237,12 +262,15 @@ curl -I https://blog.jiminhome.shop
 ### 커스텀 포트 사용하려면?
 
 #### 방법 1: 포트포워딩 방식 사용
+
 ```
+
 사용자 → http://blog.jiminhome.shop:8080
         ↓
     Cloudflare Proxy OFF (DNS only)
         ↓
     공유기 포트포워딩: 8080 → 192.168.1.187:8080
+
 ```
 
 **설정:**
@@ -256,6 +284,7 @@ server {
 
 # 공유기 포트포워딩
 8080 → 192.168.1.187:8080
+
 ```
 
 #### 방법 2: Cloudflare Spectrum (유료)
@@ -275,6 +304,7 @@ ingress:
   - hostname: custom-app.jiminhome.shop
     service: tcp://localhost:8080  # 커스텀 포트
   - service: http_status:404
+
 ```
 
 **사용:**
@@ -297,11 +327,13 @@ ingress:
 ### 2. DNS 레코드 타입 이해
 
 ```
+
 A 레코드: 도메인 → IP 주소
 blog.jiminhome.shop → 122.46.102.190
 
 CNAME: 도메인 → 다른 도메인
 blog.jiminhome.shop → 65759494-xxx.cfargotunnel.com
+
 ```
 
 **충돌:**
@@ -335,6 +367,7 @@ ingress:
     originRequest:
       noTLSVerify: true
   - service: http_status:404  # catch-all
+
 ```
 
 **주의:**
@@ -358,6 +391,7 @@ graph TB
     style C fill:#f9f,stroke:#333
     style D fill:#9f9,stroke:#333
     style H fill:#f99,stroke:#333
+
 ```
 
 **구성 요소:**

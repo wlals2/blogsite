@@ -22,7 +22,9 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---
 
 ## 📦 기본 구성
+
 ```
+
 ~/test/company-infra/
 ├─ templates/
 │ ├─ mysql/
@@ -51,19 +53,26 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 ├─ values.yaml
 ├─ Chart.yaml
 └─ helm-chart/
+
 ```
+
 🎤 서비스를 하나하나 구현하고 있다. 쉽지 않다.
+
 ```
+
 온프레미스 환경이랑 완전히 다르다. 온프레 미스에서는 명령어 한줄 만 치거나 마운트 한번이면 되는 것들이 여기서는 순서 환경 실행가능한지  다 확인하여야한다.
 apt-repo 처럼 다듬어져 있는 파일들이 아니다보니 임의적으로 다듬어야한다.
 하지만 나의 성장이 느껴지는 실습이었다.
+
 ```
+
 ## ⚙️ Nginx 구축 및 트러블 슈팅
 
 🎤 온프레미스에서 nginx는 그저 repo를 통한 설치 이후 service start만 하면 되는 수준이다. \
 하지만  k8s에서는 맞는 환경과 동시에 그 환경이 잘 조잘되도록 설정 해줘야한다.이 과정 중에 하나라도 문제가 발생하면 제대로 작동되지 않는다.
 
 ### ✅  Nginx  구현 및 트러블 슈팅
+
 ```yaml
 # /home/ubuntu/test/company-infra/values.yaml
 nginx:
@@ -193,7 +202,9 @@ spec:
 
 # /home/ubuntu/test/
 helm install company-infra company-infra
+
 ```
+
 🎤 온프레미스에서 nginx를 구동하는 거랑은 차원이 다르다. 신경써야할 부분이나 설정하는 부분 모든 게 다르다. 
 지금부터는 어떻게 설정을 했는지 어떤 식으로 생각을 잡으면 되는지 적어보겠다.
 

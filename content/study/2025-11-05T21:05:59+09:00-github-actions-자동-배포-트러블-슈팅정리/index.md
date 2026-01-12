@@ -23,6 +23,7 @@ author: "늦찌민"
 curl -I https://blog.jiminhome.shop/
 # server: cloudflare
 # cf-cache-status: DYNAMIC
+
 ```
 
 **확인:**
@@ -33,10 +34,12 @@ curl -I https://blog.jiminhome.shop/
 
 **에러 메시지:**
 ```
+
 sudo rsync -avh --delete public/ /var/www/blog/
 sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
 sudo: a password is required
 Error: Process completed with exit code 1.
+
 ```
 ---
 ### 원인분석: 
@@ -48,15 +51,19 @@ Error: Process completed with exit code 1.
 ---
 ### 해결 과정
 ### Step 1: sudoers 설정 확인
+
 ```bash
 sudo cat /etc/sudoers | grep jimin
+
 ```
+
 ### 문제점 발견:
 - sudoers 파일에 여러 줄로 중복 설정되어 있었음 
 - 개별 명령어마다 NOPASSWD 설정
 ---
 
 ### Step 2: sudoers.d에 통합 설정 추가
+
 ```bash
 # /etc/sudoers.d/github-actions 파일 생성
 sudo bash -c 'cat > /etc/sudoers.d/github-actions << EOF
@@ -69,25 +76,31 @@ sudo chmod 0440 /etc/sudoers.d/github-actions
 
 # 설정 검증
 sudo visudo -c
+
 ```
 
 ### Step 3: 설정 테스트
+
 ```bash
 # 비밀번호 없이 sudo 실행 테스트
 sudo -n whoami
 # 출력: root (성공)
+
 ```
 
 ### Step 4: GitHub Actions Runner 재시작
+
 ```bash
 # Runner 서비스 재시작하여 새 권한 적용
 sudo systemctl restart actions.runner.*
 
 # 상태 확인
 sudo systemctl status actions.runner.* --no-pager
+
 ```
 
 ### Step 5: 워크플로우 재실행
+
 ```bash
 # 방법 1: GitHub UI에서 Re-run
 # 저장소 → Actions 탭 → 해당 워크플로우 → Re-run all jobs
@@ -95,6 +108,7 @@ sudo systemctl status actions.runner.* --no-pager
 # 방법 2: 빈 커밋으로 트리거
 git commit --allow-empty -m "test: sudo 권한 테스트"
 git push origin main
+
 ```
 
 ### 최종 워크플로우 구조
@@ -119,11 +133,13 @@ jobs:
           sudo chown -R www-data:www-data /var/www/blog
           sudo chmod -R 755 /var/www/blog
           sudo systemctl reload nginx
+
 ```
 
 ## 추가 권장 사항
 
 ### 1. Cloudflare 캐시 자동 퍼지 추가 (선택사항)
+
 ```yaml
 - name: Purge Cloudflare Cache
   env:
@@ -134,15 +150,19 @@ jobs:
       -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
       -H "Content-Type: application/json" \
       --data '{"purge_everything":true}'
+
 ```
 
 ### 2. Hugo 미래 날짜 글 허용
+
 ```toml
 # config.toml 또는 hugo.toml
 buildFuture = true
+
 ```
 
 ### 3.배포 검증 단계 추가
+
 ```yaml
 - name: Verify Deployment
   run: |
@@ -150,6 +170,7 @@ buildFuture = true
     cat /var/www/blog/deploy.txt
     
     curl -sI http://localhost/ -H "Host: blog.jiminhome.shop"
+
 ```
 ---
 ## 🎓 핵심 

@@ -27,9 +27,13 @@ kubectl -n kube-system exec -it \
 $(kubectl -n kube-system get pod -l k8s-app=cilium -o jsonpath='{.itmes[0].metadata.name}') \
 -- cilium status --verbose
 ```
+
 결과 중 다음 부분을 확인한다.
+
 ```
+
 KubeProxyReplacement:   True   [eno1   192.168.1.187 ... (Direct Routing)]
+
 ```
 - `True` / `strict` → Cilium이 kube-proxy를 완전히 대체
 (Service 트래픽을 eBPF 로드밸런서가 처리)
@@ -44,6 +48,7 @@ KubeProxyReplacement:   True   [eno1   192.168.1.187 ... (Direct Routing)]
 ---
 
 ### 🧩 Cilium이 kube-proxy를 대체하는 방식
+
 | 계층          | 기존 (kube-proxy)           | Cilium (eBPF)                  |
 | ----------- | ------------------------- | ------------------------------ |
 | Service 트래픽 | iptables/IPVS 규칙 체인에서 라우팅 | eBPF 맵에서 직접 라우팅 (커널 내부)        |
@@ -53,10 +58,13 @@ KubeProxyReplacement:   True   [eno1   192.168.1.187 ... (Direct Routing)]
 | 관찰 기능       | 제한적 (conntrack, logs)     | Hubble + Envoy 기반 L3~L7 가시성 제공 |
 
 ### ⚙️ 동작 구조
+
 ```
+
 [Pod A] → [Kernel eBPF Hook] → [Cilium BPF LB Map] → [Pod B]
                    │
                    └─▶ [Envoy Proxy: L7 Policy / Metrics]
+
 ```
 - *** L3/L4 트래픽*** : eBPF가 커널 내에서 직접 라우팅
 
@@ -66,6 +74,7 @@ KubeProxyReplacement:   True   [eno1   192.168.1.187 ... (Direct Routing)]
 ---
 
 ### 💪 Cilium 도입 후 달라진 점
+
 | 구분      | Before (kube-proxy)   | After (Cilium + eBPF)            |
 | ------- | --------------------- | -------------------------------- |
 | 트래픽 처리  | iptables 규칙 기반, 성능 저하 | 커널 내부 eBPF, 빠른 라우팅               |

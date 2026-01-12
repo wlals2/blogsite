@@ -32,6 +32,7 @@ author: "늦찌민"
     sudo rm -rf /var/lib/apt/lists/*
     sudo apt-get clean
     ```
+
 >**기대 효과**: 미러 정리: http://us.archive.ubuntu.com → HTTPS 미러로 변경(예: https://archive.ubuntu.com/ubuntu 또는 지역 안정 미러).
 
 
@@ -44,7 +45,6 @@ author: "늦찌민"
 ## 한 줄 요약
 > 방금 릴리스된 미러 동기화 타이밍에 우리가 apt-get update를 때려서 신·구 인덱스가 섞였고, APT의 무결성 검증이 이를 잡아낸 사건.
 HTTPS 미러 + 리스트 초기화로 즉시 해결, 다음엔 몇 분만 늦춰서 시도하거나 다른 HTTPS 미러로 바꾸면 끝.
-
 
 
 

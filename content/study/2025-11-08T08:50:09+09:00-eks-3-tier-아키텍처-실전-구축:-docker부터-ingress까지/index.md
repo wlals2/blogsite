@@ -20,6 +20,7 @@ series: ["EKS 뿌시고 정복하기"]
 ### 목표 아키텍처
 
 ```
+
 Internet
   ↓
 ALB (Ingress가 자동 생성)
@@ -33,6 +34,7 @@ Frontend       Backend
 Pods           Pods
                ↓
             RDS (MySQL)
+
 ```
 
 ### 기술 스택
@@ -62,6 +64,7 @@ cd petclinic
 # 프로젝트 구조 확인
 ls -la
 # pom.xml, src/, Dockerfile
+
 ```
 
 ---
@@ -77,6 +80,7 @@ ls -la
     <jdbc.username>admin</jdbc.username>
     <jdbc.password>your-password</jdbc.password>
 </properties>
+
 ```
 
 **핵심 포인트:**
@@ -126,6 +130,7 @@ EXPOSE 8080
 
 # Tomcat 실행
 CMD ["catalina.sh", "run"]
+
 ```
 
 **Multi-stage Build의 장점:**
@@ -153,6 +158,7 @@ curl http://localhost:8080/petclinic/
 # 정리
 docker stop petclinic-test
 docker rm petclinic-test
+
 ```
 
 ---
@@ -241,6 +247,7 @@ docker rm petclinic-test
     </script>
 </body>
 </html>
+
 ```
 
 ---
@@ -256,6 +263,7 @@ COPY index.html /usr/share/nginx/html/
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+
 ```
 
 **특징:**
@@ -278,6 +286,7 @@ docker build -t goupang-web:v1 .
 # 테스트
 docker run -d -p 80:80 goupang-web:v1
 curl http://localhost/
+
 ```
 
 ---
@@ -292,6 +301,7 @@ aws ecr create-repository --repository-name petclinic --region ap-northeast-2
 
 # Web용 리포지토리
 aws ecr create-repository --repository-name goupang-web --region ap-northeast-2
+
 ```
 
 ---
@@ -311,6 +321,7 @@ docker push ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/petclinic:v1
 # Web 이미지 태그 및 푸시
 docker tag goupang-web:v1 ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/goupang-web:v1
 docker push ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/goupang-web:v1
+
 ```
 
 ---
@@ -321,6 +332,7 @@ docker push ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/goupang-web:v1
 # 푸시된 이미지 확인
 aws ecr describe-images --repository-name petclinic --region ap-northeast-2
 aws ecr describe-images --repository-name goupang-web --region ap-northeast-2
+
 ```
 
 ---
@@ -384,6 +396,7 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
+
 ```
 
 **핵심 포인트:**
@@ -438,6 +451,7 @@ spec:
   ports:
   - port: 80
     targetPort: 80
+
 ```
 
 ---
@@ -461,6 +475,7 @@ kubectl get svc
 # Pod 상태 확인
 kubectl describe pod petclinic-deployment-xxx
 kubectl logs petclinic-deployment-xxx
+
 ```
 
 ---
@@ -481,6 +496,7 @@ eksctl utils associate-iam-oidc-provider \
   --region=ap-northeast-2 \
   --cluster=eks-product \
   --approve
+
 ```
 
 ---
@@ -495,6 +511,7 @@ curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-lo
 aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
     --policy-document file://iam-policy.json
+
 ```
 
 ---
@@ -509,6 +526,7 @@ eksctl create iamserviceaccount \
   --name=aws-load-balancer-controller \
   --attach-policy-arn=arn:aws:iam::ACCOUNT_ID:policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
+
 ```
 
 ---
@@ -533,6 +551,7 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller \
   --set vpcId=$VPC_ID
+
 ```
 
 ---
@@ -545,6 +564,7 @@ kubectl get pods -n kube-system | grep aws-load-balancer
 
 # 로그 확인 (에러 없어야 함)
 kubectl logs -n kube-system deployment/aws-load-balancer-controller
+
 ```
 
 ---
@@ -553,8 +573,10 @@ kubectl logs -n kube-system deployment/aws-load-balancer-controller
 
 **문제:**
 ```
+
 Failed deploy model due to AccessDenied: 
 User is not authorized to perform: elasticloadbalancing:DescribeListenerAttributes
+
 ```
 
 **해결:**
@@ -570,6 +592,7 @@ aws iam attach-role-policy \
 
 # Controller 재시작
 kubectl rollout restart deployment aws-load-balancer-controller -n kube-system
+
 ```
 
 ---
@@ -583,6 +606,7 @@ kubectl rollout restart deployment aws-load-balancer-controller -n kube-system
 aws ec2 describe-subnets \
   --query 'Subnets[?MapPublicIpOnLaunch==`true`].[SubnetId,AvailabilityZone]' \
   --output table
+
 ```
 
 ---
@@ -634,6 +658,7 @@ spec:
             name: petclinic-service
             port:
               number: 8080
+
 ```
 
 **핵심 어노테이션:**
@@ -658,6 +683,7 @@ kubectl describe ingress goupang-ingress
 
 # ALB DNS 확인
 kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+
 ```
 
 ---
@@ -665,6 +691,7 @@ kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0
 ### 5.4 동작 원리
 
 ```
+
 1. Ingress 리소스 생성
    ↓
 2. AWS LB Controller가 감지
@@ -677,6 +704,7 @@ kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0
    ↓
 6. ALB Listener 규칙 생성
    (/ → web-service, /petclinic → petclinic-service)
+
 ```
 
 **전통적 방식과 비교:**
@@ -693,6 +721,7 @@ kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0
 # ALB DNS 주소 가져오기
 ALB_DNS=$(kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 echo $ALB_DNS
+
 ```
 
 ---
@@ -700,6 +729,7 @@ echo $ALB_DNS
 ### 6.2 브라우저 테스트
 
 ```
+
 http://ALB_DNS/
   → Goupang Shop 메인 페이지
 
@@ -708,6 +738,7 @@ http://ALB_DNS/petclinic/
 
 http://ALB_DNS/api/owners
   → JSON API 응답
+
 ```
 
 ---
@@ -726,6 +757,7 @@ kubectl describe ingress goupang-ingress
 
 # AWS 콘솔에서 확인
 # EC2 → 로드 밸런서 → Target Groups
+
 ```
 
 ---
@@ -749,10 +781,12 @@ spec:
           limits:
             memory: "2Gi"     # 1Gi → 2Gi
             cpu: "1000m"      # 500m → 1000m
+
 ```
 
 ```bash
 kubectl apply -f petclinic-deployment.yaml
+
 ```
 
 ---
@@ -767,6 +801,7 @@ kubectl scale deployment web-deployment --replicas=3
 # 리소스 사용률 확인
 kubectl top pods
 kubectl top nodes
+
 ```
 
 ---
@@ -792,6 +827,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
+
 ```
 
 ---
@@ -799,6 +835,7 @@ spec:
 ## 최종 아키텍처
 
 ```
+
 ┌─────────────────────────────────────┐
 │         Internet (Users)            │
 └──────────────┬──────────────────────┘
@@ -826,6 +863,7 @@ spec:
                         │    RDS    │
                         │  (MySQL)  │
                         └───────────┘
+
 ```
 
 ---
@@ -913,6 +951,7 @@ EKS 환경은 로컬과 다름:
 **해결:**
 ```bash
 aws ecr get-login-password | docker login ...
+
 ```
 
 ---
@@ -935,6 +974,7 @@ aws ecr get-login-password | docker login ...
 **해결:**
 ```bash
 helm upgrade ... --set vpcId=$VPC_ID
+
 ```
 
 ---
@@ -948,6 +988,7 @@ helm upgrade ... --set vpcId=$VPC_ID
 aws iam attach-role-policy \
   --role-name $ROLE_NAME \
   --policy-arn arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess
+
 ```
 
 ---
@@ -1018,6 +1059,7 @@ aws iam attach-role-policy \
 - 셀프 힐링
 
 무엇보다:
+
 > "인프라를 YAML로 관리한다는 것은 코드로 관리한다는 의미"
 
 이제 인프라 변경도 Git으로 버전 관리하고, PR로 리뷰하고, 자동으로 배포할 수 있습니다.
@@ -1052,6 +1094,7 @@ docker build -t petclinic:v1 .
 # Web
 cd ../web
 docker build -t goupang-web:v1 .
+
 ```
 
 ### Step 2: ECR 푸시
@@ -1066,6 +1109,7 @@ docker push ACCOUNT_ID.dkr.ecr.region.amazonaws.com/petclinic:v1
 
 docker tag goupang-web:v1 ACCOUNT_ID.dkr.ecr.region.amazonaws.com/goupang-web:v1
 docker push ACCOUNT_ID.dkr.ecr.region.amazonaws.com/goupang-web:v1
+
 ```
 
 ### Step 3: Kubernetes 배포
@@ -1080,6 +1124,7 @@ kubectl apply -f ingress.yaml
 
 # 확인
 kubectl get ingress
+
 ```
 
 ### Step 4: 접속
@@ -1087,6 +1132,7 @@ kubectl get ingress
 ```bash
 ALB_DNS=$(kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 echo "http://$ALB_DNS/"
+
 ```
 
 **끝!** 🚀

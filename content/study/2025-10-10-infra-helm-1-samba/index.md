@@ -51,6 +51,7 @@ draft: false
 ├─ values.yaml
 ├─ Chart.yaml
 └─ helm-chart
+
 ```
 
 > �� Helm에서 템플릿 경로는 `templates/`로 맞춰야 하며, 오타(`tmemplates`)는 Chart 빌드 시 에러가 납니다.
@@ -74,6 +75,7 @@ helm install company-infra ./
 
 # 확인
 kubectl -n company-infra get pods,svc,pv,pvc
+
 ```
 
 ## 🔓 트러블슈팅 핵심
@@ -214,9 +216,11 @@ spec:
 
 # 실행
 helm install company-infra /home/ubuntu/test/company-infra/
+
 ```
 
  > 🔥  이번 실습으로 우리가 알아갈 수 있는 건 굉장히 중요하다고 생각한다.\
+
 > 그리고 이것이 **PVC / PV** 높은 이해도를 줄 것이다. \
 > 글 내용을 바탕으로 실습을 해보면서 생각해보고 느껴보면서 하면 좋겠다. 트러블 슈팅 내용과 함께 같이  적어 보겠다.
 
@@ -255,22 +259,37 @@ PVC  동적 프로비저닝을 정적 으로 바꾸어 실제 Linux 시스템 �
  
 
 ### PV(PersistentVolume)
+
 ```
+
 관리자(운영자)가 직접 만들고 만드는 실제 스토리지 리소스
 쿠버네티스 클러스터에 스토리지 풀로 등록
 ex) /srv/samba-share,NFS,AWS EBS 등
+
 ```
+
 ### PVC(PersistentVolumeClaim)
+
 ```
+
 개발자/앱이 클러스터에 스토리지를 요청 하는 객체
+
 ```
+
 ### 동적 프로비저닝
+
 ```
+
 PVC에 storageClassName 지정하면  클러스터에 자동으로 PV를 생성/바인딩
+
 ```
+
 ### 정적 프로비저닝
+
 ```
+
 미리 만들어진 PV에 PVC가 원하는 속성 (storage,accessMode) 등과 맞으면 매칭된다.  volumeName으로 PVC 지정이 가능하다.
+
 ```
 
 ### 🔥 우리는 기본적으로 동적 프로비저닝을 사용했으며 Samba에서는 정적 프로비저닝을 사용하였다.
@@ -321,6 +340,7 @@ spec:
 
  
 #### In / Out 요약
+
 | In(시도/설정) | Out(관찰/결론) |
 |---|---|
 | NodePort로 SMB 노출 | Windows는 139/445 고정 포트만 사용 → 세션 실패(0x80004005) |

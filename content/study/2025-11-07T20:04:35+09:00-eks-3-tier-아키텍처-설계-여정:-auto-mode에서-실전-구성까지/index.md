@@ -23,7 +23,9 @@ EKS Auto Mode는 노드 관리를 완전히 자동화해주는 기능입니다.
 
 **Auto Mode 동작 방식:**
 ```
+
 Pod 배포 → EKS가 자동으로 노드 생성 → Pod 삭제 시 노드 자동 제거
+
 ```
 
 **장점:**
@@ -49,6 +51,7 @@ Pod 배포 → EKS가 자동으로 노드 생성 → Pod 삭제 시 노드 자�
 ```bash
 Error: VPC configuration required for creating nodegroups on clusters 
 not owned by eksctl: vpc.subnets, vpc.id, vpc.securityGroup
+
 ```
 
 **원인:**
@@ -67,13 +70,16 @@ AWS CLI를 통해 VPC 정보를 명시적으로 지정하여 노드 그룹 생�
 kubectl get nodes
 NAME                                            STATUS     ROLES    AGE
 ip-10-0-50-42.ap-northeast-2.compute.internal   NotReady   <none>   5m
+
 ```
 
 **원인:**
 ```
+
 container runtime network not ready: NetworkReady=false 
 reason:NetworkPluginNotReady 
 message:Network plugin returns error: cni plugin not initialized
+
 ```
 
 **핵심 교훈:**
@@ -89,6 +95,7 @@ aws eks create-addon --cluster-name eks-product --addon-name coredns
 
 # kube-proxy 애드온 설치
 aws eks create-addon --cluster-name eks-product --addon-name kube-proxy
+
 ```
 
 **이것이 바로 Auto Mode와 수동 관리의 차이점입니다.**
@@ -100,8 +107,11 @@ aws eks create-addon --cluster-name eks-product --addon-name kube-proxy
 ### 2.1 초기 고민
 
 기존 온프레미스 환경:
+
 ```
+
 Apache (Web) + ProxyPass → Tomcat (WAS) + Maven Build
+
 ```
 
 Kubernetes로 전환 시 선택지:
@@ -120,6 +130,7 @@ FROM amazonlinux:2023
 RUN yum install -y httpd java-17 maven
 # Apache + Tomcat 동시 설치
 CMD ["supervisord"]  # 여러 프로세스 실행
+
 ```
 
 **단점:**
@@ -133,9 +144,11 @@ CMD ["supervisord"]  # 여러 프로세스 실행
 #### 방법 2: 컨테이너 분리 (전통적)
 
 ```
+
 web-container (Apache + ProxyPass)
   ↓ 리버스 프록시
 was-container (Tomcat + WAR)
+
 ```
 
 **장점:**
@@ -151,12 +164,14 @@ was-container (Tomcat + WAR)
 #### 방법 3: Ingress 활용 (최종 선택) ⭐
 
 ```
+
 Ingress (라우팅 규칙)
   ↓
 ┌─────────┬──────────┐
 │         │          │
 Nginx Pod  Tomcat Pod
 (정적 파일)  (API)
+
 ```
 
 **왜 이 방식을 선택했나?**
@@ -169,21 +184,25 @@ Nginx Pod  Tomcat Pod
 
 **Apache ProxyPass 방식:**
 ```
+
 클라이언트 
   → Ingress/LB 
     → Apache Pod (중계)
       → Tomcat Pod
 
 총 3단계 홉(hop)
+
 ```
 
 **Ingress 직접 라우팅:**
 ```
+
 클라이언트 
   → Ingress/LB
     → Tomcat Pod (직접 연결)
 
 총 2단계 홉(hop)
+
 ```
 
 **성능 차이:**
@@ -199,7 +218,9 @@ Nginx Pod  Tomcat Pod
 
 **Nginx Ingress Controller:**
 ```
+
 NLB (L4) → Nginx Ingress Controller Pod (L7 로직) → Backend Pods
+
 ```
 
 - Nginx Ingress 자체는 Pod로 실행되는 L7 라우터
@@ -208,7 +229,9 @@ NLB (L4) → Nginx Ingress Controller Pod (L7 로직) → Backend Pods
 
 **AWS Load Balancer Controller:**
 ```
+
 ALB (L7) → Backend Pods (직접 연결)
+
 ```
 
 - ALB가 직접 L7 라우팅 수행
@@ -243,6 +266,7 @@ ALB (L7) → Backend Pods (직접 연결)
 
 **구조:**
 ```
+
 ALB (라우팅)
   ↓
 ┌──────────────┬───────────────┐
@@ -270,6 +294,7 @@ spec:
         backend:
           service:
             name: tomcat-service    # Tomcat
+
 ```
 
 ---
@@ -285,6 +310,7 @@ spec:
     ProxyPass /api/ http://internal-alb/simpleapp/
     ProxyPassReverse /api/ http://internal-alb/simpleapp/
 </VirtualHost>
+
 ```
 
 **특징:**
@@ -306,6 +332,7 @@ function callAPI() {
         .then(data => console.log(data));
 }
 </script>
+
 ```
 
 **Ingress 라우팅:**
@@ -314,6 +341,7 @@ function callAPI() {
   backend:
     service:
       name: tomcat-service  # 직접 연결!
+
 ```
 
 **핵심 차이:**
@@ -328,10 +356,13 @@ function callAPI() {
 **문제 상황:**
 
 Tomcat에 배포된 WAR 파일:
+
 ```
+
 webapps/
   ├── simpleapp.war  → /simpleapp/* 으로 접근
   └── petclinic.war  → /petclinic/* 으로 접근
+
 ```
 
 프론트엔드에서는 `/api`로 호출하고 싶지만, 실제 Tomcat은 `/simpleapp`로 동작
@@ -355,15 +386,18 @@ spec:
         backend:
           service:
             name: tomcat-service
+
 ```
 
 **동작:**
 ```
+
 브라우저 요청: /api/test
     ↓
 Ingress 변환: /simpleapp/test
     ↓
 Tomcat: simpleapp.war가 처리
+
 ```
 
 **장점:**
@@ -379,6 +413,7 @@ Tomcat: simpleapp.war가 처리
 FROM tomcat:9
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
 COPY simpleapp.war /usr/local/tomcat/webapps/ROOT.war
+
 ```
 
 **장점:**
@@ -395,6 +430,7 @@ COPY simpleapp.war /usr/local/tomcat/webapps/ROOT.war
 ### 5.1 전통적 AWS 아키텍처
 
 ```
+
 Internet
   ↓
 External ALB (Public)
@@ -406,6 +442,7 @@ Internal ALB (Private) ← 수동 생성 및 관리
 WAS Servers (Tomcat × 3)
   ↓
 RDS
+
 ```
 
 **Internal ALB의 역할:**
@@ -419,6 +456,7 @@ RDS
 ### 5.2 Kubernetes의 답: ClusterIP Service
 
 ```
+
 Ingress (External ALB)
   ↓
 Backend Service (ClusterIP) ← Internal ALB 역할!
@@ -426,6 +464,7 @@ Backend Service (ClusterIP) ← Internal ALB 역할!
 Backend Pods (Tomcat × 3)
   ↓
 RDS
+
 ```
 
 **Service 정의:**
@@ -442,6 +481,7 @@ spec:
   - port: 8080
     targetPort: 8080
   sessionAffinity: ClientIP  # Sticky Session
+
 ```
 
 ---
@@ -483,6 +523,7 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
+
 ```
 
 **동작:**
@@ -497,6 +538,7 @@ spec:
 ### 6.1 구조 이해
 
 ```
+
 개발자 로컬 / Bastion (mgmt 인스턴스)
   ↓ kubectl 명령
   ↓ (AWS IAM 인증)
@@ -507,6 +549,7 @@ EKS Control Plane (AWS 관리형, Private)
 Worker Nodes (Node Group)
   ↓
 Pods 실행
+
 ```
 
 ---
@@ -525,6 +568,7 @@ Pods 실행
 # mgmt 인스턴스에서
 kubectl get pods  # → Control Plane API 호출
 kubectl apply -f deployment.yaml  # → Control Plane이 Worker에 전달
+
 ```
 
 **mgmt는 Control Plane이 아닙니다!**
@@ -539,6 +583,7 @@ kubectl apply -f deployment.yaml  # → Control Plane이 Worker에 전달
 
 **mgmt 인스턴스:**
 ```
+
 Outbound:
 - EKS API (443)
 - ECR (이미지 Pull)
@@ -547,6 +592,7 @@ Outbound:
 
 **Worker Nodes:**
 ```
+
 Inbound:
 - Control Plane (kubelet 통신)
 - Pod 간 통신 (모든 포트)
@@ -596,6 +642,7 @@ roleRef:
 subjects:
 - kind: User
   name: jimin
+
 ```
 
 ---
@@ -603,6 +650,7 @@ subjects:
 ### 6.4 실제 작업 흐름
 
 ```
+
 1. mgmt에서 YAML 작성
    └─ vi deployment.yaml
 
@@ -618,6 +666,7 @@ subjects:
 3. 확인
    └─ kubectl get pods
    └─ kubectl logs pod-name
+
 ```
 
 **보안 체크포인트:**
@@ -630,6 +679,7 @@ subjects:
 ## 7. 최종 아키텍처
 
 ```
+
 ┌─────────────────────────────────────┐
 │         Internet (Users)            │
 └──────────────┬──────────────────────┘
@@ -671,6 +721,7 @@ subjects:
 │  - YAML 관리        │
 │  - IAM 인증         │
 └─────────────────────┘
+
 ```
 
 ---
@@ -795,6 +846,7 @@ EKS를 활용한 3-Tier 아키텍처 구축은 단순히 기술을 옮기는 것
 전통적인 Apache + Internal ALB 구조에서 Ingress + Service 구조로의 전환은 성능, 비용, 관리 효율성 모든 면에서 이점을 제공했습니다.
 
 무엇보다 중요한 것은:
+
 > "왜 이렇게 설계했는가?"에 대한 명확한 답을 가지는 것
 
 이 글이 EKS 아키텍처를 고민하는 누군가에게 도움이 되기를 바랍니다.

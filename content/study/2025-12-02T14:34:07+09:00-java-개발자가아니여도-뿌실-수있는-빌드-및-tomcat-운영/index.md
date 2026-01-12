@@ -29,6 +29,7 @@ graph LR
     B --> C[바이트코드<br/>.class 파일]
     C --> D[패키징]
     D --> E[배포 가능한 파일<br/>.war 또는 .jar]
+
 ```
 
 ### 주요 빌드 도구
@@ -41,10 +42,12 @@ mvn clean package
 
 # 결과물 생성 위치
 # target/myapp.war
+
 ```
 
 **프로젝트 구조:**
 ```
+
 myproject/
 ├── pom.xml              # 빌드 설정 파일 (중요!)
 ├── src/
@@ -54,6 +57,7 @@ myproject/
 │   └── test/            # 테스트 코드
 └── target/              # 빌드 결과물 (자동 생성)
     └── myapp.war        # 최종 배포 파일
+
 ```
 
 #### Gradle 방식
@@ -63,6 +67,7 @@ myproject/
 ./gradlew build
 
 # 결과물: build/libs/myapp.war
+
 ```
 
 ---
@@ -74,6 +79,7 @@ myproject/
 **웹 애플리케이션 전용 패키지**입니다. Tomcat 같은 서블릿 컨테이너에 배포합니다.
 
 ```
+
 myapp.war (압축 파일)
 ├── WEB-INF/
 │   ├── web.xml          # 웹 애플리케이션 설정
@@ -81,6 +87,7 @@ myapp.war (압축 파일)
 │   └── lib/             # 필요한 라이브러리들
 ├── META-INF/
 └── index.html, *.jsp    # 웹 페이지 파일들
+
 ```
 
 **배포 방법:**
@@ -88,6 +95,7 @@ myapp.war (압축 파일)
 # Tomcat webapps 디렉토리에 복사하면 끝!
 cp myapp.war /path/to/tomcat/webapps/
 # Tomcat이 자동으로 압축 해제하고 실행
+
 ```
 
 ### JAR 파일 (Java Archive)
@@ -97,6 +105,7 @@ cp myapp.war /path/to/tomcat/webapps/
 ```bash
 # 직접 실행 가능
 java -jar myapp.jar
+
 ```
 
 ---
@@ -104,6 +113,7 @@ java -jar myapp.jar
 ## 3. Tomcat 디렉토리 구조 완벽 이해
 
 ```
+
 apache-tomcat-7.0.67/
 ├── bin/                 # 실행 스크립트 모음
 │   ├── catalina.sh      # 핵심 실행 엔진
@@ -129,6 +139,7 @@ apache-tomcat-7.0.67/
 │   └── myapp.war        # WAR 파일 (자동 압축 해제됨)
 │
 └── work/                # JSP 컴파일 결과
+
 ```
 
 ### 중요 포인트
@@ -145,6 +156,7 @@ apache-tomcat-7.0.67/
 
 ```bash
 ./startup.sh
+
 ```
 
 이 간단한 명령어가 실행되면 어떤 일이 벌어질까요?
@@ -162,6 +174,7 @@ graph TD
     H --> I[webapps/<br/>스캔]
     I --> J[애플리케이션<br/>로드]
     J --> K[서버 가동<br/>완료]
+
 ```
 
 ### 실제 실행 명령어
@@ -175,6 +188,7 @@ java $JAVA_OPTS \
      -Dcatalina.base=$CATALINA_BASE \
      -Dcatalina.home=$CATALINA_HOME \
      org.apache.catalina.startup.Bootstrap start
+
 ```
 
 ---
@@ -220,6 +234,7 @@ export JAVA_ENDORSED_DIRS=""
 EOF
 
 chmod +x bin/setenv.sh
+
 ```
 
 **방법 2: 시스템 환경 변수 (.bashrc)**
@@ -228,6 +243,7 @@ chmod +x bin/setenv.sh
 # ~/.bashrc에 추가
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export PATH=$PATH:$JAVA_HOME/bin
+
 ```
 
 ---
@@ -237,13 +253,16 @@ export PATH=$PATH:$JAVA_HOME/bin
 ### 문제 상황
 
 ```
+
 Tomcat 7 + Java 17 = 에러 발생!
+
 ```
 
 **에러 메시지:**
 ```
 -Djava.endorsed.dirs=/path/to/endorsed is not supported.
 Error: Could not create the Java Virtual Machine.
+
 ```
 
 ### 원인
@@ -258,6 +277,7 @@ Java 9부터 `endorsed.dirs` 옵션이 제거되었습니다.
 ```bash
 # bin/setenv.sh
 export JAVA_ENDORSED_DIRS=""
+
 ```
 
 **Option 2: JMeter 등에서 모듈 접근 허용**
@@ -268,6 +288,7 @@ export JVM_ARGS="--add-opens java.base/java.util=ALL-UNNAMED \
                  --add-opens java.base/java.lang.reflect=ALL-UNNAMED \
                  --add-opens java.base/java.text=ALL-UNNAMED \
                  --add-opens java.desktop/java.awt.font=ALL-UNNAMED"
+
 ```
 
 ---
@@ -285,6 +306,7 @@ cp myapp.war /path/to/tomcat/webapps/
 #    - myapp/ 디렉토리로 압축 해제
 #    - 애플리케이션 로드
 #    - http://localhost:8080/myapp 접근 가능
+
 ```
 
 ### 배포 방법 2: ROOT 애플리케이션 (기본 경로)
@@ -297,6 +319,7 @@ rm -rf webapps/ROOT webapps/ROOT.war
 cp myapp.war webapps/ROOT.war
 
 # 이제 http://localhost:8080/ 으로 접근
+
 ```
 
 ### 배포 방법 3: 디렉토리 직접 배포
@@ -304,6 +327,7 @@ cp myapp.war webapps/ROOT.war
 ```bash
 # 압축 해제된 디렉토리 복사
 cp -r myapp/ /path/to/tomcat/webapps/
+
 ```
 
 ---
@@ -318,6 +342,7 @@ logs/
 ├── catalina.2025-12-02.log   # Tomcat 내부 로그
 ├── localhost.2025-12-02.log  # 로컬호스트 관련
 └── host-manager.*.log        # 관리자 앱 로그
+
 ```
 
 ### 실전 로그 명령어
@@ -325,22 +350,26 @@ logs/
 **실시간 로그 모니터링:**
 ```bash
 tail -f logs/catalina.out
+
 ```
 
 **에러만 필터링:**
 ```bash
 grep -i error logs/catalina.out
+
 ```
 
 **애플리케이션 시작 시간 확인:**
 ```bash
 grep "Server startup in" logs/catalina.out
 # 출력: Server startup in 3245 ms
+
 ```
 
 **특정 애플리케이션 로드 확인:**
 ```bash
 grep "Deploying web application" logs/catalina.out
+
 ```
 
 ---
@@ -354,6 +383,7 @@ grep "Deploying web application" logs/catalina.out
 **해결:**
 ```bash
 mkdir -p logs temp
+
 ```
 
 Tomcat은 `logs` 디렉토리를 자동으로 생성하지 않습니다!
@@ -374,6 +404,7 @@ java -version
 
 # 실제 Java 경로 확인
 readlink -f $(which java)
+
 ```
 
 **해결:**
@@ -381,6 +412,7 @@ readlink -f $(which java)
 # 올바른 경로로 설정
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export PATH=$PATH:$JAVA_HOME/bin
+
 ```
 
 ---
@@ -395,12 +427,14 @@ export PATH=$PATH:$JAVA_HOME/bin
 netstat -tlnp | grep 8080
 # 또는
 ss -tlnp | grep 8080
+
 ```
 
 **해결 방법 1: 프로세스 종료**
 ```bash
 # PID 확인 후
 kill -9 <PID>
+
 ```
 
 **해결 방법 2: 포트 변경**
@@ -409,6 +443,7 @@ kill -9 <PID>
 <Connector port="9090" protocol="HTTP/1.1"
            connectionTimeout="20000"
            redirectPort="8443" />
+
 ```
 
 ---
@@ -451,6 +486,7 @@ kill -9 <PID>
 WHATAP_HOME=/sw/whatap
 WHATAP_JAR=$(ls ${WHATAP_HOME}/whatap.agent-*.jar | sort -V | tail -1)
 JAVA_OPTS="${JAVA_OPTS} -javaagent:${WHATAP_JAR}"
+
 ```
 
 **실제 실행 명령어:**
@@ -458,6 +494,7 @@ JAVA_OPTS="${JAVA_OPTS} -javaagent:${WHATAP_JAR}"
 java -javaagent:/sw/whatap/whatap.agent-2.2.66.jar \
      -Dcatalina.home=/path/to/tomcat \
      org.apache.catalina.startup.Bootstrap start
+
 ```
 
 ### 에이전트가 수집하는 정보
@@ -475,6 +512,7 @@ graph LR
     D --> G
     E --> G
     F --> G
+
 ```
 
 **수집 데이터:**
@@ -506,6 +544,7 @@ graph TD
     K -->|No| M[정상 운영]
     L --> N[문제 해결]
     N --> F
+
 ```
 
 ---
@@ -538,6 +577,7 @@ tail -f logs/catalina.out
 
 # 8. 애플리케이션 시작 확인 (별도 터미널)
 # "Server startup in XXX ms" 메시지 대기
+
 ```
 
 ### 시나리오 2: 성능 튜닝
@@ -566,6 +606,7 @@ chmod +x bin/setenv.sh
 
 # 재시작
 ./shutdown.sh && sleep 3 && ./startup.sh
+
 ```
 
 ### 시나리오 3: 포트 변경
@@ -585,6 +626,7 @@ grep 'Connector port' conf/server.xml
 
 # 5. 포트 리스닝 확인
 netstat -tlnp | grep 9090
+
 ```
 
 ---
@@ -628,6 +670,7 @@ ls -lh webapps/
 
 # 디스크 사용량 확인 (로그 파일)
 du -sh logs/
+
 ```
 
 ### 필수 디렉토리 생성
@@ -638,6 +681,7 @@ mkdir -p logs temp
 
 # 권한 설정 (필요 시)
 chmod +x bin/*.sh
+
 ```
 
 ---

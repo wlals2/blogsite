@@ -67,7 +67,9 @@ Kubernetes 환경에서의 긴 도전 끝에 깨달은 점은,
 │   ├─ .gitignore
 │   ├─ Jenkinsfile
 │   ├─ k8s-deploy.yaml
+
 ```
+
 ### ⚙️ 서버 구축 및 트러블 슈팅
  
 **🎤 openvpn** 을 구현해본 경험이 있다. 이때는 docker만을 이용해서 구현했다. \
@@ -101,11 +103,13 @@ openvpn:
     restart: unless-stopped
 
  ```
+
  🎤 우리가 사용하는  `openvpn/kylemanna`   이미지는 docker run 을 통해 config을 생성 했다. \
 PKI init 을 해야하는데 github에 나와있는 것처럼 비밀번호 없이 pki를 생성했다. \
 이후 **Client.ovpn**을 생성했다.
 
 ### ✅   docker run config 설정파일 생성
+
 ```yaml
 # 1) 서버 설정 템플릿 생성
 docker run --rm \
@@ -139,7 +143,9 @@ docker run --rm \
 
 # 실행
 docker-compose up -d
+
 ```
+
 (2).  에서 init-pki complete \
 (3). 에서 client.crt/client.key 생성 \
 (4).  후 openvpn-data/client.ovpn 파일이 제대로 생성 완료 해야함
@@ -162,7 +168,9 @@ docker-compose up -d
 ```bash
 -e EASYRSA_BATCH=1 \
 ovpn_initpki nopass
+
 ```
+
 환경변수 `EASYRSA_BATCH=1` 을 주어 "모든 질문에 기본 값 사용" 으로 비대화식 배치 모드 실행
 
 ### 2. /dev/net/tun 디바이스 없음
@@ -174,7 +182,9 @@ cap_add: ["NET_ADMIN"]
 devices:
   - /dev/net/tun:/dev/net/tun
 privileged: true   # (필요 시 추가)
+
 ```
+
 ### 3. Cipher 협상 경고 & 실패 `( --cipher is not set )`
 - 에러: 클라이언트 로그에 `"Note: --cipher is not set..."` 반복
 - 원인: OpenVPN 2.4.x버전은 `data-ciphers` 옵션 미지원 → 클라이언트가 어떤 암호를 제안할지 모름
@@ -185,6 +195,7 @@ dev tun
 - data-ciphers-fallback BF-CBC
 + cipher AES-256-CBC
 + ncp-ciphers AES-256-GCM:AES-128-GCM
+
 ```
 
  
@@ -207,4 +218,5 @@ dev tun
 - server 192.168.255.0 255.255.255.0
 + server 10.8.0.0 255.255.255.0
 push "route 192.168.56.0 255.255.255.0"
+
 ```

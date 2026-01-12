@@ -21,25 +21,32 @@ author: "늦찌민"
 
 ## 초기 상황
 ### ⚠️ 문제 상황
+
 ```
+
 ❌ TP-Link DDNS 사용 (외부 노출)
 ❌ 포트포워딩 (보안 취약)
 ❌ 공인 IP 노출
 ❌ WOL을 위해 공유기 접근 필요
+
 ```
 
 ### 📝 **원하는 목표**
+
 ```
+
 ✅ 외부에서 안전하게 Windows/Ubuntu 접근
 ✅ DDNS 주소 숨기기
 ✅ VPN을 통한 안전한 접속
 ✅ WOL 기능 유지
+
 ```
 
 ### **Cloudflare WARP + Cloudflare Tunnel**
 
 **아키텍처:**
 ```
+
 [외부 디바이스] 
     ↓ (WARP VPN - L3/L4)
 [Cloudflare 글로벌 네트워크]
@@ -49,6 +56,7 @@ author: "늦찌민"
 [홈 네트워크 192.168.1.0/24]
     ├─ Windows
     └─ Ubuntu 
+
 ```
 
 **주요 특징:**
@@ -60,15 +68,20 @@ author: "늦찌민"
 ## 3. 구축 단계별 정리
 
 ### Phase 1: Cloudflare 설정
+
 ```
+
 ✅ Cloudflare 계정 생성
 ✅ Zero Trust 활성화 (무료 플랜)
 ✅ Team name 설정: jiminhome
 ✅ 도메인 등록: jiminhome.shop
+
 ```
 
 ### Phase 2: Ubuntu 서버 설정
+
 ```
+
 ✅ cloudflared 설치
 ✅ Cloudflare 인증 (tunnel login)
 ✅ 터널 생성: home-network
@@ -84,20 +97,27 @@ warp-routing:
 
 ingress:
   - service: http_status:404
+
 ```
 
 ### Phase 3: Authentication 설정
+
 ```
+
 ✅ One-time PIN 활성화
 ✅ WARP authentication identity 활성화
 ✅ Device enrollment policy 설정
+
 ```
 
 ### phase 4: 클라이언트 설정
+
 ```
+
 ✅ 노트북에 WARP 클라이언트 설치
 ✅ Team name으로 로그인 (jiminhome)
 ✅ Zero Trust 인증 완료
+
 ```
 
 ---
@@ -105,38 +125,50 @@ ingress:
 ## 트러블슈팅 과정
 
 ### 문제 1
+
 ``` 
 Cannot determine default configuration path
 permission denied
+
 ```
+
 > 원인: sudo로 실행하면 ~가 root 디렉토리를 
 
 #### 💡 해결
+
 ```
+
 # 설정 값들이 정확한 경로를 갖게 설정 해줌
 
 sudo mkdir -p /etc/cloudflared
 sudo cp ~/.cloudflared/* /etc/cloudflared/
 sudo sed -i 's|/home/jimin/.cloudflared/|/etc/cloudflared/|g' /etc/cloudflared/config.yml
 sudo cloudflared service install
+
 ```
 
 ---
 
 ### 문제 2
+
 ```
+
 ✅ Ubuntu에서 Windows로: ping 성공
 ✅ WARP → Ubuntu: ping 성공
 ❌ WARP → Windows: ping 실패
 
 #Windows 방화벽이 WARP를 통해 들어오는 트래픽을 "외부"로 인식하여 차단
 ```
+
 #### 💡 해결
+
 ```
+
 # 방화벽 규칙을 "모든 원격 주소"에서 허용하도록 변경
 New-NetFirewallRule -DisplayName "ICMP Allow All" -Direction Inbound -Protocol ICMPv4 -Action Allow -RemoteAddress Any -Profile Domain,Private,Public -Enabled True
 
 New-NetFirewallRule -DisplayName "RDP 52515 All" -Direction Inbound -Protocol TCP -LocalPort 52515 -Action Allow -RemoteAddress Any -Profile Domain,Private,Public -Enabled True
+
 ```
 
 #### 확인
@@ -178,7 +210,9 @@ WARP: WireGuard 기반 암호화
 
 
 ### 3. ⚠️ Windows 방화벽 완전 개방
+
 ```
+
 현재 설정:
 powershell-RemoteAddress Any -Profile Public
 
@@ -186,6 +220,7 @@ powershell-RemoteAddress Any -Profile Public
 모든 원격 주소에서 접근 허용
 Public 프로필에서도 허용
 만약 Cloudflare Tunnel이 뚫리면 Windows도 노출
+
 ```
 
 ### 4.   위험  ⚠️ WOL의 보안 취약점

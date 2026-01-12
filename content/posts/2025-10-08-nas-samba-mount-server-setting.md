@@ -40,29 +40,39 @@ NAS 관리자 페이지에서 다음 중 하나를 활성화합니다:
 ### ⚙️ 2. Ubuntu에서 마운트
 
 #### ▪ NFS 방식
+
 ```bash
 sudo apt install -y nfs-common
 sudo mkdir -p /mnt/nas
 sudo mount -t nfs 192.168.1.10:/volume1/blog_backup /mnt/nas
+
 ```
+
 #### ▪ SMB(CIFS) 방식
+
 ```bash
 sudo apt install -y cifs-utils
 sudo mkdir -p /mnt/nas
 sudo mount -t cifs //192.168.1.10/share /mnt/nas \
   -o username=nasuser,password=비밀번호,uid=jimin,gid=jimin
+
 ```
 
 ### 🔁 3. 부팅 시 자동 마운트 설정
 /etc/fstab 파일 아래에 추가
 #### ▪ NFS
+
 ```bash
 192.168.1.10:/volume1/blog_backup /mnt/nas nfs defaults 0 0
+
 ```
+
 #### ▪ SMB
+
 ```bash
 # credentials 파일을 사용하는 방식이 더 안전
 //192.168.1.10/share /mnt/nas cifs credentials=/etc/cifs-cred,noperm,uid=jimin,gid=jimin 0 0
+
 ```
 
 
@@ -71,14 +81,17 @@ NAS가 없어도, Ubuntu 서버 자체를 “작은 NAS”처럼 만들어
 Windows 탐색기에서 직접 접근할 수 있습니다.
 
 ### ⚙️ 1. Samba 설치 및 폴더 준비
+
 ```bash
 sudo apt update
 sudo apt install -y samba
 sudo mkdir -p /home/jimin/share
 sudo chown -R jimin:jimin /home/jimin/share
+
 ```
 
 ### ⚙️ 2. Samba 설정 파일 수정
+
 ```bash
 sudo vi /etc/samba/smb.conf
 # 맨 아래에 추가
@@ -92,22 +105,31 @@ sudo vi /etc/samba/smb.conf
    valid users = jimin
    create mask = 0664
    directory mask = 0775
+
 ```
+
 ### 🔐 3. Samba 사용자 등록
+
 ```bash
 sudo smbpasswd -a jimin
 sudo systemctl restart smbd
 sudo systemctl enable smbd
+
 ```
+
 ### 🌐 4. 방화벽 열기
+
 ```bash
 sudo ufw allow samba
 sudo ufw reload
+
 ```
 
 ### 💻 5. Windows에서 접근하기
+
 ```bash
 \\192.168.1.10\blogshare
+
 ```
 ---
 ### ✅ 결론

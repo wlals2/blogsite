@@ -20,12 +20,14 @@ summary: "Hugo를 설치하고 PaperMod 테마를 적용한 뒤, 새 포스트�
 
 ```bash
 sudo apt install -y hugo
+
 ```
 
 설치 후 버전 확인:
 
 ```bash
 hugo version
+
 ```
 
 ✅ Hugo Extended 버전이면 SCSS 테마(PaperMod 등)도 문제없이 사용할 수 있습니다.
@@ -40,11 +42,13 @@ hugo version
 mkdir ~/blogsite
 cd ~/blogsite
 hugo new site .
+
 ```
 
 생성되면 기본 구조는 다음과 같습니다:
 
 ```
+
 blogsite/
 ├── archetypes/
 ├── content/
@@ -52,6 +56,7 @@ blogsite/
 ├── static/
 ├── themes/
 └── config.toml
+
 ```
 
 ---
@@ -63,6 +68,7 @@ Git으로 테마를 추가합니다.
 ```bash
 git init
 git submodule add https://github.com/adityatelange/hugo-PaperMod themes/PaperMod
+
 ```
 
 `config.toml` 파일에 테마 설정을 추가합니다.
@@ -73,6 +79,7 @@ title = "내 기술 블로그"
 baseURL = "https://blog.jiminhome.shop"
 languageCode = "ko-kr"
 paginate = 5
+
 ```
 
 ⚙️ 이후 `config.toml`은 필요에 따라 `config.yml` 또는 `config/_default/` 디렉토리로 세분화해도 됩니다.
@@ -86,6 +93,7 @@ Hugo는 `content/` 폴더 아래에 Markdown 파일로 글을 관리합니다.
 
 ```bash
 hugo new posts/2025-10-08-my-first-post.md
+
 ```
 
 이 명령을 실행하면 아래와 같은 기본 틀이 자동 생성됩니다:
@@ -109,6 +117,7 @@ Hugo 내장 서버로 결과를 즉시 미리보기할 수 있습니다.
 
 ```bash
 hugo server -D
+
 ```
 
 - `-D`: draft 상태의 글도 포함하여 미리보기
@@ -122,15 +131,18 @@ hugo server -D
 
 ```bash
 hugo
+
 ```
 
 출력 결과는 `public/` 디렉터리에 저장됩니다.
 
 ```
+
 blogsite/public/
 ├── index.html
 ├── posts/
 └── categories/
+
 ```
 
 이 폴더를 Nginx의 DocumentRoot로 연결하면 웹에서 접근할 수 있습니다.

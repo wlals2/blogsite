@@ -17,6 +17,7 @@ seires: ["Hugo 블로그 kubernetes 마이그레이션 가이드"]
 ## 전체 워크플로우
 
 ```
+
 [1단계] 테스트 환경 구축 (31313 포트)
    ↓
 [2단계] 검증 (원 서버와 비교)
@@ -26,6 +27,7 @@ seires: ["Hugo 블로그 kubernetes 마이그레이션 가이드"]
 [4단계] 기존 Nginx 종료
    ↓
 [5단계] 포트 전환 (80/443)
+
 ```
 
 ## 사용 방법
@@ -35,6 +37,7 @@ seires: ["Hugo 블로그 kubernetes 마이그레이션 가이드"]
 ```bash
 cd ~/test/hugo-k8s-test
 ./build.sh
+
 ```
 
 **결과:**
@@ -54,6 +57,7 @@ kubectl get svc -n hugo-test
 # 접속 테스트
 curl http://localhost:31313
 # 또는 브라우저: http://192.168.1.187:31313
+
 ```
 
 **확인 사항:**
@@ -73,6 +77,7 @@ curl http://localhost:31313/ | head -100 > /tmp/new.html
 
 # 비교
 diff /tmp/old.html /tmp/new.html
+
 ```
 
 ### 4단계: 프로덕션 배포
@@ -92,6 +97,7 @@ kubectl get svc -n hugo-prod
 
 # 접속 테스트
 curl http://localhost:30080
+
 ```
 
 ### 5단계: 기존 Nginx와 전환
@@ -105,6 +111,7 @@ kubectl port-forward -n hugo-prod svc/hugo-blog-prod-svc 80:80
 
 # 또는 Ingress 설정 (권장)
 kubectl apply -f ingress.yaml
+
 ```
 
 ## 롤백 방법
@@ -120,11 +127,13 @@ kubectl delete -f hugo-prod-deployment.yaml
 
 # 기존 Nginx 재시작
 sudo systemctl start nginx
+
 ```
 
 ## 디렉토리 구조
 
 ```
+
 ~/test/hugo-k8s-test/
 ├── Dockerfile                    # Hugo 블로그 컨테이너화
 ├── nginx.conf                    # Nginx 설정
@@ -132,12 +141,15 @@ sudo systemctl start nginx
 ├── hugo-test-deployment.yaml     # 테스트 환경 (31313 포트)
 ├── hugo-prod-deployment.yaml     # 프로덕션 환경 (30080 포트)
 └── README.md                     # 이 파일
+
 ```
 
 ## 아키텍처 비교
 
 ### 현재 (Before)
+
 ```
+
 사용자
   ↓
 Nginx (80/443)
@@ -145,10 +157,13 @@ Nginx (80/443)
 /usr/share/nginx/html/
   ↓
 Hugo 정적 파일
+
 ```
 
 ### 이후 (After)
+
 ```
+
 사용자
   ↓
 Ingress (80/443)
@@ -160,6 +175,7 @@ Hugo Blog Pods (여러 개)
 Nginx 컨테이너
   ↓
 Hugo 정적 파일
+
 ```
 
 ## 장점

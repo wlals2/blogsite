@@ -41,12 +41,14 @@ GitHub → Repository → **Settings → Actions → Runners**
 mkdir -p ~/actions-runner && cd ~/actions-runner
 curl -o actions-runner-linux-x64.tar.gz -L https://github.com/actions/runner/releases/latest/download/actions-runner-linux-x64.tar.gz
 tar xzf ./actions-runner-linux-x64.tar.gz
+
 ```
 
 ### (3) GitHub에서 받은 토큰을 이용해 등록
 
 ```bash
 ./config.sh --url https://github.com/<GitHubID>/my-hugo-blog --token <등록_토큰>
+
 ```
 
 ### (4) 서비스 등록 및 실행
@@ -54,12 +56,14 @@ tar xzf ./actions-runner-linux-x64.tar.gz
 ```bash
 sudo ./svc.sh install
 sudo ./svc.sh start
+
 ```
 
 ### (5) 정상 동작 확인
 
 ```bash
 sudo systemctl status actions.runner.<GitHubID>.my-hugo-blog.service
+
 ```
 
 ---
@@ -97,6 +101,7 @@ jobs:
           sudo rsync -av --delete public/ /home/ubuntu/hugo-blog/public/
           sudo chown -R www-data:www-data /home/ubuntu/hugo-blog/public
           sudo systemctl reload nginx
+
 ```
 
 > 이 파일이 핵심입니다.
@@ -147,6 +152,7 @@ server {
 git add .
 git commit -m "Add new post: CI/CD 구축기"
 git push origin main
+
 ```
 
 GitHub → Actions 탭에서 "Deploy Hugo Blog" 실행 로그를 확인하면

@@ -38,6 +38,7 @@ pvc-zzz        detached   faulted
 $ kubectl describe pod grafana-xxx -n monitoring
 Events:
   Warning  FailedAttachVolume  volume pvc-xxx is not ready for workloads
+
 ```
 
 ---
@@ -49,14 +50,17 @@ Events:
 Longhorn은 고가용성을 위해 **기본 2개의 replica**를 다른 노드에 분산 저장합니다.
 
 ```
+
 Grafana PVC 생성 시:
 ├─ Worker1에 replica 1 생성 ✅
 └─ Worker2에 replica 2 생성 ✅
+
 ```
 
 ### 2. VMware Worker를 껐다 켰을 때 발생하는 일
 
 ```
+
 1. VM 종료
    └─ Worker1의 kubelet 프로세스 종료
 
@@ -77,6 +81,7 @@ Grafana PVC 생성 시:
 
 5. Pod 시작 실패
    └─ "volume is not ready for workloads" 에러
+
 ```
 
 ### 3. Kubernetes Health Check 메커니즘
@@ -93,6 +98,7 @@ $ kubectl describe node k8s-worker1
 Conditions:
   Type     Status  LastHeartbeatTime
   Ready    True    2025-11-18 19:18:50  # ← 마지막 heartbeat 시간
+
 ```
 
 VM이 꺼지면 kubelet 프로세스도 종료 → heartbeat 중단 → NotReady
@@ -120,6 +126,7 @@ VM이 꺼지면 kubelet 프로세스도 종료 → heartbeat 중단 → NotReady
 ### 전략: Control Plane을 주 스토리지 노드로 변경
 
 ```
+
 변경 전:
 ├─ Control Plane: 스토리지 X
 ├─ Worker1 (VMware): 주 스토리지 → 꺼지면 문제 💥
@@ -129,6 +136,7 @@ VM이 꺼지면 kubelet 프로세스도 종료 → heartbeat 중단 → NotReady
 ├─ Control Plane (/mnt/data): 주 스토리지 ✅ (항상 ON)
 ├─ Worker1 (VMware): 보조 스토리지 (optional)
 └─ Worker2 (VMware): 보조 스토리지 (optional)
+
 ```
 
 ### 1. Control Plane의 /mnt/data를 Longhorn 디스크로 추가
@@ -154,6 +162,7 @@ kubectl -n longhorn-system patch node.longhorn.io jimin-ab350m-gaming-3 \
 
 # 주의: default-disk-xxxxxxxxx는 실제 디스크 ID로 변경
 # 확인 방법: kubectl -n longhorn-system get node.longhorn.io jimin-ab350m-gaming-3 -o yaml | grep "default-disk-"
+
 ```
 
 ### 2. Worker 노드의 스케줄링 우선순위 낮춤
@@ -175,6 +184,7 @@ kubectl -n longhorn-system get nodes.longhorn.io
 # jimin-ab350m-gaming-3   True    true              True          2m
 # k8s-worker1             True    false             True          15d
 # k8s-worker2             True    false             True          15d
+
 ```
 
 ### 3. 기존 faulted PVC 복구
@@ -205,6 +215,7 @@ kubectl apply -f nextcloud-pvc-backup.yaml
 
 # 6. Deployment 재생성 (자동으로 PVC에 새 볼륨 생성)
 # 이미 있는 Deployment spec을 다시 apply하면 됨
+
 ```
 
 **방법 B: Longhorn UI로 수동 복구** (복잡함)
@@ -221,6 +232,7 @@ kubectl port-forward -n longhorn-system svc/longhorn-frontend 8080:80
 #    - "Attach to Node" → jimin-ab350m-gaming-3 선택
 #    - 정상 상태가 되면 "Detach"
 #    - Pod 재시작
+
 ```
 
 **방법 C: 간단한 복구 (데이터 손실 감수)**
@@ -236,6 +248,7 @@ kubectl delete namespace nextcloud
 
 # 다시 설치
 # (원래 사용한 Helm chart나 manifest로 재설치)
+
 ```
 
 ### 4. 기본 replica 개수 조정 (선택)
@@ -244,10 +257,12 @@ kubectl delete namespace nextcloud
 
 ```bash
 kubectl -n longhorn-system edit settings.longhorn.io default-replica-count
+
 ```
 
 ```yaml
 value: "1"  # 기본 2 → 1로 변경
+
 ```
 
 ---
@@ -279,6 +294,7 @@ $ kubectl get pods -A
 NAMESPACE     NAME                READY   STATUS    NODE
 monitoring    grafana-xxx         1/1     Running   k8s-worker1
 monitoring    prometheus-xxx      1/1     Running   k8s-worker2
+
 ```
 
 ---
@@ -291,6 +307,7 @@ monitoring    prometheus-xxx      1/1     Running   k8s-worker2
 sudo mkdir -p /mnt/data/longhorn
 sudo chown -R root:root /mnt/data/longhorn
 sudo chmod 700 /mnt/data/longhorn
+
 ```
 
 ### 2. Longhorn 백업 설정 (NFS/S3)
@@ -305,6 +322,7 @@ metadata:
 spec:
   backupTargetURL: s3://my-bucket@us-east-1/
   credentialSecret: aws-secret
+
 ```
 
 ### 3. 모니터링 설정
@@ -324,6 +342,7 @@ spec:
   endpoints:
   - port: manager
 EOF
+
 ```
 
 ---
@@ -352,14 +371,17 @@ EOF
 ## 대안 솔루션 (참고)
 
 ### A. Local Path Provisioner (간단)
+
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+
 ```
 - 각 노드의 로컬 디스크 사용
 - 복제 없음 (데이터 손실 위험)
 - VM 재시작해도 해당 노드의 데이터는 유지
 
 ### B. NFS Provisioner (안정적)
+
 ```bash
 # Control Plane에 NFS 서버 구성
 sudo apt install nfs-kernel-server
@@ -367,6 +389,7 @@ sudo mkdir -p /mnt/data/nfs
 sudo chown nobody:nogroup /mnt/data/nfs
 echo "/mnt/data/nfs *(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
 sudo systemctl restart nfs-kernel-server
+
 ```
 - 모든 노드가 Control Plane의 NFS 공유 사용
 - 구조 단순, 성능 적당
@@ -414,6 +437,7 @@ monitoring    prometheus-xxx                0/1     ContainerCreating
 $ kubectl describe pod grafana-xxx -n monitoring
 Events:
   Warning  FailedAttachVolume  volume pvc-xxx is not ready for workloads
+
 ```
 
 **첫 번째 가설:** Pod 재시작 문제? → 아니었음
@@ -430,6 +454,7 @@ monitoring    grafana-data-pvc     Bound    pvc-xxx
 $ kubectl -n longhorn-system get volume
 NAME       STATE      ROBUSTNESS
 pvc-xxx    detached   faulted
+
 ```
 
 **두 번째 가설:** Longhorn 볼륨이 문제의 근원
@@ -446,6 +471,7 @@ $ kubectl get nodes
 NAME          STATUS     ROLES
 worker1       NotReady   <none>   # ← 문제 발견!
 worker2       Ready      <none>
+
 ```
 
 **핵심 발견:** Worker1이 NotReady → 해당 replica가 outdated → 전체 볼륨 faulted
@@ -459,6 +485,7 @@ $ kubectl describe node k8s-worker1
 Conditions:
   Type     Status  LastHeartbeatTime
   Ready    False   2025-11-18 09:30:00  # ← 40초 전 마지막 heartbeat
+
 ```
 
 **학습:**
@@ -469,11 +496,13 @@ Conditions:
 ### 5단계: 근본 원인 분석
 
 ```
+
 문제의 구조:
 ├─ Longhorn은 고가용성을 위해 Worker1, Worker2에 replica 분산
 ├─ VM 재시작 → Worker1 NotReady → Worker1의 replica outdated
 ├─ Longhorn: "두 replica sync 안 맞아서 위험" → faulted
 └─ Control Plane은 항상 켜져있는데 스토리지로 안 씀 (taint 때문)
+
 ```
 
 **깨달음:** 항상 켜져있는 Control Plane을 주 스토리지로 써야 함!
@@ -491,12 +520,14 @@ NAME          READY
 k8s-worker1   True
 k8s-worker2   True
 # Control Plane이 없음! 😱
+
 ```
 
 **실패 원인 조사:**
 ```bash
 $ kubectl get node jimin-ab350m-gaming-3 -o jsonpath='{.spec.taints}'
 [{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane"}]
+
 ```
 
 **발견:** Control Plane에 `NoSchedule` taint → Longhorn manager Pod가 스케줄링 안 됨
@@ -514,6 +545,7 @@ $ kubectl -n longhorn-system get pods -o wide | grep jimin
 longhorn-manager-cdmqp   0/1   ContainerCreating   jimin-ab350m-gaming-3
 engine-image-ei-xxx      0/1   ContainerCreating   jimin-ab350m-gaming-3
 longhorn-csi-plugin-xxx  0/3   ContainerCreating   jimin-ab350m-gaming-3
+
 ```
 
 **진행 중:** 이미지 다운로드 중 (1-2분 소요)
@@ -527,6 +559,7 @@ NAME                    READY   ALLOWSCHEDULING
 jimin-ab350m-gaming-3   True    true              # ✅ 성공!
 k8s-worker1             True    true
 k8s-worker2             True    true
+
 ```
 
 **성공!** Control Plane이 Longhorn 노드로 등록됨
@@ -547,6 +580,7 @@ $ kubectl -n longhorn-system patch node.longhorn.io jimin-ab350m-gaming-3 \
     --type='json' \
     -p='[{"op": "replace", "path": "/spec/disks/default-disk-4e154299498f4305/path", "value": "/mnt/data/longhorn"}]'
 node.longhorn.io/jimin-ab350m-gaming-3 patched
+
 ```
 
 ### 10단계: Worker 노드 우선순위 낮춤
@@ -567,6 +601,7 @@ NAME                    READY   ALLOWSCHEDULING   SCHEDULABLE
 jimin-ab350m-gaming-3   True    true              True       ✅
 k8s-worker1             True    false             True       🔽
 k8s-worker2             True    false             True       🔽
+
 ```
 
 **완벽!** 이제 새 PVC는 Control Plane에만 생성됨
@@ -582,6 +617,7 @@ $ kubectl delete pod -n nextcloud --all
 $ kubectl -n longhorn-system get volume
 NAME       STATE      ROBUSTNESS
 pvc-xxx    detached   faulted    # ← 여전히 faulted 😢
+
 ```
 
 **실패:** 기존 Worker 노드의 faulted replica는 자동 복구 안 됨
@@ -594,6 +630,7 @@ $ kubectl -n longhorn-system patch volume pvc-xxx \
     -p='[{"op": "replace", "path": "/spec/numberOfReplicas", "value": 1}]'
 
 # 여전히 faulted
+
 ```
 
 **실패:** Longhorn이 안전을 위해 faulted 볼륨 attach 거부
@@ -623,6 +660,7 @@ pvc-new-xxx attached  jimin-ab350m-gaming-3  # ✅ Control Plane에!
 $ kubectl get pods -A | grep monitoring
 grafana-xxx      1/1   Running   jimin-ab350m-gaming-3
 prometheus-xxx   1/1   Running   jimin-ab350m-gaming-3
+
 ```
 
 **성공!** 🎉

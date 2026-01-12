@@ -15,8 +15,10 @@ Nextcloud를 Kubernetes에 배포했는데 Pod가 CrashLoopBackOff 상태로 계
 
 **에러 로그:**
 ```
+
 (13)Permission denied: AH00072: make_sock: could not bind to address :80
 no listening sockets available, shutting down
+
 ```
 
 ## securityContext란?
@@ -38,6 +40,7 @@ spec:
       allowPrivilegeEscalation: false
       capabilities:
         drop: ["ALL"]
+
 ```
 
 ### 주요 옵션 설명
@@ -48,6 +51,7 @@ spec:
 ```yaml
 securityContext:
   runAsUser: 33  # UID 33(www-data)으로 실행
+
 ```
 
 **의미:**
@@ -61,6 +65,7 @@ securityContext:
 $ kubectl exec -it pod-name -- ps aux
 USER       PID  COMMAND
 www-data     1  apache2
+
 ```
 
 #### 2. runAsGroup
@@ -69,6 +74,7 @@ www-data     1  apache2
 ```yaml
 securityContext:
   runAsGroup: 3000
+
 ```
 
 #### 3. fsGroup
@@ -77,6 +83,7 @@ securityContext:
 ```yaml
 securityContext:
   fsGroup: 33
+
 ```
 
 **동작 방식:**
@@ -98,6 +105,7 @@ drwxrwsr-x 2 root   33  4096 Nov  4 10:00 data
 ```yaml
 securityContext:
   runAsNonRoot: true
+
 ```
 
 - 컨테이너 이미지가 root로 실행하려 하면 **시작 차단**
@@ -131,6 +139,7 @@ OSError: [Errno 13] Permission denied
 # root(UID 0)
 $ sudo python3 -m http.server 80
 Serving HTTP on 0.0.0.0 port 80...  # ✅ 성공
+
 ```
 
 ## Nextcloud 컨테이너의 동작 방식
@@ -146,11 +155,13 @@ EXPOSE 80
 
 # entrypoint.sh 스크립트
 ENTRYPOINT ["/entrypoint.sh"]
+
 ```
 
 ### 실행 흐름
 
 ```
+
 ┌─────────────────────────────────────────┐
 │ 1. 컨테이너 시작 (root, UID 0)          │
 │    - /entrypoint.sh 실행               │
@@ -168,6 +179,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 │    - Worker: www-data(UID 33)로 실행   │
 │    - PHP 처리: www-data 권한           │
 └─────────────────────────────────────────┘
+
 ```
 
 **핵심:**
@@ -182,6 +194,7 @@ USER       PID  COMMAND
 root         1  apache2 -DFOREGROUND        # 마스터
 www-data    15  apache2 -DFOREGROUND        # 워커
 www-data    16  apache2 -DFOREGROUND        # 워커
+
 ```
 
 ## 문제 발생 시나리오
@@ -192,10 +205,12 @@ www-data    16  apache2 -DFOREGROUND        # 워커
 securityContext:
   runAsUser: 33        # UID 33(www-data)로 강제 실행
   runAsNonRoot: true
+
 ```
 
 **실행 흐름:**
 ```
+
 ┌──────────────────────────────────────────┐
 │ 1. 컨테이너 시작 (www-data, UID 33)      │
 │    ❌ root가 아님!                        │
@@ -213,12 +228,15 @@ securityContext:
 │    🔄 Kubernetes가 재시작 시도           │
 │    🔄 CrashLoopBackOff                   │
 └──────────────────────────────────────────┘
+
 ```
 
 **에러 로그:**
 ```
+
 AH00072: make_sock: could not bind to address :80
 (13)Permission denied
+
 ```
 
 ## 다른 서비스는 왜 괜찮나?
@@ -229,6 +247,7 @@ AH00072: make_sock: could not bind to address :80
 securityContext:
   runAsUser: 65534     # ✅ 가능
   runAsNonRoot: true
+
 ```
 
 **이유:**
@@ -241,6 +260,7 @@ securityContext:
 securityContext:
   runAsUser: 472       # ✅ 가능
   runAsNonRoot: true
+
 ```
 
 **이유:**
@@ -253,6 +273,7 @@ securityContext:
 securityContext:
   runAsUser: 999       # ✅ 가능
   runAsNonRoot: true
+
 ```
 
 **이유:**
@@ -277,6 +298,7 @@ securityContext:
   fsGroup: 33  # PVC 권한만 해결
   # runAsUser: 33        ← 삭제
   # runAsNonRoot: true   ← 삭제
+
 ```
 
 **장점:**
@@ -286,10 +308,12 @@ securityContext:
 
 **동작:**
 ```
+
 1. 컨테이너 시작 → root(UID 0)
 2. Apache 마스터 → root (80번 포트 OK)
 3. Apache 워커 → www-data (UID 33)
 4. PVC 파일 그룹 → 33 (fsGroup)
+
 ```
 
 ### 2. 비특권 포트 사용 (대안)
@@ -304,6 +328,7 @@ containers:
 securityContext:
   runAsUser: 33
   runAsNonRoot: true
+
 ```
 
 **단점:**
@@ -318,6 +343,7 @@ securityContext:
   capabilities:
     add:
     - NET_BIND_SERVICE  # 특권 포트 허용
+
 ```
 
 **의미:**
@@ -335,6 +361,7 @@ securityContext:
 ```bash
 $ ls -la /var/lib/longhorn/
 drwxr-xr-x 2 root root 4096 data/
+
 ```
 
 **Nextcloud가 파일 쓰기 시도:**
@@ -342,6 +369,7 @@ drwxr-xr-x 2 root root 4096 data/
 # www-data(UID 33)가 쓰기 시도
 $ touch /var/www/html/data/test.txt
 Permission denied  # ❌ root 소유라 실패
+
 ```
 
 ### fsGroup으로 해결
@@ -349,6 +377,7 @@ Permission denied  # ❌ root 소유라 실패
 ```yaml
 securityContext:
   fsGroup: 33
+
 ```
 
 **변경된 권한:**
@@ -367,6 +396,7 @@ drwxrwsr-x 2 root   33 4096 data/
 ```bash
 # www-data가 쓰기 가능!
 $ touch /var/www/html/data/test.txt  # ✅ 성공
+
 ```
 
 ## 최종 권장 설정
@@ -389,6 +419,7 @@ spec:
         image: nextcloud:latest
         ports:
         - containerPort: 80
+
 ```
 
 ### 일반 애플리케이션 (비특권 포트)
@@ -410,6 +441,7 @@ spec:
         image: myapp:latest
         ports:
         - containerPort: 8080  # 비특권 포트
+
 ```
 
 ## 트러블슈팅 체크리스트
@@ -451,9 +483,11 @@ spec:
 - [capabilities(7) man page](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 
 ### 특권 포트 해제 (참고용)
+
 ```bash
 # Linux에서 특권 포트 제한 해제 (비권장)
 sysctl -w net.ipv4.ip_unprivileged_port_start=0
+
 ```
 
 ## 요약
@@ -469,14 +503,6 @@ sysctl -w net.ipv4.ip_unprivileged_port_start=0
 **핵심 원칙:**
 - 특권 포트 사용 → `runAsUser` 제거, `fsGroup`만 설정
 - 비특권 포트 사용 → `runAsUser` + `runAsNonRoot` + `fsGroup` 모두 설정
-
-
-
-
-
-
-
-
 
 
 

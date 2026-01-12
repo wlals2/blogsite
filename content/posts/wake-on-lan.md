@@ -19,10 +19,13 @@ description: "꺼져 있는 PC를 네트워크 매직 패킷으로 원격으로 
 
 ```bash
 sudo ethtool enxb0386cf28a7e | grep Supports
+
 ```
 
 ### 🧩 전체 구조
+
 ```
+
 ┌──────────────┐
 │ BIOS/UEFI    │ ← Wake on LAN 옵션
 │  └─> NIC(유선랜) 전원 유지
@@ -46,6 +49,7 @@ sudo ethtool enxb0386cf28a7e | grep Supports
 ---
 
 ### ⚙️ 2. 네트워크 확인 및 Tool 설치
+
 ```bash
 # 사용할 NIC 확인
 ip link show
@@ -56,8 +60,11 @@ sudo apt install -y ethtool
 
 # WOL 상태 확인
 sudo ethtool 인터페이스명 | grep Wake-on
+
 ```
+
 ### 출력예시
+
 ```bash
 Supports Wake-on: pumbg
 Wake-on: d
@@ -79,18 +86,17 @@ ExecStart=/sbin/ethtool -s enxb0386cf28a7e wol g
 
 [Install]
 WantedBy=multi-user.target
+
 ```
 
 활성화 명령어:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable wol.service
 sudo systemctl start wol.service
 
 ```
-
-
-
 
 
 

@@ -21,7 +21,9 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 ###  K8s EFK 구현 및 트러블슈팅
 
 ## 📦 기본 구성
+
 ```
+
 ~/test/company-infra/
 ├─ templates/
 │ ├─ mysql/
@@ -50,10 +52,13 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 ├─ values.yaml
 ├─ Chart.yaml
 ├─ helm-chart
+
 ```
 
 ### 🎤 폴더를 구분한 이유:
+
 ```
+
   EFK에서는 많은 설정 변경이랑 트러블 슈팅이 많이 일어나기 때문에
 구분지어 관리를 하도록 하였다. 많은 혼란이 일어날 수 있다. 구현하는 과정이 너무나 험난했다.
 
@@ -65,6 +70,7 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 이 방법은 통했고 더 손 쉽게 마무리한 것 같다.  기존에 하던 방식에서 벗어나 기본적인 것 만을 사용하니 정말 마법같이 해결되었다. 아쉬운 것은 Elaistcsearch 버전을 7.x.x를 사용했다는 것이다. selft-certficate까지 구현하기에는 지금 나에게는 너무 어렵다고 생각헀다. 계속 오류가 일어나며 권한 문제가 계속 발생했기 때문이다.
 
 이번 실습을 통해 더욱더 많은 것을 배우게 된 것같다.  이번 프로젝트를 끝내고 EFK를 보안적인 요소까지 챙겨서 꼭 다시 구현해보고 싶다.
+
 ```
 
 ### 🔥 helm 차트로 ELK(+ Fluent bit) 통합 배포
@@ -97,6 +103,7 @@ K8s에서 사용하던 helm 과 Kubectl 네임서버를 삭제하면 된다.
 ---
 
 ## ✅ values.yaml
+
 ```yaml
 replicaCount: 1
 
@@ -151,8 +158,11 @@ fluentbit:
     host:  company-infra-c-elasticsearch
     port:  9200
     index: kubernetes-logs
+
 ```
+
 ## ✅ Elasitcsearch *.yaml
+
 ```yaml
 # elasticsearch-configmap
 apiVersion: v1
@@ -240,8 +250,11 @@ spec:
       resources:
         requests:
           storage: {{ .Values.elasticsearch.volume.size }}
+
 ```
+
 ## ✅  Fluentbit *.yaml
+
 ```yaml
 #fluentbit-configmap.yaml
 apiVersion: v1
@@ -354,8 +367,11 @@ spec:
     port: {{ .Values.service.fluentbit.metricsPort }}
     targetPort: metrics
     nodePort: {{ .Values.service.fluentbit.metricsNodePort }}
+
 ```
+
 ## ✅  kibana*.yaml
+
 ```yaml
 # kibana-configmap.yaml
 apiVersion: v1
@@ -425,6 +441,7 @@ spec:
     port: {{ .Values.service.kibana.port }}
     targetPort: http
     nodePort: {{ .Values.service.kibana.nodePort }}
+
 ```
 
 ## 🔓 트러블 슈팅
@@ -441,10 +458,12 @@ spec:
 curl http://<노드IP>:32020/_cluster/health?pretty
 kubectl logs -f deployment/company-infra-c-kibana
 kubectl exec -it <kibana-pod> -- curl -I http://company-infra-c-elasticsearch:9200
+
 ```
 - 해결:
 복잡한 configMap 대신 Env-vars로만 설정한다.
 kibana Deployment에  아래 내용을 추가한다.
+
 ```yaml
 env:
 - name: ELASTICSEARCH_HOSTS
@@ -462,6 +481,7 @@ env:
 ``` bash
 curl: (7) Failed to connect to localhost port 32020
 원인 : network.host 가 localhost로 만 바인딩 되어 있어 다른 곳에서는 들어 올수 없었음
+
 ```
 
 - 해결:
@@ -477,9 +497,12 @@ env:
  ```
 
 ### 3. Fluent Bit DNS 오류
+
 ```
+
 getaddrinfo(host='efk-elasticsearch', err=4): Domain name not found
  ```
+
 사실 상 통틀어서 제일 큰 문제 였을지도 모른다. \
 기존에 다른 아키텍처에서도 Fluent bit에서 es 연결이 되지 않으며 도착까지 못한 이유는 서비스 이름이 서로 불일치 하지 않아서 일까라는 생각이 들었다. 이전에는 config 설정만 찾아댕겼지 막상 host는 한번도 생각하지 못했다.
 (EFK 성공하기 위해 몇날 며칠을 고생했다..)
@@ -491,7 +514,9 @@ fluentbit:
     port: 9200
     index: kubernetes-logs
     
+
 ```
+
  
 
 * (네임스페이스가 다르다면)  FQDN을 사용한다.
@@ -499,7 +524,9 @@ fluentbit:
 comapny-infra-c-elasticseach.efk.svc.cluster.local 을 사용한다. 위 host명을 바꾸어주면 된다.
 
 ### 🔥 고생한거에 비해 글이 짧아 적으면서도 놀랐다. 
+
 ```
+
 트러블슈팅들을 정리해보니 계속 하던 것을 바꾸던지 기존에도 잘된 것도 values에 옮겨 실행하는 둥 
 쓸때 없는 행동들도 많았던 것 같다. 템플릿을 직접 수정하는 데는 들여쓰기에도 많은 오류가 나타났다.
 
@@ -511,5 +538,7 @@ comapny-infra-c-elasticseach.efk.svc.cluster.local 을 사용한다. 위 host명
 정말 너무 안될 때는 새로 만들어 보는 것도 하나의 방법이라는 것을 느꼈다.
 
 차차 배경지식들을 쌓아가면서 더 높고 빠른 해결 능력이 갖출 것이라고 믿는 다.
+
 ```
+
  

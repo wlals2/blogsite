@@ -34,6 +34,7 @@ series: ["EKS 정복기"]
 ### 전체 구조
 
 ```
+
 ┌─────────────────────────────────────────────────────┐
 │                   AWS 관리 영역                      │
 │  ┌──────────────────────────────────────────┐       │
@@ -62,12 +63,15 @@ series: ["EKS 정복기"]
 │  │  (Pod에 VPC IP 할당)                         │    │
 │  └─────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────┘
+
 ```
 
 ### 주요 컴포넌트 동작 방식
 
 #### 1. **Control Plane (AWS 관리)**
+
 ```
+
 ┌─────────────────────────────────────────┐
 │  API Server                              │
 │  - 모든 요청의 진입점                      │
@@ -86,20 +90,25 @@ series: ["EKS 정복기"]
 │  - Pod 배치 결정                          │
 │  - Desired state 유지                     │
 └─────────────────────────────────────────┘
+
 ```
 
 #### 2. **Data Plane (사용자 관리)**
+
 ```
+
 Worker Node (EC2 Instance)
 ├── kubelet: Control Plane과 통신, Pod 관리
 ├── kube-proxy: 네트워크 규칙 관리
 ├── Container Runtime: Docker/containerd
 └── VPC CNI: Pod에 ENI IP 할당
+
 ```
 
 #### 3. **네트워킹 흐름**
 
 ```
+
 [외부 요청] 
     ↓
 [LoadBalancer Service / Ingress]
@@ -107,6 +116,7 @@ Worker Node (EC2 Instance)
 [VPC CNI가 할당한 Pod IP]
     ↓
 [Container 내 애플리케이션]
+
 ```
 
 **특징**: EKS는 VPC CNI를 사용하여 Pod에 VPC IP를 직접 할당합니다.
@@ -148,6 +158,7 @@ sudo mv /tmp/eksctl /usr/local/bin
 # 버전 확인
 eksctl version
 kubectl version --client
+
 ```
 
 ### 방법 1: eksctl로 간단하게 시작 (추천)
@@ -169,6 +180,7 @@ eksctl create cluster \
 # - Control Plane 생성
 # - Worker Node Group 생성
 # - kubeconfig 자동 설정
+
 ```
 
 ### 방법 2: YAML 파일로 세밀하게 제어
@@ -223,11 +235,13 @@ addons:
     version: latest
   - name: kube-proxy
     version: latest
+
 ```
 
 ```bash
 # YAML로 클러스터 생성
 eksctl create cluster -f cluster-config.yaml
+
 ```
 
 ### 클러스터 생성 확인
@@ -242,6 +256,7 @@ kubectl get pods -A
 
 # 클러스터 정보 상세 확인
 kubectl cluster-info
+
 ```
 
 ---
@@ -284,6 +299,7 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 80
+
 ```
 
 ```bash
@@ -298,6 +314,7 @@ kubectl get svc nginx-service
 # nginx-service   LoadBalancer   a7f2...ap-northeast-2.elb.amazonaws.com
 
 # 브라우저에서 EXTERNAL-IP로 접속하면 Nginx 페이지 확인 가능
+
 ```
 
 ### 2. 실전 예제: Hugo 블로그 배포 (당신의 경험 활용)
@@ -343,6 +360,7 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 1313
+
 ```
 
 ### 3. Ingress 컨트롤러 설치 (비용 절감)
@@ -359,6 +377,7 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set clusterName=my-first-eks \
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller
+
 ```
 
 ```yaml
@@ -383,6 +402,7 @@ spec:
             name: hugo-blog-service
             port:
               number: 80
+
 ```
 
 ---
@@ -401,6 +421,7 @@ managedNodeGroups:
     desiredCapacity: 2
     minSize: 1
     maxSize: 5
+
 ```
 
 **절감 효과**: 최대 90% 비용 절감 (비프로덕션 워크로드에 적합)
@@ -413,6 +434,7 @@ fargateProfiles:
     selectors:
       - namespace: default
       - namespace: production
+
 ```
 
 **장점**: 
@@ -428,6 +450,7 @@ fargateProfiles:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml
+
 ```
 
 워크로드에 따라 노드를 자동으로 증감하여 비용 절감.
@@ -439,6 +462,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/
 kubectl create namespace kubecost
 helm repo add kubecost https://kubecost.github.io/cost-analyzer/
 helm install kubecost kubecost/cost-analyzer --namespace kubecost
+
 ```
 
 ---
@@ -460,6 +484,7 @@ eksctl scale nodegroup --cluster my-first-eks \
 
 # 클러스터 삭제 (주의!)
 eksctl delete cluster --name my-first-eks
+
 ```
 
 ### 디버깅
@@ -477,6 +502,7 @@ kubectl exec -it  -- /bin/bash
 # 리소스 사용량 확인
 kubectl top nodes
 kubectl top pods
+
 ```
 
 ### kubeconfig 관리
@@ -488,6 +514,7 @@ aws eks update-kubeconfig --region ap-northeast-2 --name my-first-eks
 # 여러 클러스터 간 전환
 kubectl config get-contexts
 kubectl config use-context 
+
 ```
 
 ---

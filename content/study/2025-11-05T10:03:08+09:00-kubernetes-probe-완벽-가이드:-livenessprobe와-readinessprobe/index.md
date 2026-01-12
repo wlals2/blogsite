@@ -21,6 +21,7 @@ series: ["K8s 개념 뿌시기"]
 - GitLab/GitHub deployment 화면에서 실패 발생 (사진 참조)
 
 ### 2. 문제 발견
+
 ```bash
 # GitGuardian(ggshield)로 스캔 실행
 ggshield secret scan repo .
@@ -28,6 +29,7 @@ ggshield secret scan repo .
 # 결과: Kubernetes JWT 토큰이 commit 히스토리에서 감지됨
 # Commit: 935a85afe976d495bc0ac282ada86864a6cbf3a9
 # 파일: dashboard/dashboard-token.txt
+
 ```
 
 ---
@@ -48,18 +50,24 @@ ggshield secret scan repo .
 
 ## 🛠️ 해결 과정
 ####  1단계: 문제 인식
+
 ```
+
 # ggshield가 탐지만 함 - 자동 수정은 안 됨
 # 수동으로 처리 필요
+
 ```
 
 #### 2단계: 토큰 무효화 시도 (실패)
+
 ```
+
 # Secret만 삭제하고 재생성
 kubectl delete secret admin-user-token -n kubernetes-dashboard
 kubectl apply -f secret.yaml
 
 # 결과: 토큰이 똑같이 생성됨! ❌kub
+
 ```
 
 #### 실패 원인:
@@ -68,14 +76,17 @@ kubectl apply -f secret.yaml
 - JWT 토큰은 다음 정보로 생성됨:
 
 ```
+
 {
     "kubernetes.io/serviceaccount/service-account.uid": "32831f10-aa7b-46d1-be40-ff3ca1df454b",
     "kubernetes.io/serviceaccount/service-account.name": "admin-user",
     // ...
   }
+
 ```
 - 동일한 UID = 동일한 토큰
 #### 3단계: 올바른 토큰 무효화 (성공)
+
 ```bash
 # ServiceAccount 자체를 삭제해야 UID가 변경됨
 kubectl delete serviceaccount admin-user -n kubernetes-dashboard
@@ -85,8 +96,11 @@ kubectl create serviceaccount admin-user -n kubernetes-dashboard
 kubectl create clusterrolebinding admin-user \
   --clusterrole=cluster-admin \
   --serviceaccount=kubernetes-dashboard:admin-user
+
 ```
+
 #### 4단계: Git 히스토리에서 완전 제거
+
 ```bash
 # BFG Repo-Cleaner로 히스토리에서 파일 제거
 bfg --delete-files dashboard-token.txt
@@ -97,9 +111,11 @@ git gc --prune=now --aggressive
 
 # Force push (주의!)
 git push origin main --force
+
 ```
 
 ### 5단계: 재발 방지
+
 ```bash
 # .gitignore 설정
 cat >> .gitignore << EOF
@@ -123,12 +139,15 @@ if [ $? -ne 0 ]; then
 fi
 EOF
 chmod +x .git/hooks/pre-commit
+
 ```
 
 ## 📊 핵심 개념 정리
 
 ### Kubernetes ServiceAccount Token의 구조
+
 ```
+
 JWT Token = Header + Payload + Signature
 
 Payload에 포함되는 정보:
@@ -138,11 +157,13 @@ Payload에 포함되는 정보:
 - Secret 이름
 
 → UID가 같으면 토큰도 같음!
+
 ```
 
 #### Secret vs ServiceAccount 삭제의 차이
 
 ### ✅ 최종 해결책
+
 ```bash
 #!/bin/bash
 # dashboard/rotate-token.sh
@@ -171,6 +192,7 @@ EOF
 # 4. 새 토큰 출력
 sleep 2
 kubectl get secret admin-user-token -n kubernetes-dashboard -o jsonpath='{.data.token}' | base64 -d
+
 ```
 
 | 작업                | ServiceAccount UID | 토큰     |

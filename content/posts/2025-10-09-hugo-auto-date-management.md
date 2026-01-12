@@ -30,6 +30,7 @@ Hugo 블로그를 운영하다 보면 다음과 같은 불편함이 있습니다
 
 ```bash
 mkdir -p layouts/_default
+
 ```
 
 `list.html` 파일에서 페이지를 가져오는 부분에 정렬 코드를 추가합니다:
@@ -46,6 +47,7 @@ mkdir -p layouts/_default
 {{- $pages = $pages.ByDate.Reverse }}
 
 {{- $paginator := .Paginate $pages }}
+
 ```
 
 **핵심 코드:** `{{- $pages = $pages.ByDate.Reverse }}`
@@ -65,6 +67,7 @@ enableGitInfo = true
 # Frontmatter 날짜 우선순위 설정
 [frontmatter]
   date = [":git", ":fileModTime", "date", "publishDate", "lastmod"]
+
 ```
 
 #### 설정 설명
@@ -106,6 +109,7 @@ Hugo는 배열의 **왼쪽부터 우선순위**를 가집니다:
 ```bash
 # 새 글 생성
 hugo new posts/my-new-post.md
+
 ```
 
 1. 파일이 생성됨 → `:fileModTime`이 현재 시간으로 설정
@@ -121,6 +125,7 @@ vim content/posts/old-post.md
 # Git commit
 git add content/posts/old-post.md
 git commit -m "글 내용 업데이트"
+
 ```
 
 1. 파일 저장 → `:fileModTime`이 업데이트됨
@@ -169,6 +174,7 @@ draft: false
 git init
 git add .
 git commit -m "Initial commit"
+
 ```
 
 ### 날짜 우선순위 이해하기
@@ -187,6 +193,7 @@ git commit -m "Initial commit"
 [frontmatter]
   date = ["date", "publishDate"]           # 작성 날짜 (고정)
   lastmod = [":git", ":fileModTime"]       # 수정 날짜 (자동)
+
 ```
 
 ### 2. 날짜 포맷 표시
@@ -200,6 +207,7 @@ git commit -m "Initial commit"
   | 수정: {{ .Format "2006-01-02" }}
   {{ end }}
 </div>
+
 ```
 
 ### 3. 여러 정렬 옵션
@@ -211,6 +219,7 @@ Hugo는 다양한 정렬 방법을 지원합니다:
 {{- $pages.ByDate.Reverse }}   # 최신 글 먼저
 {{- $pages.ByTitle }}          # 제목순
 {{- $pages.ByWeight }}         # Weight 필드순
+
 ```
 
 ---

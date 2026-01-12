@@ -23,17 +23,20 @@ author: "늦찌민"
 하지만 Nextcloud는 여전히 문제가 있었습니다.
 
 ### 증상
+
 ```bash
 $ kubectl -n nextcloud get pods
 NAME                            READY   STATUS            RESTARTS   AGE
 nextcloud-749ff94d7c-xsfx7      0/1     PodInitializing   0          5m
 nextcloud-db-5f696d4f47-vdc78   1/1     Running           0          5m
+
 ```
 
 - **nextcloud-db**: 정상 실행 ✅
 - **nextcloud**: PodInitializing 상태로 멈춤 ⏳
 
 ### PVC 상태는 정상
+
 ```bash
 $ kubectl -n nextcloud get pvc
 NAME                 STATUS   VOLUME                                     CAPACITY   STORAGECLASS
@@ -46,6 +49,7 @@ NAME                                       STATE      ROBUSTNESS   NODE
 pvc-548af1dd-5d39-45e0-9d4c-749ca3cc4596   attached   healthy      jimin-ab350m-gaming-3
 pvc-da572f49-4485-403d-918a-92e6a4d36452   attached   healthy      jimin-ab350m-gaming-3
 pvc-c6b5e7f8-9a1b-4c2d-8d3e-5f6a7b8c9d0e   attached   healthy      jimin-ab350m-gaming-3
+
 ```
 
 모든 볼륨이 `healthy` 상태인데 왜 Pod는 시작이 안 되는가? 🤔
@@ -58,6 +62,7 @@ pvc-c6b5e7f8-9a1b-4c2d-8d3e-5f6a7b8c9d0e   attached   healthy      jimin-ab350m-
 
 ```bash
 $ kubectl -n nextcloud describe pod nextcloud-749ff94d7c-xsfx7
+
 ```
 
 **핵심 발견:**
@@ -75,6 +80,7 @@ Containers:
     State:          Running
       Started:      Wed, 19 Nov 2025 13:40:09 +0900
     Ready:          True
+
 ```
 
 **어? Init Container는 완료되었고 메인 컨테이너도 Running인데?**
@@ -96,6 +102,7 @@ Events:
   Normal   Pulled                  22s    Successfully pulled image "nextcloud:latest" in 8m2.796s  # ← 여기!
   Normal   Created                 22s    Created container: nextcloud
   Normal   Started                 22s    Started container nextcloud
+
 ```
 
 **핵심 발견:**
@@ -108,9 +115,11 @@ Events:
 ## 근본 원인
 
 ### Nextcloud 이미지 크기
+
 ```bash
 $ kubectl -n nextcloud describe pod nextcloud-749ff94d7c-xsfx7 | grep "Image size"
 Image size: 523988958 bytes  # 약 524MB
+
 ```
 
 **문제:**
@@ -123,10 +132,12 @@ Image size: 523988958 bytes  # 약 524MB
 Kubernetes의 Pod 라이프사이클:
 
 ```
+
 Pending → PodInitializing → Running
   ↓              ↓              ↓
 스케줄링     Init 컨테이너    메인 컨테이너
              + 이미지 다운     실행 중
+
 ```
 
 **PodInitializing 단계에서 하는 일:**
@@ -141,6 +152,7 @@ Pending → PodInitializing → Running
 Grafana:      ~200MB
 Prometheus:   ~250MB
 Nextcloud:    ~524MB  ← 2배 이상 큼!
+
 ```
 
 ---
@@ -157,6 +169,7 @@ $ kubectl -n nextcloud get pods --watch
 
 # 이미지 다운로드 진행 상황 확인 (다른 터미널에서)
 $ kubectl -n nextcloud describe pod nextcloud-xxx | grep -A 5 "Events:"
+
 ```
 
 **예상 시간:**
@@ -176,6 +189,7 @@ done
 
 # 또는 crictl로 직접 다운로드 (각 노드에서)
 $ sudo crictl pull nextcloud:latest
+
 ```
 
 ### 방법 3: 특정 버전 고정 (안정성)
@@ -189,6 +203,7 @@ spec:
   - name: nextcloud
     image: nextcloud:29.0.8  # 특정 버전 명시
     imagePullPolicy: IfNotPresent  # 로컬에 있으면 재다운로드 안 함
+
 ```
 
 **장점:**
@@ -207,6 +222,7 @@ $ helm install harbor harbor/harbor
 $ docker pull nextcloud:latest
 $ docker tag nextcloud:latest harbor.local/nextcloud:latest
 $ docker push harbor.local/nextcloud:latest
+
 ```
 
 ---
@@ -214,14 +230,17 @@ $ docker push harbor.local/nextcloud:latest
 ## 최종 확인
 
 ### Pod 정상 실행
+
 ```bash
 $ kubectl -n nextcloud get pods
 NAME                            READY   STATUS    RESTARTS   AGE
 nextcloud-749ff94d7c-xsfx7      1/1     Running   0          13m
 nextcloud-db-5f696d4f47-vdc78   1/1     Running   0          13m
+
 ```
 
 ### Nextcloud 로그 확인
+
 ```bash
 $ kubectl -n nextcloud logs nextcloud-749ff94d7c-xsfx7 --tail=20
 Initializing nextcloud 32.0.1.2 ...
@@ -229,9 +248,11 @@ New nextcloud instance
 Initializing finished
 AH00558: apache2: Could not reliably determine the server's fully qualified domain name
 Apache/2.4.65 (Debian) PHP/8.3.27 configured -- resuming normal operations
+
 ```
 
 ### 서비스 접속
+
 ```bash
 $ kubectl -n nextcloud get svc
 NAME           TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)
@@ -240,6 +261,7 @@ nextcloud-db   ClusterIP   10.103.159.120   <none>        3306/TCP
 
 # 브라우저에서 접속
 http://192.168.1.187:30888
+
 ```
 
 ---
@@ -251,6 +273,7 @@ http://192.168.1.187:30888
 - 큰 이미지 다운로드 중일 수 있으므로 `describe pod`로 Events 확인 필수
 
 ### 2. 문제 진단 순서
+
 ```bash
 # 1. Pod 상태
 kubectl get pods
@@ -263,6 +286,7 @@ kubectl get events --sort-by='.lastTimestamp'
 
 # 4. 로그 확인
 kubectl logs <pod-name>
+
 ```
 
 ### 3. 이미지 크기 최적화
@@ -293,6 +317,7 @@ initContainers:
   volumeMounts:
   - name: nextcloud-data
     mountPath: /var/www/html/data
+
 ```
 
 **목적:**

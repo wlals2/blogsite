@@ -16,10 +16,13 @@ Prometheus에서 `kubernetes-nodes` job으로 kubelet의 메트릭을 수집하�
 ### 첫 번째 에러: x509 인증서 문제
 
 ```
+
 Error scraping target: Get "https://CONTROL_PLANE_IP:10250/metrics": 
 tls: failed to verify certificate: x509: cannot validate certificate 
 for CONTROL_PLANE_IP because it doesn't contain any IP SANs
+
 ```
+
 1
 **원인:** kubelet이 사용하는 자체 서명 인증서에 IP 주소가 SAN(Subject Alternative Name)에 포함되어 있지 않아서 발생
 
@@ -38,6 +41,7 @@ for CONTROL_PLANE_IP because it doesn't contain any IP SANs
   relabel_configs:
     - action: labelmap
       regex: __meta_kubernetes_node_label_(.+)
+
 ```
 
 ### 두 번째 에러: 403 Forbidden
@@ -45,7 +49,9 @@ for CONTROL_PLANE_IP because it doesn't contain any IP SANs
 TLS 문제를 해결한 후 새로운 에러가 발생:
 
 ```
+
 Error scraping target: server returned HTTP status 403 Forbidden
+
 ```
 
 **원인:** Prometheus ServiceAccount가 kubelet의 `/metrics` 엔드포인트에 접근할 권한이 없음
@@ -80,12 +86,14 @@ subjects:
 - kind: ServiceAccount
   name: prometheus
   namespace: monitoring
+
 ```
 
 ### 적용
 
 ```bash
 kubectl apply -f prometheus-rbac-nodes.yaml
+
 ```
 
 약 15초 후 Prometheus UI에서 kubernetes-nodes target이 UP 상태로 변경되는 것을 확인할 수 있습니다.
@@ -108,6 +116,7 @@ rules:
   - nodes/metrics  # Node의 metrics 하위 리소스
   - nodes/proxy    # Node의 proxy 하위 리소스
   verbs: ["get", "list"]  # 읽기 작업만 허용
+
 ```
 
 #### 필드 설명
@@ -149,6 +158,7 @@ subjects:
 - kind: ServiceAccount
   name: prometheus  # monitoring 네임스페이스의 prometheus ServiceAccount
   namespace: monitoring
+
 ```
 
 #### 필드 설명
@@ -176,6 +186,7 @@ subjects:
 ### 우리 케이스의 전체 흐름
 
 ```
+
 1. Prometheus Pod 실행
    ↓
 2. Pod는 prometheus ServiceAccount 사용 (monitoring 네임스페이스)
@@ -187,6 +198,7 @@ subjects:
 5. Prometheus가 nodes/metrics와 nodes/proxy에 접근 가능
    ↓
 6. kubelet의 /metrics 엔드포인트에서 메트릭 수집 성공
+
 ```
 
 ## 검증
@@ -203,6 +215,7 @@ kubectl get clusterrolebinding prometheus-nodes
 # 상세 정보 확인
 kubectl describe clusterrole prometheus-nodes
 kubectl describe clusterrolebinding prometheus-nodes
+
 ```
 
 ### Prometheus에서 확인
@@ -243,11 +256,6 @@ Prometheus UI에서 Status → Targets로 이동하여 `kubernetes-nodes` job의
 4. **ClusterRoleBinding의 역할**: 권한과 주체를 연결하는 다리 역할
 
 Kubernetes의 RBAC은 처음에는 복잡해 보이지만, 권한 정의와 권한 부여를 분리한 명확한 구조 덕분에 유연하고 안전한 권한 관리가 가능합니다.
-
-
-
-
-
 
 
 

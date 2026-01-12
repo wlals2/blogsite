@@ -36,6 +36,7 @@ sudo apt update
 sudo apt install -y nginx
 sudo systemctl enable nginx
 sudo systemctl start nginx
+
 ```
 
 설치 후 브라우저에서 서버 IP(http://122.46.102.248)로 접속해
@@ -44,19 +45,24 @@ Welcome to nginx! 페이지가 보이면 정상입니다.
 ## ☁️ Step 2. Cloudflare DNS 설정
 1. Cloudflare에 blog.jiminhome.shop 도메인을 추가
 2. A 레코드 생성
+
 ```bash
 blog  →  122.46.102.248
+
 ```
+
 3. Proxy(🌩️) 기능은 ON으로 유지해도 HTTPS 동작에는 문제 없습니다.
 단, 인증서 발급 시에는 일시적으로 OFF 하는 것이 안전합니다.
 
 ## 🔐 Step 3. Let's Encrypt SSL 인증서 발급
 
 Certbot과 nginx 플러그인을 설치합니다.
+
 ``` bash
 sudo apt install -y certbot python3-certbot-nginx
 # 인증서 발급
 sudo certbot --nginx -d blog.jiminhome.shop
+
 ```
 - 인증 이메일: fw4568@gmail.com
 - 자동으로 /etc/letsencrypt/live/blog.jiminhome.shop/ 경로에 PEM 파일 생성
@@ -68,10 +74,12 @@ sudo certbot --nginx -d blog.jiminhome.shop
 ```bash
 sudo systemctl status certbot.timer
 sudo certbot renew --dry-run
+
 ```
 
 ## 🧱 Step 5. Nginx HTTPS 설정 확인
 인증서 적용이 완료되면 깁노 설정 파일(/etc/nginx/sites-enabled/default)에 자동으로 아래와 같은 블록 추가
+
 ```bash
 server {
     listen 443 ssl;
@@ -86,12 +94,15 @@ server {
     }
 }
 ```
+
 ## ⚙️ Step 6. 방화벽 설정(UFW)
+
 ```bash
 sudo ufw allow 'Nginx Full'
 sudo ufw enable
 sudo ufw status
 # 80, 443/tcp 허용되어 있으면 된다.
+
 ```
 
 ## 🧾 Step 7. Hugo 블로그 연동 준비

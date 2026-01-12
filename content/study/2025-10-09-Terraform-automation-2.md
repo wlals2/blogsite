@@ -20,6 +20,7 @@ Terraform의 기본 문법과 핵심 개념들을 정리합니다. Resource와 D
 ```hcl
 resource "타입" "이름" {...}
 data "타입" "이름" {...}
+
 ```
 
 ### 타입(Type) 이해하기

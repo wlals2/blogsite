@@ -20,22 +20,30 @@ Apache httpd의 프록시 기능을 이해하고 실제 설정할 수 있다.
 프록시는 클라이언트와 서버 사이에서 중개 역할을 하는 서버입니다.
 
 ```
+
 [클라이언트] ↔ [프록시 서버] ↔ [백엔드 서버]
+
 ```
 
 ### 프록시 종류
 
 #### Forward Proxy (정방향 프록시)
+
 ```
+
 [클라이언트] → [프록시] → [인터넷] → [목적지 서버]
+
 ```
 - 클라이언트를 대신해서 요청
 - 클라이언트가 프록시 존재를 인지
 - 용도: 캐싱, 접근 제어, 익명화
 
 #### Reverse Proxy (역방향 프록시)
+
 ```
+
 [클라이언트] → [인터넷] → [리버스 프록시] → [백엔드 서버들]
+
 ```
 - 서버를 대신해서 요청 받음
 - 클라이언트는 프록시 존재를 모름
@@ -56,6 +64,7 @@ httpd -M | grep proxy
 # - mod_proxy_http     (HTTP/HTTPS 프록시)
 # - mod_proxy_balancer (로드 밸런싱)
 # - mod_proxy_wstunnel (WebSocket)
+
 ```
 
 ### 모듈 활성화
@@ -67,6 +76,7 @@ LoadModule proxy_module modules/mod_proxy.so
 LoadModule proxy_http_module modules/mod_proxy_http.so
 LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
 LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
+
 ```
 
 **Ubuntu/Debian:**
@@ -76,6 +86,7 @@ sudo a2enmod proxy_http
 sudo a2enmod proxy_balancer
 sudo a2enmod lbmethod_byrequests
 sudo systemctl restart apache2
+
 ```
 
 ---
@@ -95,6 +106,7 @@ sudo systemctl restart apache2
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ### 설정 항목 설명
@@ -135,6 +147,7 @@ sudo systemctl restart apache2
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ### 특정 경로 제외
@@ -156,6 +169,7 @@ sudo systemctl restart apache2
         Require all granted
     </Directory>
 </VirtualHost>
+
 ```
 
 ---
@@ -182,6 +196,7 @@ sudo systemctl restart apache2
     ProxyPass / balancer://mycluster/
     ProxyPassReverse / balancer://mycluster/
 </VirtualHost>
+
 ```
 
 ### 로드 밸런싱 알고리즘
@@ -199,6 +214,7 @@ sudo systemctl restart apache2
 
     ProxySet lbmethod=byrequests
 </Proxy>
+
 ```
 
 ### 가중치 설정
@@ -211,6 +227,7 @@ sudo systemctl restart apache2
 
     ProxySet lbmethod=byrequests
 </Proxy>
+
 ```
 
 ---
@@ -227,6 +244,7 @@ sudo systemctl restart apache2
     # Sticky Session 활성화
     ProxySet stickysession=JSESSIONID
 </Proxy>
+
 ```
 
 ### 자동 복구 설정
@@ -238,6 +256,7 @@ sudo systemctl restart apache2
 
     # retry=60 : 60초 후 다시 시도
 </Proxy>
+
 ```
 
 ### 헬스 체크
@@ -250,6 +269,7 @@ sudo systemctl restart apache2
     # 타임아웃 설정
     ProxySet timeout=10
 </Proxy>
+
 ```
 
 ---
@@ -268,6 +288,7 @@ ProxyRequests Off
     Deny from all
     Allow from localhost
 </Proxy>
+
 ```
 
 ### 헤더 조작
@@ -285,6 +306,7 @@ ProxyRequests Off
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ---
@@ -308,6 +330,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ---
@@ -334,6 +357,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ---
@@ -355,6 +379,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ### 상태 페이지
@@ -371,6 +396,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     SetHandler server-status
     Require ip 127.0.0.1
 </Location>
+
 ```
 
 접속: `http://example.com/balancer-manager`
@@ -395,6 +421,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     ErrorLog /var/log/httpd/myapp_error.log
     CustomLog /var/log/httpd/myapp_access.log combined
 </VirtualHost>
+
 ```
 
 ### Django/Python 앱 (Gunicorn)
@@ -416,6 +443,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
 
     ProxyPreserveHost On
 </VirtualHost>
+
 ```
 
 ### 다중 앱 로드 밸런싱
@@ -444,6 +472,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
         Require ip 10.0.0.0/8
     </Location>
 </VirtualHost>
+
 ```
 
 ---
@@ -463,6 +492,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     # 동시 연결 수 제한
     ProxyPass / http://localhost:8080/ max=20
 </VirtualHost>
+
 ```
 
 ### 타임아웃 설정
@@ -477,6 +507,7 @@ LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
     ProxyPass / http://localhost:8080/ timeout=60
     ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
+
 ```
 
 ---

@@ -27,6 +27,7 @@ author: "늦찌민"
 코드 블록에 한글을 입력하면 다음과 같이 표시됨:
 
 ```
+
 이후 (After)
 
 人蔗‍
@@ -34,6 +35,7 @@ author: "늦찌민"
 Ingress (80/443)
   ↓
 Kubernetes Service
+
 ```
 
 글자가 완전히 겹쳐서 읽을 수 없는 상태.
@@ -50,9 +52,11 @@ Hugo v0.93.0+부터 도입된 기능:
 **문제가 되는 코드:**
 ```markdown
 ```
+
 [1단계] 테스트 환경 구축
    ↓
 [2단계] 검증
+
 ```
 ```
 
@@ -77,6 +81,7 @@ Hugo의 GoAT 렌더 훅을 오버라이드하여 일반 코드 블록으로 렌�
 <div class="highlight">
   <pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code>{{ .Inner }}</code></pre>
 </div>
+
 ```
 
 #### Step 2: 한글 코드 블록 폰트 설정
@@ -130,6 +135,7 @@ code {
 
 <!-- 나눔고딕코딩 폰트 (한글 코드용) -->
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+
 ```
 
 #### Step 4: Hugo 설정 업데이트 (선택사항)
@@ -151,6 +157,7 @@ code {
   [markup.goldmark.extensions]
     [markup.goldmark.extensions.passthrough]
       enable = false
+
 ```
 
 ### 결과
@@ -171,11 +178,13 @@ code {
 ### 원인 분석
 
 ```
+
 로컬 소스              빌드 결과            Docker               Nginx 서버            외부 접속
 ────────────────────────────────────────────────────────────────────────────────────────────
 content/study/        public/study/        hugo-test           /var/www/blog/        https://blog.jiminhome.shop
 2025-11-18 ✅  ─hugo→  2025-11-18 ✅  ───X─→ (21시간 전 이미지) ───X─→ 2025-11-17까지만 ───→ 11/17까지만 표시
 2025-11-19 ✅         2025-11-19 ✅                                    2025-11-17까지만
+
 ```
 
 **문제의 흐름:**
@@ -188,39 +197,57 @@ content/study/        public/study/        hugo-test           /var/www/blog/   
 ### 진단 과정
 
 #### 1. 로컬 빌드 확인
+
 ```bash
 ls /home/jimin/blogsite/public/study/
+
 ```
+
 **결과:** 2025-11-18, 2025-11-19 디렉토리 존재 ✅
 
 #### 2. Docker 컨테이너 확인
+
 ```bash
 docker ps | grep hugo
+
 ```
+
 **결과:**
 ```
+
 hugo-test   21 hours ago   Up 21 hours   0.0.0.0:1313->80/tcp
+
 ```
+
 ❌ 21시간 전에 시작된 컨테이너가 오래된 이미지 사용 중
 
 #### 3. 실제 서비스 확인
+
 ```bash
 curl -s https://blog.jiminhome.shop/study/ | grep -o "2025-11-[0-9][0-9]" | sort -u
+
 ```
+
 **결과:**
 ```
+
 2025-11-05
 2025-11-06
 2025-11-07
 2025-11-08
 2025-11-17
+
 ```
+
 ❌ 11월 18일, 19일 없음
 
 #### 4. Nginx 문서 루트 확인
+
 ```bash
 sudo nginx -T | grep -B 2 -A 5 "blog.jiminhome"
+
 ```
+
 **결과:**
 ```nginx
 server {
@@ -232,9 +259,12 @@ server {
 ```
 
 #### 5. Nginx 서버 디렉토리 확인
+
 ```bash
 ls /var/www/blog/study/ | grep "2025-11-1[89]"
+
 ```
+
 **결과:** 없음 ❌
 
 ### 해결 과정
@@ -250,6 +280,7 @@ docker rm hugo-test
 
 # 이미지 삭제
 docker rmi hugo-blog:test
+
 ```
 
 **이유:**
@@ -265,13 +296,16 @@ docker rmi hugo-blog:test
 cd ~/blogsite
 sudo rm -rf public/ resources/
 hugo
+
 ```
 
 **결과:**
 ```
+
 Pages            | 569
 Paginator pages  |  10
 Total in 494 ms
+
 ```
 
 #### Step 3: Nginx 서버로 배포
@@ -279,6 +313,7 @@ Total in 494 ms
 ```bash
 sudo rsync -av --delete /home/jimin/blogsite/public/ /var/www/blog/
 sudo systemctl reload nginx
+
 ```
 
 **`rsync` 옵션 설명:**
@@ -291,23 +326,32 @@ sudo systemctl reload nginx
 ```bash
 # 파일 존재 확인
 ls /var/www/blog/study/ | grep "2025-11-1[89]"
+
 ```
+
 **결과:**
 ```
+
 2025-11-18t193030+0900-kubernetes-+-longhorn-+-vmware-worker-환경에서-pvc가-계속-망가지는-문제-해결
 2025-11-18t195454+0900-longhorn-트러블-슈팅-정리-가이드
 2025-11-19t151012+0900-pod-트러블-슈팅-뿌시기-feat.pvc
+
 ```
+
 ✅ 파일 존재
 
 ```bash
 # 웹사이트 확인
 curl -s https://blog.jiminhome.shop/study/ | grep "11월 19일"
+
 ```
+
 **결과:**
 ```html
 <span title='2025-11-19 15:10:12 +0900 KST'>2025년 11월 19일</span>
+
 ```
+
 ✅ 정상 표시
 
 ### 브라우저 캐시 이슈
@@ -335,19 +379,23 @@ curl -s https://blog.jiminhome.shop/study/ | grep "11월 19일"
 ### Before (문제 있음)
 
 ```
+
 1. Hugo 빌드 (~/blogsite/public/)
 2. Docker 이미지 빌드 (hugo-blog:test)
 3. Docker 컨테이너 실행 (hugo-test)
    └─ 문제: 이미지 재빌드 안 하면 오래된 콘텐츠 계속 서빙
+
 ```
 
 ### After (개선됨)
 
 ```
+
 1. Hugo 빌드 (~/blogsite/public/)
 2. Nginx로 직접 배포 (rsync)
 3. Nginx 리로드
    └─ 장점: 즉각 반영, 간단한 프로세스
+
 ```
 
 ---
@@ -366,6 +414,7 @@ sudo rsync -av --delete public/ /var/www/blog/
 
 # 3. Nginx 리로드
 sudo systemctl reload nginx
+
 ```
 
 ### 자동화 스크립트 (선택사항)
@@ -397,12 +446,15 @@ sudo systemctl reload nginx
 
 echo "✅ 배포 완료!"
 echo "🌐 https://blog.jiminhome.shop 확인"
+
 ```
 
 실행:
+
 ```bash
 chmod +x ~/blogsite/deploy.sh
 ~/blogsite/deploy.sh
+
 ```
 
 ---
@@ -435,10 +487,13 @@ chmod +x ~/blogsite/deploy.sh
 - 불필요한 중간 단계는 복잡도만 증가
 
 ### 4. 배포 파이프라인 설계
+
 ```
+
 복잡함                             간단함
 Docker → K8s → ...    vs.    Hugo → Nginx
 (대규모, 자동화 필요)           (소규모, 빠른 반영)
+
 ```
 
 ### 5. 캐시 관리
