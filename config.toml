@@ -1,5 +1,5 @@
 baseURL = "https://blog.jiminhome.shop/"
-title = "Jimin's DevOps Journey"
+title = "Jimin | Cloud Engineer Journey"
 theme = "PaperMod"
 languageCode = "ko-kr"
 defaultContentLanguage = "ko"
@@ -30,6 +30,10 @@ enableGitInfo = true
         title = true
   [markup.highlight]
     noClasses = false
+    codeFences = true
+    guessSyntax = true
+    lineNos = false
+    style = "monokai"
   [markup.goldmark.extensions]
     [markup.goldmark.extensions.passthrough]
       enable = false
@@ -42,31 +46,37 @@ enableGitInfo = true
   showCodeCopyButtons = true
   showPostNavLinks = true
   showWordCount = true
-  mainSections = ["til", "devops", "posts", "study", "experience"]
+  mainSections = ["projects", "study"]
 
   # Home Page - Profile Mode
   [params.profileMode]
     enabled = true
-    title = "DevOps Engineer를 향한 여정"
-    subtitle = "AWS EKS 3-Tier + Multi-Cloud DR 프로젝트 진행 중 | Kubernetes, CI/CD, IaC"
+    title = "클라우드 엔지니어를 준비하는 지민입니다"
+    subtitle = """
+수동 작업 4시간의 고통에서 시작해, **99.9% 가용성**을 달성하기까지
+
+🎯 **성장 여정:** EC2 수동 → Terraform IaC → Kubernetes → AWS EKS + Multi-Cloud DR
+
+💡 **철학:** 문제를 발견하고, 원인을 분석하고, 코드로 해결합니다.
+"""
     imageUrl = "/images/profile.png"
-    imageTitle = "Jimin - DevOps Engineer"
+    imageTitle = "Jimin - Cloud Engineer"
     imageWidth = 150
     imageHeight = 150
 
     [[params.profileMode.buttons]]
-      name = "About Me"
-      url = "/about/"
-    [[params.profileMode.buttons]]
-      name = "Projects"
+      name = "🚀 Projects"
       url = "/projects/"
     [[params.profileMode.buttons]]
-      name = "TIL"
-      url = "/til/"
+      name = "📚 Study"
+      url = "/study/"
+    [[params.profileMode.buttons]]
+      name = "👤 About"
+      url = "/about/"
 
   # Home Info Mode (alternative - disabled)
   [params.homeInfoParams]
-    Title = "DevOps Engineer를 향한 여정"
+    Title = "클라우드 엔지니어를 향한 여정"
     Content = """
 - AWS EKS 3-Tier Architecture 구축
 - Multi-Cloud DR (AWS + Azure)
@@ -87,7 +97,7 @@ enableGitInfo = true
   category = "categories"
   series = "series"
 
-# Main Menu - 목적 기반 구조
+# Main Menu - 간소화된 구조 (4개)
 [[menu.main]]
   identifier = "about"
   name = "About"
@@ -101,34 +111,16 @@ enableGitInfo = true
   weight = 2
 
 [[menu.main]]
-  identifier = "til"
-  name = "TIL"
-  url = "/til/"
-  weight = 3
-
-[[menu.main]]
-  identifier = "devops"
-  name = "DevOps"
-  url = "/devops/"
-  weight = 4
-
-[[menu.main]]
-  identifier = "experience"
-  name = "Experience"
-  url = "/posts/"
-  weight = 5
-
-[[menu.main]]
   identifier = "study"
   name = "Study"
   url = "/study/"
-  weight = 6
+  weight = 3
 
 [[menu.main]]
   identifier = "tags"
   name = "Tags"
   url = "/tags/"
-  weight = 7
+  weight = 4
 
 buildFuture = true
 
