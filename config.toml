@@ -51,39 +51,66 @@ enableGitInfo = true
   # Home Page - Profile Mode
   [params.profileMode]
     enabled = true
-    title = "클라우드 엔지니어로 성장하는 중입니다 🚀"
+    title = "지민 (Jimin)"
     subtitle = """
-**3개월간 219개 문서 작성** | AWS EKS + Multi-Cloud DR 구축 완료
+<p style="margin-bottom: 2rem;">클라우드 엔지니어 지망생입니다.</p>
 
-📊 **실제 성과**
-• 배포 시간 67% 단축 (30분 → 10분, Canary 배포)
-• 가용성 99.9% 달성 (DR RTO 2분)
-• HPA 자동 스케일링 구현 (WAS 2-10 Pods)
+<div class="profile-section">
+  <h3>📊 핵심 성과</h3>
+  <div class="highlight-box">
+    배포 시간 <span class="metric-badge">67% 단축</span> (30분 → 10분) ·
+    가용성 <span class="metric-badge">99.9%</span> 달성 ·
+    인프라 구축 <span class="metric-badge">94% 자동화</span>
+  </div>
+</div>
 
-💻 **Tech Stack**
-AWS | Kubernetes | Terraform | ArgoCD | Jenkins | Prometheus | Grafana | Redis | Azure
+<div class="profile-section">
+  <h3>💻 기술 스택</h3>
+  <div class="tech-grid">
+    <div>
+      <strong>Infrastructure</strong><br>
+      AWS · Kubernetes · Terraform · ArgoCD
+    </div>
+    <div>
+      <strong>CI/CD & Monitoring</strong><br>
+      Jenkins · Prometheus · Grafana · GitHub Actions
+    </div>
+    <div>
+      <strong>Application</strong><br>
+      Spring Boot · Redis · MySQL · nginx
+    </div>
+  </div>
+</div>
 
-🎯 **학습 여정** (2025.09 ~ 현재)
-Phase 1: Terraform IaC (인프라 구축 94% 단축)
-Phase 2: Kubernetes (배포 자동화 83% 개선)
-Phase 3: EKS + Multi-Cloud DR (99.9% 가용성)
-Phase 4: MSA 준비 중 (Service Mesh, Kafka)
+<div class="profile-section">
+  <h3>🚀 프로젝트 여정</h3>
+  <div class="project-card">
+    <strong>Phase 1</strong> | Terraform IaC<br>
+    수동 4시간 → 자동 15분, 재현 가능한 인프라
+  </div>
+  <div class="project-card">
+    <strong>Phase 2</strong> | Kubernetes + CI/CD<br>
+    수동 배포 30분 → GitOps 자동 10분
+  </div>
+  <div class="project-card">
+    <strong>Phase 3</strong> | EKS + Multi-Cloud DR<br>
+    단일 클라우드 → Multi-Cloud, RTO 2분 달성
+  </div>
+</div>
 
-💡 **철학:** 문제를 발견하고, 원인을 분석하고, 코드로 해결합니다.
+<div class="profile-section">
+  <h3>🎯 목표</h3>
+  <div class="goal-box">
+    "문제를 발견하고, 원인을 분석하고, 코드로 해결하는 엔지니어"
+  </div>
+</div>
 """
-    imageUrl = "/images/profile.png"
-    imageTitle = "Jimin - Cloud Engineer"
-    imageWidth = 150
-    imageHeight = 150
 
     [[params.profileMode.buttons]]
-      name = "🏆 Projects"
+      name = "프로젝트 보기"
       url = "/projects/"
     [[params.profileMode.buttons]]
-      name = "📝 Study Notes"
-      url = "/study/"
-    [[params.profileMode.buttons]]
-      name = "📧 Contact"
+      name = "소개"
       url = "/about/"
 
   # Home Info Mode (alternative - disabled)
