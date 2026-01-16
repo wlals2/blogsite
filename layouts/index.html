@@ -1,0 +1,157 @@
+{{ define "main" }}
+<div class="profile-container">
+  {{- with site.Params.profileMode }}
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    {{- if .imageUrl }}
+    <div class="profile-image">
+      <img src="{{ .imageUrl | absURL }}" alt="{{ .imageTitle | default "Profile" }}"
+           width="{{ .imageWidth | default 150 }}"
+           height="{{ .imageHeight | default 150 }}" />
+    </div>
+    {{- end }}
+
+    <h1 class="profile-title">{{ .title }}</h1>
+    <p class="profile-subtitle">클라우드 엔지니어 지망생입니다.</p>
+  </div>
+
+  <!-- 핵심 성과 (정적) -->
+  <div class="profile-section">
+    <h3>📊 핵심 성과</h3>
+    <div class="highlight-box">
+      배포 시간 <span class="metric-badge">67% 단축</span> (30분 → 10분) ·
+      가용성 <span class="metric-badge">99.9%</span> 달성 ·
+      인프라 구축 <span class="metric-badge">94% 자동화</span>
+    </div>
+  </div>
+
+  <!-- 기술 스택 (정적) -->
+  <div class="profile-section">
+    <h3>💻 기술 스택</h3>
+    <div class="tech-grid">
+      <div>
+        <strong>Infrastructure</strong><br>
+        AWS · Kubernetes · Terraform · ArgoCD
+      </div>
+      <div>
+        <strong>CI/CD & Monitoring</strong><br>
+        Jenkins · Prometheus · Grafana · GitHub Actions
+      </div>
+      <div>
+        <strong>Application</strong><br>
+        Spring Boot · Redis · MySQL · nginx
+      </div>
+    </div>
+  </div>
+
+  <!-- 최근 프로젝트 (동적 - 자동 업데이트) -->
+  <div class="profile-section">
+    <h3>📌 최근 프로젝트</h3>
+    {{- with site.RegularPages }}
+      {{- $projects := where . "Section" "projects" }}
+      {{- $projects = where $projects "Type" "!=" "page" }}
+      {{- $recentProjects := first 3 $projects }}
+
+      {{- if $recentProjects }}
+        {{- range $recentProjects }}
+          {{- if ne .File.LogicalName "_index.md" }}
+          <div class="project-card">
+            <strong><a href="{{ .Permalink }}">{{ .Title }}</a></strong>
+            {{- if .Date }}
+             ({{ .Date.Format "2006.01" }} ~ 현재)<br>
+            {{- end }}
+            {{- if .Params.summary }}
+            {{ .Params.summary }}
+            {{- else if .Summary }}
+            {{ .Summary | truncate 100 }}
+            {{- end }}
+          </div>
+          {{- end }}
+        {{- end }}
+      {{- else }}
+        <div class="project-card">
+          <strong>AWS EKS + Multi-Cloud DR</strong> (2025.11 ~ 현재)<br>
+          3-Tier 아키텍처 구축 · 99.9% 가용성 달성 · Canary 배포 자동화
+        </div>
+      {{- end }}
+    {{- else }}
+      <!-- Fallback if no pages -->
+      <div class="project-card">
+        <strong>AWS EKS + Multi-Cloud DR</strong> (2025.11 ~ 현재)<br>
+        3-Tier 아키텍처 구축 · 99.9% 가용성 달성 · Canary 배포 자동화
+      </div>
+    {{- end }}
+  </div>
+
+  <!-- 관심사 (동적 - tags 기반 자동 추출) -->
+  <div class="profile-section">
+    <h3>🎯 관심사</h3>
+    <div class="interest-box">
+      {{- $allTags := slice }}
+      {{- $recentPages := first 10 site.RegularPages }}
+      {{- range $recentPages }}
+        {{- range .Params.tags }}
+          {{- $allTags = $allTags | append . }}
+        {{- end }}
+      {{- end }}
+
+      {{- $tagMap := dict }}
+      {{- range $allTags }}
+        {{- $count := index $tagMap . | default 0 }}
+        {{- $tagMap = merge $tagMap (dict . (add $count 1)) }}
+      {{- end }}
+
+      {{- $sortedTags := slice }}
+      {{- range $tag, $count := $tagMap }}
+        {{- $sortedTags = $sortedTags | append (dict "tag" $tag "count" $count) }}
+      {{- end }}
+
+      {{- if gt (len $sortedTags) 0 }}
+        {{- $topTags := first 6 (sort $sortedTags "count" "desc") }}
+        {{- range $index, $item := $topTags }}
+          {{- if eq $item.tag "MSA" }}
+            • <strong>MSA 전환</strong> - Service Mesh (Istio, Cilium), Event-Driven<br>
+          {{- else if or (eq $item.tag "Cost") (eq $item.tag "FinOps") }}
+            • <strong>Cost 최적화</strong> - Spot Instance, Karpenter, FinOps<br>
+          {{- else if or (eq $item.tag "Observability") (eq $item.tag "Monitoring") }}
+            • <strong>Observability</strong> - Distributed Tracing, OpenTelemetry<br>
+          {{- else if or (eq $item.tag "Istio") (eq $item.tag "Service Mesh") }}
+            • <strong>Service Mesh</strong> - Istio, Cilium, mTLS, Circuit Breaker<br>
+          {{- else if eq $item.tag "Security" }}
+            • <strong>Security</strong> - IRSA, Secrets Manager, Pod Security<br>
+          {{- else }}
+            • <strong>{{ $item.tag }}</strong><br>
+          {{- end }}
+        {{- end }}
+      {{- else }}
+        <!-- Fallback: 기본 관심사 표시 -->
+        • <strong>MSA 전환</strong> - Service Mesh (Istio, Cilium), Event-Driven<br>
+        • <strong>Cost 최적화</strong> - Spot Instance, Karpenter, FinOps<br>
+        • <strong>Observability</strong> - Distributed Tracing, OpenTelemetry
+      {{- end }}
+    </div>
+  </div>
+
+  <!-- 블로그 취지 (정적) -->
+  <div class="profile-section">
+    <h3>✍️ 이 블로그는</h3>
+    <div class="goal-box">
+      클라우드 엔지니어로 성장하며 겪은 경험과 배움을 기록하고 공유합니다.<br>
+      실패와 해결 과정, 그리고 그 안에서 얻은 인사이트를 나눕니다.
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="profile-buttons">
+    {{- range .buttons }}
+    <a href="{{ .url | absURL }}" class="profile-button">
+      {{ .name }}
+    </a>
+    {{- end }}
+  </div>
+
+  {{- end }}{{/* end profileMode */}}
+</div>
+
+{{- end }}{{/* end main */}}

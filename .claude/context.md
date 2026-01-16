@@ -1,7 +1,13 @@
 # Blog K8s Project - 현재 상태
 
 > 최종 업데이트: 2026-01-16
-> 상태: ⏳ 계획 단계
+> 상태: 📋 **구현 계획 확정** → Phase 0 시작 대기
+>
+> **중요 결정**:
+> - ✅ Hugo 블로그도 Pod로 배포 (Docker 이미지)
+> - ✅ GitOps 자동화 (Git Push → Jenkins → K8s)
+> - ✅ Ingress로 Path-based Routing
+> - ✅ MySQL Longhorn PVC 영구 저장
 
 ---
 
@@ -316,11 +322,24 @@ kubectl get pvc -A
 
 ## 9. 다음 단계
 
-### 즉시 작업 가능
+### 구현 계획 확정 ✅
 
-1. **Phase 1**: Ingress Controller 설치 (승인 필요)
-2. **WAS 선택**: Spring Boot 애플리케이션 종류 결정
-3. **프로젝트 생성**: `/home/jimin/blog-k8s/` 디렉터리 구조 생성
+**계획 문서**: [IMPLEMENTATION-PLAN.md](.claude/IMPLEMENTATION-PLAN.md)
+
+**주요 결정 사항**:
+1. ✅ Hugo 블로그 → Docker 이미지 → K8s Pod
+2. ✅ Spring Boot Board (게시판 CRUD)
+3. ✅ GitOps 자동화 (Git Push → Jenkins → 자동 배포)
+4. ✅ 배포 시간: ~1-2분 (Netlify와 동일)
+
+### 즉시 시작 가능
+
+**Phase 0: 환경 준비** (30분)
+1. Ingress Controller 설치
+2. blog-system Namespace 생성
+3. 프로젝트 디렉터리 생성
+
+→ "Phase 0 시작"이라고 말씀하시면 즉시 시작합니다!
 
 ---
 

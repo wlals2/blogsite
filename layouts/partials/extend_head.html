@@ -1,2 +1,11 @@
+{{- /* Mermaid Diagram Support */ -}}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: document.body.className.includes("dark") ? 'dark' : 'default'
+  });
+</script>
+
 {{- /* Custom CSS */ -}}
 <link rel="stylesheet" href="{{ "css/custom.css" | absURL }}" />

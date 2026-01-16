@@ -14,9 +14,9 @@ tocopen: true
 
 모든 프로젝트는 **실제 문제 해결**에서 시작했습니다.
 
-"왜 이렇게 오래 걸리지?" → Terraform으로 15분에 해결
-"왜 배포할 때마다 긴장해야 하지?" → Canary로 리스크 최소화
-"왜 클라우드도 장애가 나지?" → Multi-Cloud DR로 99.9% 가용성
+- "왜 이렇게 오래 걸리지?" → Terraform으로 15분에 해결
+- "왜 배포할 때마다 긴장해야 하지?" → Canary로 리스크 최소화
+- "왜 클라우드도 장애가 나지?" → Multi-Cloud DR로 99.9% 가용성
 
 ---
 
@@ -26,12 +26,14 @@ tocopen: true
 graph LR
     A[Phase 1<br/>EC2 수동 배포<br/>4시간] --> B[Phase 2<br/>Kubernetes<br/>30분]
     B --> C[Phase 3<br/>EKS + DR<br/>10분]
-    C --> D[Phase 4<br/>MSA<br/>계획중]
+    C --> D[Phase 4<br/>Local K8s Blog<br/>진행중 🚧]
+    D --> E[Phase 5<br/>MSA<br/>계획중]
 
     style A fill:#ff6b6b
     style B fill:#4ecdc4
     style C fill:#45b7d1
-    style D fill:#96ceb4
+    style D fill:#ffa502
+    style E fill:#96ceb4
 ```
 
 | Phase | 문제 | 해결 | 성과 |
@@ -39,11 +41,51 @@ graph LR
 | **1. EC2** | 수동 배포 4시간 | Terraform IaC | 재현 가능 100% |
 | **2. K8s** | 배포 30분 소요 | Helm Chart | 배포 83% 단축 |
 | **3. EKS** | 단일 클라우드 SPOF | Multi-Cloud DR | 99.9% 가용성 |
-| **4. MSA** | Monolith 한계 | Service Mesh (계획) | - |
+| **4. Blog K8s** 🚧 | 블로그를 K8s로! | Hugo Pod + GitOps | 진행 중 |
+| **5. MSA** | Monolith 한계 | Service Mesh (계획) | - |
 
 ---
 
-## ☁️ Phase 3: AWS EKS + Multi-Cloud DR (현재)
+## 🚧 Phase 4: Local K8s Blog (진행 중!)
+
+> **기간**: 2026.01 ~ (진행 중)
+> **목표**: 이 블로그를 Kubernetes Pod로 배포, GitOps 자동화
+
+### 한 줄 요약
+
+**Netlify에서 내 Kubernetes로! 블로그도 K8s Pod로 운영하기**
+
+### 왜 이 프로젝트를?
+
+**문제 상황:**
+- 블로그에서 "Kubernetes 전문가"라고 소개
+- 정작 내 블로그는 Netlify에서 실행 🤔
+- **"자기가 쓰는 블로그도 K8s로 운영해야 진짜 아닌가?"**
+
+**목표:**
+- ✅ Hugo 블로그 → Docker 이미지 → K8s Pod
+- ✅ Spring Boot Board (게시판 CRUD)
+- ✅ Jenkins CI/CD (Git Push → 자동 배포)
+- ✅ Ingress Path Routing (`/`, `/board`)
+
+### Tech Stack
+
+<div class="tech-stack-badges">
+
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)
+![Hugo](https://img.shields.io/badge/Hugo-FF4088?logo=hugo&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white)
+![Jenkins](https://img.shields.io/badge/Jenkins-D24939?logo=jenkins&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+![Longhorn](https://img.shields.io/badge/Longhorn-ED6D00?logo=rancher&logoColor=white)
+
+</div>
+
+**[Phase 4 상세 보기 →](./phase4-local-k8s-blog/)** | **[구현 계획서 →](./.claude/IMPLEMENTATION-PLAN.md)**
+
+---
+
+## ☁️ Phase 3: AWS EKS + Multi-Cloud DR (완료)
 
 > **기간**: 2025.11 ~ 2026.01 (3개월)
 > **역할**: 인프라 전체 설계 및 구축
@@ -179,9 +221,9 @@ graph TB
 
 ---
 
-## 🚀 Phase 4: MSA (계획 중)
+## 🚀 Phase 5: MSA (계획 중)
 
-> **예상 기간**: 2026.02 ~
+> **예상 기간**: 2026.02 ~ (Phase 4 완료 후)
 
 ### 왜 필요한가?
 
@@ -277,11 +319,12 @@ EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
 
 ## 🎯 다음 목표
 
-1. **Phase 4 MSA 구축** (2026.02~)
-2. **Cost 최적화** (Spot Instance, Karpenter)
-3. **Security 강화** (IRSA, Secrets Manager)
-4. **Observability 개선** (Distributed Tracing)
+1. **Phase 4 완료** 🚧 (Local K8s Blog - 진행 중)
+2. **Phase 5 MSA 구축** (2026.02~)
+3. **Cost 최적화** (Spot Instance, Karpenter)
+4. **Security 강화** (IRSA, Secrets Manager)
+5. **Observability 개선** (Distributed Tracing)
 
 ---
 
-**Last Updated**: 2026-01-12
+**Last Updated**: 2026-01-16 (Phase 4 추가)

@@ -1,0 +1,29 @@
+# ==============================================================================
+# Hugo Blog Service
+# ==============================================================================
+# 목적: WEB Pod를 클러스터 내부에서 접근 가능하도록 노출
+#
+# Type: ClusterIP
+# - 클러스터 내부에서만 접근 가능
+# - Ingress가 이 Service를 통해 Pod에 접근
+#
+# Selector: app=web
+# - Deployment의 Pod들을 자동으로 발견하여 로드밸런싱
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: blog-system
+  labels:
+    app: web
+    tier: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
