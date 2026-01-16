@@ -195,3 +195,4 @@ AWS Console에서 클릭, 클릭, 클릭... 매번 실수하고, 같은 작업�
 | [Projects](/projects/) | Phase 1-3 프로젝트 상세 (문제 → 해결 → 성과) |
 | [Study](/study/) | 공부한 내용 정리 (K8s, EKS, Monitoring, Storage 등) |
 <- 커스텀 CSS 추가 ( 그라데이션, 카드 UI, 애니메이션 ) Test: Fri Jan 16 03:37:02 PM KST 2026 -->
+<- 커스텀 CSS 추가 ( 그라데이션, 카드 UI, 애니메이션 ) Test: Fri Jan 16 03:52:10 PM KST 2026 -->
