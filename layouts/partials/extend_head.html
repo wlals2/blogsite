@@ -1,7 +1,72 @@
-<!-- Google Fonts - 한글 코딩 폰트 -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Mermaid Diagram Support -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: document.body.className.includes("dark") ? 'dark' : 'default'
+  });
 
-<!-- 나눔고딕코딩 폰트 (한글 코드용) -->
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+  // Theme toggle support
+  window.addEventListener('load', () => {
+    const observer = new MutationObserver(() => {
+      const isDark = document.body.className.includes("dark");
+      mermaid.initialize({
+        theme: isDark ? 'dark' : 'default'
+      });
+      mermaid.contentLoaded();
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  });
+</script>
+
+<!-- Shields.io Badge Support (for Tech Stack) -->
+<style>
+  .tech-stack-badges img {
+    display: inline-block;
+    margin: 2px;
+  }
+
+  .tech-stack-badges {
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  /* Mermaid diagram styling */
+  .mermaid {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  /* Architecture section styling */
+  .architecture-section {
+    background: var(--entry);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+
+  /* Performance metrics table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+
+  table th {
+    background: var(--theme);
+    color: var(--primary);
+    padding: 12px;
+    text-align: left;
+  }
+
+  table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Highlight improvements */
+  table td:last-child {
+    font-weight: bold;
+    color: #4CAF50;
+  }
+</style>
