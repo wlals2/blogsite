@@ -51,11 +51,23 @@ enableGitInfo = true
   # Home Page - Profile Mode
   [params.profileMode]
     enabled = true
-    title = "클라우드 엔지니어를 준비하는 지민입니다"
+    title = "클라우드 엔지니어로 성장하는 중입니다 🚀"
     subtitle = """
-수동 작업 4시간의 고통에서 시작해, **99.9% 가용성**을 달성하기까지
+**3개월간 219개 문서 작성** | AWS EKS + Multi-Cloud DR 구축 완료
 
-🎯 **성장 여정:** EC2 수동 → Terraform IaC → Kubernetes → AWS EKS + Multi-Cloud DR
+📊 **실제 성과**
+• 배포 시간 67% 단축 (30분 → 10분, Canary 배포)
+• 가용성 99.9% 달성 (DR RTO 2분)
+• HPA 자동 스케일링 구현 (WAS 2-10 Pods)
+
+💻 **Tech Stack**
+AWS | Kubernetes | Terraform | ArgoCD | Jenkins | Prometheus | Grafana | Redis | Azure
+
+🎯 **학습 여정** (2025.09 ~ 현재)
+Phase 1: Terraform IaC (인프라 구축 94% 단축)
+Phase 2: Kubernetes (배포 자동화 83% 개선)
+Phase 3: EKS + Multi-Cloud DR (99.9% 가용성)
+Phase 4: MSA 준비 중 (Service Mesh, Kafka)
 
 💡 **철학:** 문제를 발견하고, 원인을 분석하고, 코드로 해결합니다.
 """
@@ -65,13 +77,13 @@ enableGitInfo = true
     imageHeight = 150
 
     [[params.profileMode.buttons]]
-      name = "🚀 Projects"
+      name = "🏆 Projects"
       url = "/projects/"
     [[params.profileMode.buttons]]
-      name = "📚 Study"
+      name = "📝 Study Notes"
       url = "/study/"
     [[params.profileMode.buttons]]
-      name = "👤 About"
+      name = "📧 Contact"
       url = "/about/"
 
   # Home Info Mode (alternative - disabled)
