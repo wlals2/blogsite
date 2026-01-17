@@ -24,226 +24,90 @@ tocopen: true
 
 ```mermaid
 graph LR
-    A[Phase 1<br/>EC2 수동 배포<br/>4시간] --> B[Phase 2<br/>Kubernetes<br/>30분]
-    B --> C[Phase 3<br/>EKS + DR<br/>10분]
-    C --> D[Phase 4<br/>Local K8s Blog<br/>진행중 🚧]
-    D --> E[Phase 5<br/>MSA<br/>계획중]
+    A["Phase 1<br>EC2 인스턴스<br>nginx 수동 설정"] --> B["Phase 2<br>Kubernetes<br>자동 배포"]
+    B --> C["Phase 3<br>EKS + DR<br>99.9% 가용성"]
+    C --> D["Phase 4<br>MSA<br>계획중"]
+
+    C -.-> E["Local K8s Blog<br>진행중"]
 
     style A fill:#ff6b6b
     style B fill:#4ecdc4
     style C fill:#45b7d1
-    style D fill:#ffa502
-    style E fill:#96ceb4
+    style D fill:#96ceb4
+    style E fill:#ffa502
 ```
 
 | Phase | 문제 | 해결 | 성과 |
 |-------|------|------|------|
-| **1. EC2** | 수동 배포 4시간 | Terraform IaC | 재현 가능 100% |
-| **2. K8s** | 배포 30분 소요 | Helm Chart | 배포 83% 단축 |
+| **1. EC2** | 수동 배포 4시간 | nginx 인스턴스 + Terraform | 재현 가능 100% |
+| **2. K8s** | 배포 30분 소요 | Kubernetes + Helm | 배포 83% 단축 |
 | **3. EKS** | 단일 클라우드 SPOF | Multi-Cloud DR | 99.9% 가용성 |
-| **4. Blog K8s** 🚧 | 블로그를 K8s로! | Hugo Pod + GitOps | 진행 중 |
-| **5. MSA** | Monolith 한계 | Service Mesh (계획) | - |
+| **4. MSA** | Monolith 한계 | Service Mesh + Istio (계획) | - |
+| **Local K8s** 🚧 | 블로그를 K8s로! | Hugo Pod + Jenkins | 진행 중 |
 
 ---
 
-## 🚧 Phase 4: Local K8s Blog (진행 중!)
+## 📌 프로젝트 둘러보기
 
-> **기간**: 2026.01 ~ (진행 중)
-> **목표**: 이 블로그를 Kubernetes Pod로 배포, GitOps 자동화
+### 🏗️ Phase 1: EC2 인스턴스 기반 nginx 구축
 
-### 한 줄 요약
+> **기간**: 2025.09 ~ 2025.10 | **역할**: 인프라 자동화
 
-**Netlify에서 내 Kubernetes로! 블로그도 K8s Pod로 운영하기**
+수동 배포 4시간 → Terraform 자동화 (**94% 단축**)
 
-### 왜 이 프로젝트를?
+**핵심 성과**: 재현 가능성 0% → 100% | 실수율 30% → 0%
 
-**문제 상황:**
-- 블로그에서 "Kubernetes 전문가"라고 소개
-- 정작 내 블로그는 Netlify에서 실행 🤔
-- **"자기가 쓰는 블로그도 K8s로 운영해야 진짜 아닌가?"**
-
-**목표:**
-- ✅ Hugo 블로그 → Docker 이미지 → K8s Pod
-- ✅ Spring Boot Board (게시판 CRUD)
-- ✅ Jenkins CI/CD (Git Push → 자동 배포)
-- ✅ Ingress Path Routing (`/`, `/board`)
-
-### Tech Stack
-
-<div class="tech-stack-badges">
-
-![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)
-![Hugo](https://img.shields.io/badge/Hugo-FF4088?logo=hugo&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white)
-![Jenkins](https://img.shields.io/badge/Jenkins-D24939?logo=jenkins&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
-![Longhorn](https://img.shields.io/badge/Longhorn-ED6D00?logo=rancher&logoColor=white)
-
-</div>
-
-**[Phase 4 상세 보기 →](./phase4-local-k8s-blog/)** | **[구현 계획서 →](./.claude/IMPLEMENTATION-PLAN.md)**
+**[상세 보기 →](./phase1-ec2/)**
 
 ---
 
-## ☁️ Phase 3: AWS EKS + Multi-Cloud DR (완료)
+### 🐳 Phase 2: Kubernetes 온프레미스
 
-> **기간**: 2025.11 ~ 2026.01 (3개월)
-> **역할**: 인프라 전체 설계 및 구축
+> **기간**: 2025.10 ~ 2025.11 | **역할**: K8s 클러스터 구축
 
-### 한 줄 요약
+EC2 수동 배포 30분 → Helm Chart 자동 배포 5분 (**83% 단축**)
 
-**단일 클라우드 95% 가용성 → Multi-Cloud 99.9% 가용성 달성**
+**핵심 성과**: 롤백 시간 30분 → 1분 | 설정 일관성 100%
 
-### 왜 이 프로젝트를?
-
-**문제 상황 (2025-11-07):**
-- 온프레미스 서버실 전원 장애 → **1시간 30분 다운타임**
-- 단일 클라우드 의존 → AWS 장애 시 대응 불가
-
-**목표:**
-- ✅ 99.9% 가용성 (월 43분 이하 다운타임)
-- ✅ DR RTO 2분 (Route53 Failover)
-- ✅ GitOps 자동화 (ArgoCD)
-
-### 아키텍처
-
-```mermaid
-graph TB
-    User[사용자] --> Route53[Route53 Failover<br/>www.goupang.shop]
-
-    Route53 -->|PRIMARY| ALB[AWS ALB<br/>HTTPS ACM]
-    Route53 -->|SECONDARY| CF[CloudFront<br/>점검 페이지]
-
-    ALB --> EKS[EKS Cluster<br/>Multi-AZ]
-    EKS --> WEB[WEB Pod<br/>nginx]
-    EKS --> WAS[WAS Pod<br/>Tomcat]
-    WAS --> Redis[Redis<br/>Session]
-    WAS --> RDS[RDS MySQL<br/>Multi-AZ]
-
-    CF --> Blob[Azure Blob<br/>Static HTML]
-
-    style Route53 fill:#ff9900
-    style EKS fill:#326CE5
-    style RDS fill:#527FFF
-    style Redis fill:#DC382D
-    style CF fill:#ff9900
-```
-
-### 핵심 성과
-
-| 지표 | Before | After | 개선 |
-|------|--------|-------|------|
-| **가용성** | 95% (월 36시간) | **99.9%** (월 43분) | +4.9% |
-| **DR RTO** | 없음 (백업 4시간) | **2분** | 신규 |
-| **배포 시간** | 30분 | **10분** (Canary) | 67% 단축 |
-| **WAS 스케일** | 1개 (세션 문제) | **2-10개** (Redis) | 신규 |
-
-### Tech Stack
-
-<div class="tech-stack-badges">
-
-![AWS](https://img.shields.io/badge/AWS-FF9900?logo=amazonaws&logoColor=white)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)
-![Terraform](https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white)
-![ArgoCD](https://img.shields.io/badge/ArgoCD-EF7B4D?logo=argo&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
-![Jenkins](https://img.shields.io/badge/Jenkins-D24939?logo=jenkins&logoColor=white)
-![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white)
-
-</div>
-
-**[Phase 3 상세 보기 →](./phase3-eks-dr/)**
+**[상세 보기 →](./phase2-k8s/)**
 
 ---
 
-## 🐳 Phase 2: Kubernetes 온프레미스 (완료)
+### ☁️ Phase 3: AWS EKS + Multi-Cloud DR
 
-> **기간**: 2025.10 ~ 2025.11 (1개월)
+> **기간**: 2025.11 ~ 2026.01 (3개월) | **역할**: 인프라 전체 설계 및 구축
 
-### 한 줄 요약
+단일 클라우드 95% 가용성 → Multi-Cloud **99.9% 가용성** 달성
 
-**EC2 수동 배포 30분 → Helm Chart 자동 배포 5분**
+**핵심 성과**: DR RTO 없음 → 2분 | WAS 스케일 1개 → 2-10개
 
-### 왜 이 프로젝트를?
-
-**문제:**
-- EC2 SSH 2대 접속 → WAR 파일 복사 → Tomcat 재시작 (30분)
-- 롤백 어려움 (30분), 스케일링 불가
-
-**해결:**
-- Kubernetes 선언적 인프라
-- Helm Chart 재사용
-- HPA Auto Scaling
-
-### 핵심 성과
-
-| 지표 | Before | After | 개선 |
-|------|--------|-------|------|
-| 배포 시간 | 30분 | **5분** | 83% 단축 |
-| 롤백 시간 | 30분 | **1분** | 97% 단축 |
-| 설정 일관성 | 수동 | **코드 기반** | 100% |
-
-**[Phase 2 상세 보기 →](./phase2-k8s/)**
+**[상세 보기 →](./phase3-eks-dr/)**
 
 ---
 
-## 🏗️ Phase 1: Terraform IaC (완료)
+### 🚀 Phase 4: MSA (계획 중)
 
-> **기간**: 2025.09 ~ 2025.10 (1개월)
+> **예상 기간**: 2026.02 ~ (Phase 3 완료 후)
 
-### 한 줄 요약
+Monolith 한계 극복 - Service Mesh로 기능별 독립 배포
 
-**AWS Console 수동 구축 4시간 → Terraform 15분**
+**핵심 목표**: Istio + Kafka + Spring Cloud Gateway
 
-### 왜 이 프로젝트를?
-
-**문제:**
-- AWS Console 클릭 → 4시간 소요
-- Security Group 실수 → 30분 디버깅
-- 재현 불가능 (매번 다름)
-
-**해결:**
-- Terraform IaC
-- S3 + DynamoDB Backend
-- 모듈화 재사용
-
-### 핵심 성과
-
-| 지표 | Before | After | 개선 |
-|------|--------|-------|------|
-| 인프라 구축 | 4시간 | **15분** | 94% 단축 |
-| 재현 가능성 | 0% | **100%** | +100% |
-| 실수율 | 30% | **0%** | -30% |
-
-**[Phase 1 상세 보기 →](./phase1-ec2/)**
+**[상세 보기 →](./phase4-msa/)**
 
 ---
 
-## 🚀 Phase 5: MSA (계획 중)
+## 🆕 독립 프로젝트
 
-> **예상 기간**: 2026.02 ~ (Phase 4 완료 후)
+### 🚧 Local K8s Blog (진행 중!)
 
-### 왜 필요한가?
+> **기간**: 2026.01 ~ (진행 중) | **역할**: GitOps 자동화
 
-**현재 한계 (Monolithic):**
-- 전체 애플리케이션 하나의 WAR
-- 작은 변경에도 전체 재배포
-- 기능별 독립 스케일링 불가
+Netlify에서 내 Kubernetes로! 블로그도 K8s Pod로 운영하기
 
-### 계획
+**핵심 목표**: Hugo Pod + Spring Boot Board + Jenkins CI/CD
 
-**목표:**
-- Microservices 아키텍처 (User, Pet, Vet, Visit)
-- Service Mesh (Istio) - mTLS, Circuit Breaker
-- Event-Driven (Kafka) - 비동기 통신
-- API Gateway (Spring Cloud Gateway)
-
-**기대 효과:**
-- 기능별 독립 배포
-- 장애 격리 (Circuit Breaker)
-- 독립 스케일링
+**[상세 보기 →](./local-k8s-blog/)**
 
 ---
 
@@ -304,7 +168,7 @@ graph TB
 ### 2. 점진적 개선
 
 ```
-EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
+EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 5)
 ```
 
 한 번에 완벽하려 하지 않고, **단계별로 개선**
@@ -327,4 +191,4 @@ EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
 
 ---
 
-**Last Updated**: 2026-01-16 (Phase 4 추가)
+**Last Updated**: 2026-01-16 (Phase별 상세 페이지 구조화)

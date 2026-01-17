@@ -1,17 +1,17 @@
 ---
-title: "Phase 4: Local K8s Blog - GitOps 자동화 블로그 시스템 🚧"
+title: "Local K8s Blog - GitOps 자동화 블로그 시스템 🚧"
 date: 2026-01-16
 summary: "로컬 Kubernetes에 Hugo 블로그 + Spring Boot WAS 배포, Jenkins CI/CD 구축 (진행 중)"
 tags: ["kubernetes", "gitops", "hugo", "spring-boot", "jenkins", "project", "in-progress"]
 categories: ["projects"]
 series: ["Infrastructure Learning Journey"]
-weight: 4
+weight: 5
 showtoc: true
 tocopen: true
 draft: false
 ---
 
-# Phase 4: Local K8s Blog (🚧 진행 중)
+# Local K8s Blog (🚧 진행 중)
 
 > **상태**: 🚧 **진행 중** (2026.01.16 시작)
 > **목표**: 로컬 K8s에 블로그 + WAS 배포, GitOps 자동화 (Git Push → 자동 배포)
@@ -32,10 +32,10 @@ draft: false
 
 ## 🎯 왜 이 프로젝트?
 
-### Phase 3와의 차이점
+### Phase 3 (EKS)와의 차이점
 
-| 항목 | Phase 3 (EKS) | Phase 4 (Local K8s) |
-|------|--------------|---------------------|
+| 항목 | Phase 3 (EKS) | Local K8s Blog |
+|------|--------------|----------------|
 | **환경** | AWS EKS (클라우드) | 베어메탈 Kubernetes (로컬) |
 | **목적** | 프로덕션급 HA + DR | 블로그 자동 배포 + 학습 |
 | **WEB** | nginx (정적 파일) | **Hugo 블로그 (이 블로그!)** |
@@ -128,7 +128,7 @@ http://blog.jiminhome.shop/       (Cloudflare Tunnel)
 | **Storage** | Longhorn | 분산 스토리지 (3 replica) |
 | **Monitoring** | Prometheus + Grafana | 기존 운영 중 |
 
-### 신규 구축 (Phase 4)
+### 신규 구축 (Local K8s Blog)
 
 | 레이어 | 기술 | 선택 이유 |
 |--------|------|----------|
@@ -294,7 +294,7 @@ K8s 배포
 - ✅ Canary Deployment (Argo Rollouts)
 - ✅ Multi-Cloud DR
 
-**Phase 4에서 배울 것:**
+**Local K8s Blog에서 배울 것:**
 - ✅ 베어메탈 Kubernetes 운영 경험
 - ✅ Ingress Controller 직접 설치/관리
 - ✅ 로컬 이미지 관리 (ECR 없이)
@@ -306,7 +306,7 @@ K8s 배포
 - PetClinic (샘플 앱) → 실제 사용 안 함
 - AWS 환경 → 돈 들음 ($258/월)
 
-**Phase 4 (Local K8s)**:
+**Local K8s Blog**:
 - **내 블로그** → 매일 사용 ✅
 - **로컬 환경** → 무료 ✅
 - **장애 발생 시** → 실제로 트러블슈팅 필요 (진짜 경험)
@@ -315,9 +315,9 @@ K8s 배포
 
 ## 🔮 이 프로젝트 이후
 
-### Phase 5 (가칭): Homelab Services
+### 향후 확장: Homelab Services
 
-Phase 4 성공 후 확장 계획:
+Local K8s Blog 성공 후 확장 계획:
 - Nextcloud (파일 저장소)
 - Vaultwarden (비밀번호 관리)
 - Grafana (모니터링 통합)
