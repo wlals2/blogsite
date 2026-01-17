@@ -12,7 +12,10 @@
 # ==============================================================================
 # Stage 1: Builder - Hugo Build
 # ==============================================================================
-FROM klakegg/hugo:0.146.0-alpine AS builder
+FROM alpine:latest AS builder
+
+# Hugo 설치
+RUN apk add --no-cache hugo
 
 WORKDIR /src
 
