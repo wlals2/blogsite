@@ -14,8 +14,8 @@
 # ==============================================================================
 FROM alpine:latest AS builder
 
-# Hugo 설치
-RUN apk add --no-cache hugo
+# Hugo 설치 + timezone 데이터
+RUN apk add --no-cache hugo tzdata
 
 WORKDIR /src
 
