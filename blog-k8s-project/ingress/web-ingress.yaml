@@ -1,0 +1,40 @@
+# ==============================================================================
+# Hugo Blog Ingress (Phase 1)
+# ==============================================================================
+# 목적: WEB Pod를 외부에서 접근 가능하도록 노출
+#
+# 접속 경로:
+# - http://192.168.1.187:31852/  → Hugo 블로그
+#
+# 나중에 도메인 추가 가능:
+# - http://blog.local/  → Hugo 블로그 (/etc/hosts 설정 필요)
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: blog-system
+  labels:
+    app: web
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: blog.local  # 로컬 도메인 (선택사항)
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+  - http:  # IP 접속용 (기본)
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80

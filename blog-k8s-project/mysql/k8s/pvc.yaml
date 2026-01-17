@@ -1,0 +1,38 @@
+# ==============================================================================
+# MySQL PersistentVolumeClaim
+# ==============================================================================
+# 목적: MySQL 데이터를 영구 저장 (Pod 재시작해도 데이터 유지)
+#
+# 주요 설정:
+# - storageClassName: longhorn (분산 스토리지, 3 replica)
+# - accessModes: ReadWriteOnce (단일 노드에서만 쓰기, MySQL 특성)
+# - storage: 5Gi (게시판 데이터 충분)
+#
+# 왜 PVC인가?
+# - emptyDir: Pod 재시작 시 데이터 삭제 ❌
+# - PVC: Pod 재시작해도 데이터 유지 ✅
+# ==============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: blog-system
+  labels:
+    app: mysql
+spec:
+  # 접근 모드
+  # - ReadWriteOnce (RWO): 한 노드에서만 쓰기 (MySQL은 단일 Pod)
+  # - ReadOnlyMany (ROX): 여러 노드에서 읽기만
+  # - ReadWriteMany (RWX): 여러 노드에서 쓰기 (NFS 등)
+  accessModes:
+    - ReadWriteOnce
+
+  # StorageClass 지정
+  # - longhorn: 분산 스토리지 (3 replica, 노드 장애 시에도 데이터 유지)
+  # - local-path: 단일 노드 (노드 장애 시 데이터 손실)
+  storageClassName: longhorn
+
+  # 요청 용량
+  resources:
+    requests:
+      storage: 5Gi  # 게시판 데이터 (텍스트): ~100MB, 여유 공간: 4.9GB

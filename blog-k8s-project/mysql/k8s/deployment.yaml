@@ -1,0 +1,101 @@
+# ==============================================================================
+# MySQL Deployment
+# ==============================================================================
+# 목적: MySQL 데이터베이스를 Pod로 배포
+#
+# 주요 설정:
+# - replicas: 1 (단일 Pod, MySQL 특성상 단일 인스턴스)
+# - image: mysql:8.0 (안정적인 LTS 버전)
+# - 환경변수: Secret에서 비밀번호 주입
+# - Volume: PVC 마운트 (/var/lib/mysql)
+#
+# 왜 Deployment인가? (StatefulSet vs Deployment)
+# - StatefulSet: 여러 Pod가 각각 다른 PVC 필요 (MySQL Replica)
+# - Deployment: 단일 Pod + 단일 PVC (우리 상황)
+# ==============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: blog-system
+  labels:
+    app: mysql
+    tier: database
+spec:
+  replicas: 1  # 단일 Pod (MySQL은 단일 인스턴스)
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+        tier: database
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0  # MySQL 8.0 LTS
+
+        # 환경변수
+        env:
+        # Root 비밀번호 (Secret에서 가져오기)
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
+
+        # 데이터베이스 자동 생성
+        - name: MYSQL_DATABASE
+          value: board  # WAS가 연결할 데이터베이스
+
+        # 포트
+        ports:
+        - containerPort: 3306
+          name: mysql
+
+        # Volume 마운트
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql  # MySQL 데이터 저장 경로
+
+        # 리소스 제한
+        resources:
+          requests:
+            cpu: 250m      # 0.25 Core 보장
+            memory: 512Mi  # 512MB 보장
+          limits:
+            cpu: 500m      # 최대 0.5 Core
+            memory: 1Gi    # 최대 1GB
+
+        # Liveness Probe (Pod가 살아있는가?)
+        livenessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+          initialDelaySeconds: 30  # MySQL 시작 대기
+          periodSeconds: 10         # 10초마다 체크
+          timeoutSeconds: 5         # 5초 타임아웃
+          failureThreshold: 3       # 3번 실패 시 Pod 재시작
+
+        # Readiness Probe (트래픽 받을 준비됐나?)
+        readinessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+          initialDelaySeconds: 10   # MySQL 시작 대기
+          periodSeconds: 5          # 5초마다 체크
+          timeoutSeconds: 3         # 3초 타임아웃
+          failureThreshold: 2       # 2번 실패 시 Service에서 제외
+
+      # Volume 정의
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc  # PVC 연결

@@ -1,0 +1,97 @@
+# ==============================================================================
+# Blog Ingress (통합 - WEB + WAS)
+# ==============================================================================
+# 목적: WEB (Hugo)과 WAS (Spring Boot)를 하나의 IP/도메인으로 통합
+#
+# Path 기반 라우팅:
+# - /api/*     → was-service:8080 (REST API)
+# - /board/*   → was-service:8080 (게시판)
+# - /*         → web-service:80 (Hugo 블로그)
+#
+# 접속 경로:
+# - http://192.168.1.187:31852/            → Hugo 블로그
+# - http://192.168.1.187:31852/board       → 게시판
+# - http://192.168.1.187:31852/api/posts   → REST API
+#
+# 왜 Path 순서가 중요한가?
+# - Kubernetes는 위에서 아래로 순차 매칭
+# - /api, /board가 /보다 먼저 평가되어야 함
+# - /를 먼저 두면 모든 요청이 WEB으로 가버림
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog-ingress
+  namespace: blog-system
+  labels:
+    app: blog
+  # annotations:
+    # Rewrite Target 불필요 (WAS Controller가 /api/posts로 매핑)
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  # ============================================================================
+  # 도메인 접속용 (선택사항)
+  # ============================================================================
+  - host: blog.local
+    http:
+      paths:
+      # REST API (가장 구체적 - 먼저 매칭)
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: was-service
+            port:
+              number: 8080
+
+      # 게시판 (그 다음)
+      - path: /board
+        pathType: Prefix
+        backend:
+          service:
+            name: was-service
+            port:
+              number: 8080
+
+      # Hugo 블로그 (마지막 - catch-all)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+
+  # ============================================================================
+  # IP 접속용 (기본)
+  # ============================================================================
+  - http:
+      paths:
+      # REST API
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: was-service
+            port:
+              number: 8080
+
+      # 게시판
+      - path: /board
+        pathType: Prefix
+        backend:
+          service:
+            name: was-service
+            port:
+              number: 8080
+
+      # Hugo 블로그
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80

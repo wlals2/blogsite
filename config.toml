@@ -6,7 +6,7 @@ defaultContentLanguage = "ko"
 timeZone = "Asia/Seoul"
 enableRobotsTXT = true
 googleAnalytics = ""
-enableGitInfo = true
+enableGitInfo = false  # Docker 빌드 시 git 불필요
 
 [frontmatter]
   date = ["date", "publishDate", ":git", ":fileModTime", "lastmod"]

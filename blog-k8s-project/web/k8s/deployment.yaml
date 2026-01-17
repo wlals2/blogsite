@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ghcr.io/YOUR_GITHUB_USERNAME/blog-web:v1  # GITHUB_USERNAME을 본인 username으로 변경
+        image: ghcr.io/wlals2/blog-web:v1
         imagePullPolicy: Always  # Registry에서 최신 이미지 pull
         ports:
         - containerPort: 80
@@ -63,17 +63,11 @@ spec:
           timeoutSeconds: 3
           failureThreshold: 2
 
-      # 멀티 AZ 분산 (고가용성)
+      # 멀티 노드 분산 (로컬 환경용)
       topologySpreadConstraints:
       - maxSkew: 1
-        topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app: web
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
+        topologyKey: kubernetes.io/hostname  # 노드 간 분산
+        whenUnsatisfiable: ScheduleAnyway  # 강제하지 않음 (로컬 환경)
         labelSelector:
           matchLabels:
             app: web
