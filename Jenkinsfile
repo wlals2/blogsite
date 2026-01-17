@@ -18,6 +18,7 @@ pipeline {
         // Kubernetes 설정
         NAMESPACE = 'blog-system'
         DEPLOYMENT_NAME = 'web'
+        CONTAINER_NAME = 'nginx'  // Deployment의 실제 컨테이너 이름
 
         // GitHub 설정
         GIT_REPO = 'https://github.com/wlals2/blogsite.git'
@@ -79,7 +80,7 @@ pipeline {
                 echo "=== Stage 4: Deploy to Kubernetes ==="
                 sh """
                     kubectl set image deployment/${DEPLOYMENT_NAME} \
-                        ${DEPLOYMENT_NAME}=${IMAGE_NAME}:${IMAGE_TAG} \
+                        ${CONTAINER_NAME}=${IMAGE_NAME}:${IMAGE_TAG} \
                         -n ${NAMESPACE}
                     kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${NAMESPACE} --timeout=120s
                 """
