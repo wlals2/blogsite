@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 - Jimin's Blog</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 40px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .post-card {
+            transition: transform 0.2s;
+        }
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .btn-group-actions {
+            gap: 5px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">📝 게시판</h1>
+                <p class="card-text text-muted">Kubernetes + Spring Boot + MySQL</p>
+                <a href="/" class="btn btn-outline-secondary btn-sm">← 블로그 홈으로</a>
+            </div>
+        </div>
+
+        <!-- Alert Message -->
+        <div id="alertMessage" class="alert d-none" role="alert"></div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- New Post Form -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">✍️ 새 게시글 작성</h5>
+            </div>
+            <div class="card-body">
+                <form id="postForm">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">제목</label>
+                        <input type="text" class="form-control" id="title" required placeholder="게시글 제목을 입력하세요">
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">내용</label>
+                        <textarea class="form-control" id="content" rows="5" required placeholder="게시글 내용을 입력하세요"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="author" class="form-label">작성자</label>
+                        <input type="text" class="form-control" id="author" required placeholder="작성자 이름을 입력하세요">
+                    </div>
+                    <button type="submit" class="btn btn-primary">게시글 작성</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEdit">취소</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Posts List -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📋 게시글 목록</h5>
+                <button class="btn btn-light btn-sm" onclick="loadPosts()">🔄 새로고침</button>
+            </div>
+            <div class="card-body">
+                <div id="postsList" class="row">
+                    <!-- Posts will be loaded here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // API Base URL
+        const API_BASE_URL = '/api/posts';
+
+        // Current editing post ID
+        let editingPostId = null;
+
+        // Show alert message
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.classList.remove('d-none');
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                alertDiv.classList.add('d-none');
+            }, 3000);
+        }
+
+        // Show/hide loading spinner
+        function setLoading(isLoading) {
+            document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Load all posts
+        async function loadPosts() {
+            setLoading(true);
+            try {
+                const response = await fetch(API_BASE_URL);
+                if (!response.ok) throw new Error('게시글을 불러오는데 실패했습니다.');
+
+                const posts = await response.json();
+                displayPosts(posts);
+                showAlert(`총 ${posts.length}개의 게시글을 불러왔습니다.`, 'info');
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                showAlert('게시글을 불러오는데 실패했습니다: ' + error.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Display posts
+        function displayPosts(posts) {
+            const postsContainer = document.getElementById('postsList');
+
+            if (posts.length === 0) {
+                postsContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            아직 게시글이 없습니다. 첫 번째 게시글을 작성해보세요!
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            postsContainer.innerHTML = posts.map(post => `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card post-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${escapeHtml(post.title)}</h5>
+                            <p class="card-text">${escapeHtml(post.content)}</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    👤 ${escapeHtml(post.author)}<br>
+                                    🕒 ${formatDate(post.createdAt)}
+                                </small>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex btn-group-actions">
+                                <button class="btn btn-sm btn-outline-primary flex-fill" onclick="editPost(${post.id})">
+                                    ✏️ 수정
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger flex-fill" onclick="deletePost(${post.id})">
+                                    🗑️ 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Create or update post
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const author = document.getElementById('author').value;
+
+            const postData = { title, content, author };
+
+            setLoading(true);
+            try {
+                let response;
+                if (editingPostId) {
+                    // Update existing post
+                    response = await fetch(`${API_BASE_URL}/${editingPostId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(postData)
+                    });
+                    showAlert('게시글이 수정되었습니다!', 'success');
+                } else {
+                    // Create new post
+                    response = await fetch(API_BASE_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(postData)
+                    });
+                    showAlert('게시글이 작성되었습니다!', 'success');
+                }
+
+                if (!response.ok) throw new Error('게시글 저장에 실패했습니다.');
+
+                // Reset form and reload posts
+                resetForm();
+                loadPosts();
+            } catch (error) {
+                console.error('Error saving post:', error);
+                showAlert('게시글 저장에 실패했습니다: ' + error.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Edit post
+        async function editPost(id) {
+            setLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`);
+                if (!response.ok) throw new Error('게시글을 불러오는데 실패했습니다.');
+
+                const post = await response.json();
+
+                // Fill form with post data
+                document.getElementById('title').value = post.title;
+                document.getElementById('content').value = post.content;
+                document.getElementById('author').value = post.author;
+
+                editingPostId = id;
+
+                // Scroll to form
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showAlert('게시글을 수정할 수 있습니다.', 'info');
+            } catch (error) {
+                console.error('Error loading post:', error);
+                showAlert('게시글을 불러오는데 실패했습니다: ' + error.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Delete post
+        async function deletePost(id) {
+            if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
+
+            setLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('게시글 삭제에 실패했습니다.');
+
+                showAlert('게시글이 삭제되었습니다.', 'warning');
+                loadPosts();
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                showAlert('게시글 삭제에 실패했습니다: ' + error.message, 'danger');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('postForm').reset();
+            editingPostId = null;
+        }
+
+        // Cancel edit button
+        document.getElementById('cancelEdit').addEventListener('click', resetForm);
+
+        // Load posts on page load
+        window.addEventListener('DOMContentLoaded', loadPosts);
+    </script>
+</body>
+</html>

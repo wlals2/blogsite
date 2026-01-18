@@ -168,7 +168,7 @@ Netlify에서 내 Kubernetes로! 블로그도 K8s Pod로 운영하기
 ### 2. 점진적 개선
 
 ```
-EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 5)
+EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
 ```
 
 한 번에 완벽하려 하지 않고, **단계별로 개선**
@@ -183,8 +183,8 @@ EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 5)
 
 ## 🎯 다음 목표
 
-1. **Phase 4 완료** 🚧 (Local K8s Blog - 진행 중)
-2. **Phase 5 MSA 구축** (2026.02~)
+1. **Local K8s Blog 완료** 🚧 (진행 중)
+2. **Phase 4 MSA 구축** (2026.02~)
 3. **Cost 최적화** (Spot Instance, Karpenter)
 4. **Security 강화** (IRSA, Secrets Manager)
 5. **Observability 개선** (Distributed Tracing)
