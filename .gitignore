@@ -25,3 +25,6 @@ update-cloudflare-ip.sh
 ddns.log
 *.env*
 blog-k8s-project/was/
+
+# 내부 문서 (민감 정보 포함 가능)
+docs/
