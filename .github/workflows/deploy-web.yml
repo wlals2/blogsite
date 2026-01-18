@@ -1,0 +1,112 @@
+name: Deploy WEB to Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # 수동 실행 가능
+
+env:
+  IMAGE_NAME: ghcr.io/wlals2/blog-web
+  NAMESPACE: blog-system
+  DEPLOYMENT_NAME: web
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ======================================================================
+      # Step 1: Checkout 코드
+      # ======================================================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: false  # PaperMod은 더 이상 submodule이 아님
+
+      # ======================================================================
+      # Step 2: Docker Buildx 설정 (캐시 활용)
+      # ======================================================================
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ======================================================================
+      # Step 3: GHCR 로그인
+      # ======================================================================
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      # ======================================================================
+      # Step 4: Docker 이미지 빌드 및 푸시
+      # ======================================================================
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ======================================================================
+      # Step 5: kubeconfig 설정
+      # ======================================================================
+      - name: Setup kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      # ======================================================================
+      # Step 6: Kubernetes 배포
+      # ======================================================================
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
+            nginx=${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
+            -n ${{ env.NAMESPACE }}
+
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }} \
+            --timeout=120s
+
+      # ======================================================================
+      # Step 7: Health Check
+      # ======================================================================
+      - name: Health Check
+        run: |
+          sleep 10
+          kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=web
+
+      # ======================================================================
+      # Step 8: Cloudflare 캐시 퍼지
+      # ======================================================================
+      - name: Purge Cloudflare Cache
+        if: success()
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
+          echo "Cloudflare cache purged successfully"
+
+      # ======================================================================
+      # Step 9: 빌드 정보 출력
+      # ======================================================================
+      - name: Build Summary
+        if: success()
+        run: |
+          echo "### ✅ Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Namespace**: ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment**: ${{ env.DEPLOYMENT_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://blog.jiminhome.shop/" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cloudflare Cache**: Purged ✅" >> $GITHUB_STEP_SUMMARY
