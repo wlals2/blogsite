@@ -15,12 +15,28 @@ document.addEventListener('DOMContentLoaded', function() {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const bar = entry.target;
-                    const percentage = bar.getAttribute('data-percentage');
+                    let percentage = bar.getAttribute('data-percentage');
 
-                    // 지연 후 애니메이션 시작
-                    setTimeout(() => {
-                        bar.style.width = percentage + '%';
-                    }, 100);
+                    // data-percentage가 없으면 상위 요소에서 텍스트 찾기
+                    if (!percentage) {
+                        const container = bar.closest('[style*="margin-bottom"]');
+                        if (container) {
+                            const textElements = container.querySelectorAll('span');
+                            textElements.forEach(el => {
+                                const match = el.textContent.match(/(\d+)%/);
+                                if (match) {
+                                    percentage = match[1];
+                                }
+                            });
+                        }
+                    }
+
+                    if (percentage) {
+                        // 지연 후 애니메이션 시작
+                        setTimeout(() => {
+                            bar.style.width = percentage + '%';
+                        }, 100);
+                    }
 
                     observer.unobserve(bar);
                 }
@@ -61,8 +77,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. 숫자 카운트업 애니메이션 (메트릭 배지)
     // ========================================
     function animateCounter(element) {
-        const target = element.getAttribute('data-count');
-        const suffix = element.getAttribute('data-suffix') || '';
+        // data-count 속성이 있으면 사용, 없으면 텍스트에서 추출
+        let target = element.getAttribute('data-count');
+        let suffix = element.getAttribute('data-suffix') || '';
+
+        if (!target) {
+            // 텍스트에서 숫자 추출 (예: "67% 단축" → 67, "99.9%" → 99.9)
+            const text = element.textContent.trim();
+            const match = text.match(/(\d+\.?\d*)/);
+            if (!match) return; // 숫자가 없으면 종료
+
+            target = parseFloat(match[1]);
+            suffix = text.replace(match[1], '').trim(); // 나머지를 suffix로
+        } else {
+            target = parseFloat(target);
+        }
+
         const duration = 2000; // 2초
         const steps = 60;
         const increment = target / steps;
@@ -71,16 +101,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const timer = setInterval(() => {
             current += increment;
             if (current >= target) {
-                element.textContent = target + suffix;
+                // 소수점이 있으면 유지
+                const finalValue = target % 1 === 0 ? target : target.toFixed(1);
+                element.textContent = finalValue + suffix;
                 clearInterval(timer);
             } else {
-                element.textContent = Math.floor(current) + suffix;
+                const currentValue = target % 1 === 0 ? Math.floor(current) : current.toFixed(1);
+                element.textContent = currentValue + suffix;
             }
         }, duration / steps);
     }
 
-    // 메트릭 배지에 카운트업 적용
-    const counters = document.querySelectorAll('.metric-badge[data-count]');
+    // 메트릭 배지에 카운트업 적용 (data-count 속성 여부와 관계없이)
+    const counters = document.querySelectorAll('.metric-badge');
     if (counters.length > 0) {
         const counterObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {

@@ -133,40 +133,33 @@ terraform apply (15분)
 
 ### 3-Tier 아키텍처
 
-```
+![Phase 1 - 3-Tier Architecture](/images/architecture/phase1-3tier-architecture.png)
 
-                    Internet Gateway
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-      ┌─────▼─────┐  ┌─────▼─────┐  ┌─────▼─────┐
-      │  Public   │  │  Public   │  │  Public   │
-      │  Subnet   │  │  Subnet   │  │  Subnet   │
-      │   (2a)    │  │   (2c)    │  │   (2d)    │
-      └─────┬─────┘  └─────┬─────┘  └─────┬─────┘
-            │              │              │
-      ┌─────▼─────┐  ┌─────▼─────┐        │
-      │    ALB    │  │  Bastion  │        │
-      └─────┬─────┘  └───────────┘        │
-            │                             │
-      ┌─────▼─────────────────────────────▼─────┐
-      │              NAT Gateway                 │
-      └──────────────────┬───────────────────────┘
-                         │
-      ┌──────────────────┼───────────────────────┐
-      │                  │                       │
-┌─────▼─────┐      ┌─────▼─────┐          ┌─────▼─────┐
-│  Private  │      │  Private  │          │  Private  │
-│  Subnet   │      │  Subnet   │          │  Subnet   │
-│   (2a)    │      │   (2c)    │          │   (2d)    │
-└─────┬─────┘      └─────┬─────┘          └─────┬─────┘
-      │                  │                      │
-┌─────▼─────┐      ┌─────▼─────┐          ┌─────▼─────┐
-│    WEB    │      │    WAS    │          │    RDS    │
-│  (nginx)  │──────│ (Tomcat)  │──────────│  (MySQL)  │
-└───────────┘      └───────────┘          └───────────┘
+**아키텍처 구성 요소:**
 
-```
+#### Public Tier (Availability Zone: 2a, 2c, 2d)
+- **Internet Gateway**: 외부 인터넷과 VPC 연결
+- **Public Subnet**:
+  - **ALB (Application Load Balancer)**: HTTPS 트래픽 분산
+  - **Bastion Host**: Private 자원 접근용 점프 서버
+- **NAT Gateway**: Private Subnet에서 인터넷 아웃바운드 통신
+
+#### Private Tier - Web Layer
+- **Private Subnet (web-a, web-c)**: nginx 웹 서버
+- **Auto Scaling Group**: 트래픽에 따라 WEB 인스턴스 자동 증감
+- **Security Group**: ALB에서만 8080 포트 허용
+
+#### Private Tier - WAS Layer
+- **Private Subnet (was-a, was-c)**: Tomcat 애플리케이션 서버
+- **Internal ALB**: WEB과 WAS 사이 L7 라우팅
+- **Auto Scaling Group**: CPU 70% 초과 시 스케일 아웃
+- **Security Group**: WEB 계층에서만 8080 포트 허용
+
+#### Private Tier - DB Layer
+- **Private Subnet (db-a, db-c)**: MySQL RDS
+- **Multi-AZ**: Primary (2a) + Standby (2c) 자동 복제
+- **Security Group**: WAS 계층에서만 3306 포트 허용
+- **자동 백업**: 매일 새벽 3시 (7일 보관)
 
 ---
 

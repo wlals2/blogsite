@@ -1,0 +1,33 @@
+{{- /*
+  메트릭 배지 컴포넌트
+
+  사용법:
+  1. Front Matter에 metrics 데이터 추가:
+  ---
+  metrics:
+    - value: 67
+      suffix: "% 단축"
+      label: "배포 시간"
+      description: "(30분 → 10분)"
+    - value: 99.9
+      suffix: "%"
+      label: "가용성"
+      description: "달성"
+  ---
+
+  2. 레이아웃에서 호출:
+  {{- partial "components/metrics.html" . }}
+*/ -}}
+
+{{- if .Params.metrics }}
+<div class="profile-section">
+    <h3>📊 {{ .Params.metricsTitle | default "핵심 성과" }}</h3>
+    <div class="highlight-box">
+        {{- range $index, $metric := .Params.metrics }}
+        {{- if ne $index 0 }} · {{- end }}
+        {{ $metric.label }} <span class='metric-badge' data-count='{{ $metric.value }}' data-suffix='{{ $metric.suffix }}'>0{{ $metric.suffix }}</span>
+        {{- if $metric.description }} {{ $metric.description }}{{- end }}
+        {{- end }}
+    </div>
+</div>
+{{- end }}

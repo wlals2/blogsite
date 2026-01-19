@@ -1,0 +1,41 @@
+{{- define "main" }}
+
+<article class="post-single">
+  {{- /* 페이지 헤더 */ -}}
+  <header class="post-header">
+    {{- if .Title }}
+    <h1 class="post-title entry-hint-parent">
+      {{ .Title }}
+    </h1>
+    {{- end }}
+    {{- if .Description }}
+    <div class="post-description">
+      {{ .Description }}
+    </div>
+    {{- end }}
+  </header>
+
+  {{- /* 메트릭 배지 컴포넌트 */ -}}
+  {{- partial "components/metrics.html" . }}
+
+  {{- /* 타임라인 컴포넌트 */ -}}
+  {{- partial "components/timeline.html" . }}
+
+  {{- /* 스킬바 컴포넌트 */ -}}
+  {{- partial "components/skillbars.html" . }}
+
+  {{- /* 페이지 본문 */ -}}
+  {{- if .Content }}
+  <div class="post-content">
+    {{- if not (.Param "disableAnchoredHeadings") }}
+    {{- partial "anchored_headings.html" .Content -}}
+    {{- else }}{{ .Content }}{{ end }}
+  </div>
+  {{- end }}
+
+  {{- /* 푸터 */ -}}
+  <footer class="post-footer">
+  </footer>
+</article>
+
+{{- end }}{{- /* end main */ -}}

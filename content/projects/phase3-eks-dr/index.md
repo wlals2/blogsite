@@ -160,6 +160,97 @@ Phase 2에서 Kubernetes로 자동화는 성공했지만:
 (*) DR POC: Azure VM (dr.goupang.shop)
 ```
 
+### 상세 Multi-Cloud DR 아키텍처
+
+![Phase 3 - Multi-Cloud DR Architecture](/images/architecture/phase3-multicloud-dr-architecture.png)
+
+**아키텍처 구성 요소:**
+
+#### Primary Environment (AWS Cloud)
+
+**Networking Layer:**
+- **Route53**: Health Check 기반 Failover 라우팅
+  - Primary: AWS ALB (정상 시)
+  - Failover: CloudFront (AWS 장애 시 → 점검 페이지)
+  - Failover Secondary: Azure DR (장기 장애 시)
+- **ALB (Application Load Balancer)**: TLS 종료, EKS Ingress 연결
+- **IGW (Internet Gateway)**: VPC와 인터넷 연결
+
+**EKS Cluster (Availability Zone A, C):**
+
+**Availability Zone A:**
+- **Public Subnet - Jenkins**: CI/CD 파이프라인 실행
+  - Source Repo → Docker Build/Push → ECR
+  - Manifest Repo 업데이트 → ArgoCD Sync
+- **Private Subnet A**:
+  - **WEB Pod**: nginx 정적 파일 서빙
+  - **WAS Pod**: Spring Boot 애플리케이션
+  - **Redis Pod**: Session Clustering (Primary)
+  - **DB Backup**: MySQL 자동 백업
+  - **DB-A**: RDS MySQL Primary
+
+**Availability Zone C:**
+- **Public Subnet**: (Reserved)
+- **Private Subnet C**:
+  - **Karpenter**: 노드 자동 스케일링
+  - **ArgoCD**: GitOps 기반 배포 자동화
+  - **Argo Rollouts**: Canary 배포 (10% → 50% → 90% → 100%)
+  - **WAS Pod**: Spring Boot (Replica)
+  - **Redis**: Session (Replica)
+  - **MySQL Pod**: Standby (Multi-AZ Sync)
+  - **DB-C**: RDS MySQL Standby
+
+**Monitoring & Security:**
+- **CloudWatch**: AWS 리소스 메트릭 수집
+- **KMS (EBS 암호화)**: 데이터 암호화
+- **Cloud WAF**: 웹 방화벽
+- **Secrets Manager**: DB 자격증명 관리
+- **SNS**: 알림 (Gmail, Slack)
+
+**Storage & Registry:**
+- **S3**: Terraform State 저장
+- **ECR**: Docker 이미지 저장
+- **CloudFront**: 점검 페이지 서빙 (AWS 장애 시)
+- **DynamoDB**: MySQL 백업 메타데이터
+
+#### Disaster Recovery (Azure DR)
+
+**Azure Cloud Shell:**
+- **External Backup Storage**: Lambda로 MySQL Dump → Azure Blob 전송
+  - 매일 새벽 2시 자동 백업
+  - RPO 24시간 보장
+- **Azure Cloud Shell**: Terraform 배포 스크립트 실행 환경
+
+**DR Site (RTO: 30분):**
+- **Public Subnet**:
+  - **AppGW (Application Gateway)**: L7 로드밸런서
+- **Private Subnet**:
+  - **WEB VM (PetClinic)**: Tomcat + PetClinic WAR
+  - **DB-A**: Azure MySQL (Flexible Server)
+  - **Blob Storage**: 정적 웹 (백업용)
+
+**DR Failover Flow:**
+1. **AWS 장애 감지** (Route53 Health Check 실패 3회)
+2. **CloudFront 점검 페이지** 활성화 (1분 이내)
+3. **Azure VM 자동 시작** (Terraform Lambda 트리거)
+4. **MySQL Restore** (최신 Blob Backup)
+5. **Route53 Secondary 전환** → Azure AppGW (2분 이내)
+
+#### CI/CD & GitOps Pipeline
+1. **Developer** → Git Push → **Source Repo**
+2. **Webhook** → **Jenkins** (Public Subnet A)
+3. Jenkins → **Docker Build** → **ECR Push**
+4. Jenkins → **Manifest Repo** 업데이트 (image tag)
+5. **ArgoCD** (AZ-C) → Watch Manifest Repo
+6. ArgoCD → **Sync/Apply** → EKS Cluster
+7. **Argo Rollouts** → **Canary Deployment** (10% → 100%)
+
+#### Observability Stack
+- **Prometheus**: K8s 메트릭 수집 (Pod, Node, Service)
+- **Grafana**: 대시보드 시각화
+- **Black Box Exporter**: Health Check 모니터링
+- **Loki**: 로그 집계 및 분석
+
 ---
 
 ## 🛠️ 기술 선택 (Action)

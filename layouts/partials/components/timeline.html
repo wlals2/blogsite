@@ -1,0 +1,36 @@
+{{- /*
+  타임라인 컴포넌트
+
+  사용법:
+  1. Front Matter에 timelines 데이터 추가:
+  ---
+  timelines:
+    - date: "2025.11 ~ 현재"
+      title: "AWS EKS + Multi-Cloud DR"
+      description: "3-Tier 아키텍처 구축 · 99.9% 가용성 달성"
+      tech: "Kubernetes, EKS, Route53, Azure, Terraform"
+  ---
+
+  2. 레이아웃에서 호출:
+  {{- partial "components/timeline.html" . }}
+*/ -}}
+
+{{- if .Params.timelines }}
+<div class="profile-section">
+    <h3>📅 {{ .Params.timelineTitle | default "프로젝트 타임라인" }}</h3>
+    <div class="timeline">
+        {{- range .Params.timelines }}
+        <div class="timeline-item">
+            <div class="timeline-date">{{ .date }}</div>
+            <div class="timeline-content">
+                <strong>{{ .title }}</strong><br>
+                {{ .description | safeHTML }}<br>
+                {{- if .tech }}
+                <small style="color: var(--secondary);">{{ .tech }}</small>
+                {{- end }}
+            </div>
+        </div>
+        {{- end }}
+    </div>
+</div>
+{{- end }}

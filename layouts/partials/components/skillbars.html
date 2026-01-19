@@ -1,0 +1,47 @@
+{{- /*
+  스킬바 컴포넌트
+
+  사용법:
+  1. Front Matter에 skills 데이터 추가:
+  ---
+  skills:
+    - name: "Kubernetes & Container"
+      percentage: 85
+    - name: "AWS (EKS, VPC, RDS)"
+      percentage: 80
+  ---
+
+  2. 레이아웃에서 호출:
+  {{- partial "components/skillbars.html" . }}
+*/ -}}
+
+{{- if .Params.skills }}
+<div class="profile-section">
+    <h3>💻 {{ .Params.skillsTitle | default "기술 스택" }}</h3>
+    <div style="margin-bottom: 1.5rem;">
+        {{- range .Params.skills }}
+        <div style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                <span><strong>{{ .name }}</strong></span>
+                <span>{{ .percentage }}%</span>
+            </div>
+            <div class="skill-bar">
+                <div class="skill-bar-fill" data-percentage="{{ .percentage }}"></div>
+            </div>
+        </div>
+        {{- end }}
+    </div>
+
+    {{- /* 기술 그리드 (선택 사항) */ -}}
+    {{- if .Params.techGrid }}
+    <div class="tech-grid">
+        {{- range .Params.techGrid }}
+        <div>
+            <strong>{{ .category }}</strong><br>
+            {{ .items }}
+        </div>
+        {{- end }}
+    </div>
+    {{- end }}
+</div>
+{{- end }}

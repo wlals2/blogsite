@@ -136,6 +136,52 @@ Phase 2: Kubernetes 기반
 해결: Helm Chart로 선언적 배포, 자동 롤백, HPA
 ```
 
+### 상세 아키텍처
+
+![Phase 2 - Kubernetes on EC2 Architecture](/images/architecture/phase2-k8s-architecture.png)
+
+**아키텍처 구성 요소:**
+
+#### Networking & Ingress
+- **Route53**: DNS 기반 Health Check 및 트래픽 라우팅
+- **ALB (Application Load Balancer)**: HTTPS Listener → Kubernetes Ingress 연결
+- **Nginx Ingress Controller**: L7 라우팅 (/, /board 경로 분기)
+
+#### Kubernetes Cluster (Self-Managed on EC2)
+**Availability Zone A:**
+- **Jenkins (Public Subnet)**: CI/CD 파이프라인 실행
+  - Source Repo → Docker Build → ECR Push
+  - Manifest Repo 업데이트 → ArgoCD Sync 트리거
+- **Master Node (Private Subnet A)**: kubeadm으로 구축한 Control Plane
+- **WEB Pod (Private Subnet A)**: nginx 정적 파일 서빙
+- **WAS Pod (Private Subnet A)**: Spring Boot 애플리케이션
+- **DB Backup (Private Subnet A)**: MySQL Primary
+- **MySQL StatefulSet (Private Subnet A)**: Primary 데이터베이스
+
+**Availability Zone C:**
+- **Worker Node (Private Subnet C)**: kubeadm으로 조인한 Worker
+- **ArgoCD**: GitOps 기반 배포 자동화
+- **WEB Pod (Private Subnet C)**: nginx (Replica)
+- **WAS Pod (Private Subnet C)**: Spring Boot (Replica)
+- **DB-C (Private Subnet C)**: MySQL Standby (Multi-AZ Sync)
+- **MySQL StatefulSet (Private Subnet C)**: Standby 데이터베이스
+
+> **참고**: 이 이미지는 Phase 3 (EKS)로 전환 후의 모습을 보여줍니다. Phase 2에서는 EKS 대신 **kubeadm으로 직접 구축한 Kubernetes** 클러스터를 사용했습니다.
+
+#### Monitoring & Observability
+- **CloudWatch**: AWS 리소스 메트릭 수집
+- **KMS (EBS 암호화)**: 데이터 암호화 키 관리
+- **AWS WAF**: 웹 애플리케이션 방화벽
+- **Secrets Manager**: DB 자격증명 관리
+- **SNS (Gmail)**: 알림 발송
+
+#### CI/CD Pipeline
+1. **Source Repo** → Webhook → Jenkins
+2. Jenkins → **Docker Build** → ECR Push
+3. Jenkins → **Manifest Repo** 업데이트 (image tag)
+4. ArgoCD → Manifest Repo **watch** → Auto Sync
+5. ArgoCD → **Kubernetes Apply** → Rolling Update
+
 ---
 
 ## 🛠️ 기술 선택 (Action)

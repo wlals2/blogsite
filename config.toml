@@ -58,9 +58,9 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 <div class="profile-section">
   <h3>📊 핵심 성과</h3>
   <div class="highlight-box">
-    배포 시간 <span class="metric-badge" data-count="67" data-suffix="% 단축">0%</span> (30분 → 10분) ·
-    가용성 <span class="metric-badge" data-count="99.9" data-suffix="%">0%</span> 달성 ·
-    인프라 구축 <span class="metric-badge" data-count="94" data-suffix="% 자동화">0%</span>
+    배포 시간 <span class='metric-badge' data-count='67' data-suffix='% 단축'>0%</span> (30분 → 10분) ·
+    가용성 <span class='metric-badge' data-count='99.9' data-suffix='%'>0%</span> 달성 ·
+    인프라 구축 <span class='metric-badge' data-count='94' data-suffix='% 자동화'>0%</span>
   </div>
 </div>
 
@@ -198,7 +198,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   category = "categories"
   series = "series"
 
-# Main Menu - 간소화된 구조 (5개)
+# Main Menu - 간소화된 구조 (6개)
 [[menu.main]]
   identifier = "about"
   name = "About"
@@ -206,28 +206,34 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   weight = 1
 
 [[menu.main]]
+  identifier = "architecture"
+  name = "Architecture"
+  url = "/architecture/"
+  weight = 2
+
+[[menu.main]]
   identifier = "projects"
   name = "Projects"
   url = "/projects/"
-  weight = 2
+  weight = 3
 
 [[menu.main]]
   identifier = "study"
   name = "Study"
   url = "/study/"
-  weight = 3
+  weight = 4
 
 [[menu.main]]
   identifier = "docs"
   name = "Docs"
   url = "/docs/"
-  weight = 4
+  weight = 5
 
 [[menu.main]]
   identifier = "tags"
   name = "Tags"
   url = "/tags/"
-  weight = 5
+  weight = 6
 
 buildFuture = true
 
