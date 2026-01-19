@@ -11,7 +11,7 @@ tocopen: true
 draft: false
 ---
 
-## 📌 현재 상태 (2026-01-19 기준)
+## 📌 현재 상태 (2026-01-20 업데이트)
 
 ### 실제 구축된 아키텍처
 
@@ -158,14 +158,44 @@ cert-manager   Active   46h
 
 ---
 
+### 7. GitOps (ArgoCD) - 🚧 구축 중
+
+```bash
+kubectl get pods -n argocd
+
+# 결과:
+NAME                                                READY   STATUS
+argocd-application-controller-0                     1/1     Running
+argocd-applicationset-controller-6564d9cfd8-p2djw   1/1     Running
+argocd-dex-server-6ff5b587ff-5lmlb                  1/1     Running
+argocd-notifications-controller-6594786484-npvkg    1/1     Running
+argocd-redis-7d6fd75fcb-926x8                       1/1     Running
+argocd-repo-server-567d8799cf-fs94b                 1/1     Running
+argocd-server-5f8b4dfd84-bbqlt                      1/1     Running
+```
+
+**ArgoCD**:
+- 설치 방법: **Helm Chart** (argo/argo-cd)
+- 버전: v3.2.5
+- 초기 비밀번호: `saDtmwkg-ZyKLv2T` (admin)
+- 접속 방법:
+  - 로컬: `https://192.168.1.200/` (Host: argocd.jiminhome.shop)
+  - 외부: `https://argocd.jiminhome.shop` (Cloudflare Tunnel DNS 추가됨)
+- Ingress: nginx (192.168.1.200:443)
+- Cloudflare Tunnel: DNS 라우팅 추가 완료
+
+**다음 단계**: Application 생성 및 Git Repository 연동
+
+---
+
 ## ❌ 현재 없는 것 (구축 필요)
 
 ### 1. CI/CD
 - ❌ Jenkins: CI 파이프라인 없음
-- ❌ ArgoCD: GitOps 자동 배포 없음
+- 🚧 ArgoCD: 설치 완료, Application 생성 대기
 - ❌ Argo Rollouts: Canary 배포 없음
 
-**현재 배포 방식**: 수동 `kubectl apply` (추정)
+**현재 배포 방식**: 수동 `kubectl apply`
 
 ---
 
@@ -411,16 +441,67 @@ Total: 5200Mi (65%)
 
 ## 🎯 다음 행동
 
-### 1단계: ArgoCD 구축 (이번 주)
+### 1단계: ArgoCD 구축 (진행 중) - 2026-01-20
 
 **목표**: Git Push → 자동 배포
 
-**체크리스트**:
-- [ ] ArgoCD 설치
-- [ ] Git Repository 준비
-- [ ] Application 생성
-- [ ] Sync Policy 자동화
-- [ ] 실제 배포 테스트
+**진행 상황**:
+- [x] **Helm vs kubectl apply 비교 분석** (완료)
+  - 결론: Helm 사용 (버전 관리, 롤백 가능)
+  - 26,951줄 YAML vs values.yaml 수정만
+
+- [x] **ArgoCD Helm 설치** (완료)
+  - Chart: argo/argo-cd v9.3.4
+  - App Version: v3.2.5
+  - Namespace: argocd
+  - 모든 Pod Running 확인
+
+- [x] **Ingress 설정** (완료)
+  - Host: argocd.jiminhome.shop
+  - Service: argocd-server:443
+  - TLS Passthrough (Self-signed 인증서)
+  - 로컬 접속 테스트 완료: `curl -I -H "Host: argocd.jiminhome.shop" https://192.168.1.200/`
+
+- [x] **Cloudflare Tunnel DNS 라우팅** (완료)
+  - DNS: argocd.jiminhome.shop → home-network tunnel
+  - 명령어: `cloudflared tunnel route dns home-network argocd.jiminhome.shop`
+  - 외부 접속: https://argocd.jiminhome.shop (DNS 전파 대기 중)
+
+- [ ] **Git Repository 준비** (대기 중)
+  - blog-system manifest 정리
+  - Git Repository 생성 또는 기존 repo 활용
+
+- [ ] **Application 생성** (대기 중)
+  - ArgoCD UI 로그인
+  - blog-system Application 생성
+  - Git Repository 연동
+
+- [ ] **Sync Policy 자동화** (대기 중)
+  - Auto-Sync 활성화
+  - Self-Heal 설정
+  - Auto-Prune 설정
+
+- [ ] **실제 배포 테스트** (대기 중)
+  - Git에서 replicas 변경
+  - ArgoCD 자동 동기화 확인
+  - Pod 증감 테스트
+
+**배운 것**:
+- Helm의 가치: 26,951줄 YAML을 values.yaml 수정만으로 관리
+- Helm 히스토리: `helm history argocd`로 버전 관리
+- Helm 롤백: `helm rollback argocd 1`로 즉시 복구 가능
+- Cloudflare Tunnel: `cloudflared tunnel route dns`로 DNS 추가
+- Ingress 동작 원리: Host 헤더 기반 라우팅
+
+**트러블슈팅 경험**:
+1. **Cloudflared 설정 미반영 문제**:
+   - 원인: Systemd가 `/etc/cloudflared/config.yml` 사용, 사용자 config 우선순위 혼동
+   - 해결: 두 설정 파일 모두 업데이트 + `warp-routing` 제거
+   - 대안: DNS 라우팅 직접 추가 (`cloudflared tunnel route dns`)
+
+2. **Ingress TLS 설정**:
+   - Self-signed 인증서 → `noTLSVerify: true` 필요
+   - Annotation: `nginx.ingress.kubernetes.io/ssl-passthrough: "true"`
 
 ---
 
@@ -447,6 +528,8 @@ Total: 5200Mi (65%)
 
 ---
 
-**작성일**: 2026-01-19
-**환경**: Homeserver Kubernetes (Cilium + Ingress Nginx)
-**다음 단계**: ArgoCD 구축
+**최초 작성일**: 2026-01-19
+**최종 업데이트**: 2026-01-20
+**환경**: Homeserver Kubernetes (Cilium + Ingress Nginx + ArgoCD)
+**현재 단계**: ArgoCD 구축 진행 중 (Application 생성 대기)
+**다음 단계**: Git Repository 연동 및 첫 번째 Application 생성
