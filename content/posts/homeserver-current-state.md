@@ -1,0 +1,452 @@
+---
+title: "Homeserver K8s 현재 상태 및 다음 구축 계획"
+date: 2026-01-19
+summary: "실제 구축된 Homeserver Kubernetes 아키텍처 정리 및 향후 로드맵 (ArgoCD → Argo Rollouts → Istio)"
+tags: ["kubernetes", "homeserver", "architecture", "planning"]
+categories: ["kubernetes"]
+series: ["Infrastructure Learning Journey"]
+weight: 1
+showtoc: true
+tocopen: true
+draft: false
+---
+
+## 📌 현재 상태 (2026-01-19 기준)
+
+### 실제 구축된 아키텍처
+
+```
+외부 (192.168.1.200)
+  ↓
+MetalLB (Load Balancer)
+  ↓
+Ingress Nginx Controller
+  ↓
+┌─────────────────────────────────────┐
+│  blog-system Namespace              │
+│                                     │
+│  ┌─────┐    ┌─────┐    ┌───────┐  │
+│  │ WEB │ →  │ WAS │ →  │ MySQL │  │
+│  │nginx│    │Java │    │  Pod  │  │
+│  └─────┘    └─────┘    └───────┘  │
+│                                     │
+└─────────────────────────────────────┘
+
+기반 인프라:
+- Cilium CNI (eBPF 기반)
+- Longhorn Storage (분산 스토리지)
+- Prometheus + Grafana (모니터링)
+- Cert-manager (TLS 인증서)
+```
+
+---
+
+## ✅ 현재 구축 완료된 것
+
+### 1. 네트워킹
+
+```bash
+kubectl get namespaces | grep -E "ingress|metallb"
+
+# 결과:
+ingress-nginx          Active   3d7h
+metallb-system         Active   46h
+```
+
+**Ingress Nginx**:
+- LoadBalancer 타입 (MetalLB 연동)
+- 외부 IP: 192.168.1.200
+- HTTP(80), HTTPS(443) 포트
+
+**MetalLB**:
+- 베어메탈 환경의 LoadBalancer 구현
+- IP Pool: 192.168.1.200-192.168.1.210
+
+---
+
+### 2. CNI (Container Network Interface)
+
+```bash
+kubectl get pods -n kube-system | grep cilium
+
+# Cilium DaemonSet이 각 노드에서 실행 중
+```
+
+**Cilium**:
+- eBPF 기반 고성능 네트워킹
+- Hubble UI 활성화됨 (NodePort 31234)
+- 네트워크 플로우 관찰 가능
+
+---
+
+### 3. 스토리지
+
+```bash
+kubectl get namespace longhorn-system
+
+# 결과:
+longhorn-system   Active   54d
+```
+
+**Longhorn**:
+- 분산 블록 스토리지
+- 3 replica 설정
+- MySQL PVC로 사용 중
+
+---
+
+### 4. 애플리케이션 (blog-system)
+
+```bash
+kubectl get pods -n blog-system
+
+# 결과:
+NAME                              READY   STATUS
+web-5bd74744c7-9b98q              1/1     Running
+web-5bd74744c7-ctf6v              1/1     Running
+was-d85c45cdb-qwjn7               1/1     Running
+was-d85c45cdb-r96vr               1/1     Running
+mysql-65f4d695d4-wpmtg            1/1     Running
+mysql-exporter-59b58fdd67-6wlkv   1/1     Running
+```
+
+**WEB (nginx)**:
+- Replicas: 2
+- Hugo 블로그 정적 파일 서빙
+
+**WAS (Spring Boot)**:
+- Replicas: 2
+- 게시판 CRUD 애플리케이션
+
+**MySQL**:
+- Replicas: 1
+- Longhorn PVC 사용 (영구 저장)
+
+**MySQL Exporter**:
+- Prometheus 메트릭 수집
+
+---
+
+### 5. 모니터링
+
+```bash
+kubectl get namespace monitoring
+
+# 결과:
+monitoring   Active   54d
+```
+
+**스택**:
+- Prometheus: 메트릭 수집 (NodePort 30090)
+- Grafana: 대시보드 (NodePort 30300)
+- Pushgateway: 커스텀 메트릭 (NodePort 30091)
+
+---
+
+### 6. TLS 인증서
+
+```bash
+kubectl get namespace cert-manager
+
+# 결과:
+cert-manager   Active   46h
+```
+
+**Cert-manager**:
+- Let's Encrypt 자동 인증서 발급
+- HTTPS 지원
+
+---
+
+## ❌ 현재 없는 것 (구축 필요)
+
+### 1. CI/CD
+- ❌ Jenkins: CI 파이프라인 없음
+- ❌ ArgoCD: GitOps 자동 배포 없음
+- ❌ Argo Rollouts: Canary 배포 없음
+
+**현재 배포 방식**: 수동 `kubectl apply` (추정)
+
+---
+
+### 2. Service Mesh
+- ❌ Istio: mTLS, Traffic Routing, Tracing 없음
+- ✅ Cilium: L3-4 네트워킹만 (L7 Service Mesh 아님)
+
+---
+
+## 🎯 구축 로드맵
+
+### Phase 1: GitOps 자동 배포 (ArgoCD)
+
+**목표**: Git Push → 자동 배포
+
+**구축 순서**:
+1. ArgoCD 설치
+2. Git Repository 준비 (Manifest 저장)
+3. Application 생성 (blog-system)
+4. Sync Policy 설정 (자동 동기화)
+
+**예상 소요 시간**: 2-3시간
+
+**배우는 것**:
+- GitOps 원리 (Pull 방식)
+- Declarative Configuration
+- Self-healing
+
+---
+
+### Phase 2: Canary 배포 (Argo Rollouts)
+
+**목표**: 안전한 단계적 배포 (10% → 50% → 100%)
+
+**구축 순서**:
+1. Argo Rollouts 설치
+2. Deployment → Rollout 변환
+3. Canary 전략 정의
+4. 실제 배포 테스트
+
+**예상 소요 시간**: 2-3시간
+
+**배우는 것**:
+- Canary 배포 원리
+- Rollback 전략
+- Blast Radius 최소화
+
+---
+
+### Phase 3: Service Mesh (Istio) - 선택 사항
+
+**목표**:
+- 정확한 트래픽 제어 (정확히 10%)
+- mTLS (Pod 간 암호화)
+- Distributed Tracing
+- Circuit Breaker
+
+**구축 순서**:
+1. Istio 설치 (minimal 프로파일)
+2. Sidecar Injection
+3. VirtualService + DestinationRule
+4. mTLS 활성화
+5. Jaeger Tracing
+
+**예상 소요 시간**: 6-8시간 (트러블슈팅 포함)
+
+**배우는 것**:
+- Service Mesh 아키텍처
+- Envoy Proxy 동작 원리
+- mTLS Handshake
+- L7 트래픽 관리
+
+**트레이드오프**:
+- ✅ 고급 기능 (mTLS, Tracing, Circuit Breaker)
+- ❌ 메모리 +100MB/Pod
+- ❌ 지연시간 +5ms
+- ❌ 복잡도 증가
+
+---
+
+## 💡 Istio vs Ingress Nginx 비교
+
+### 현재 (Ingress Nginx)
+
+**역할**: L7 Reverse Proxy + Load Balancer
+
+```
+외부 요청
+  ↓
+Ingress Nginx (192.168.1.200:80/443)
+  ↓ (Path-based Routing)
+/        → web-service
+/board   → was-service
+```
+
+**기능**:
+- ✅ HTTP/HTTPS Routing
+- ✅ TLS Termination
+- ✅ Path-based Routing
+- ❌ Canary 배포 (가중치 제어)
+- ❌ mTLS (Pod 간 암호화)
+- ❌ Distributed Tracing
+
+---
+
+### Istio 추가 시 (Istio Ingress Gateway)
+
+**역할**: Ingress Nginx를 대체 또는 함께 사용
+
+**Option 1: Istio만 사용** (Ingress Nginx 제거)
+```
+외부 요청
+  ↓
+Istio Ingress Gateway (192.168.1.200:80/443)
+  ↓
+VirtualService (Canary 10%)
+  ↓
+Envoy Sidecar (mTLS)
+  ↓
+Pod
+```
+
+**장점**:
+- ✅ Canary 배포 (정확히 10% 트래픽)
+- ✅ Header 기반 라우팅 (A/B 테스트)
+- ✅ Fault Injection (카오스 엔지니어링)
+
+**단점**:
+- ❌ 복잡도 증가
+- ❌ 메모리 사용량 증가
+
+---
+
+**Option 2: 함께 사용** (추천)
+```
+외부 요청
+  ↓
+Ingress Nginx (TLS Termination)
+  ↓
+Istio Ingress Gateway
+  ↓
+VirtualService + Envoy Sidecar
+  ↓
+Pod
+```
+
+**왜?**
+- Ingress Nginx: TLS 처리 (Cert-manager 연동)
+- Istio: 내부 트래픽 관리 (Canary, mTLS)
+
+---
+
+## 🔄 구축 우선순위 (추천)
+
+### 1순위: ArgoCD (필수)
+
+**이유**:
+- 수동 배포 → 자동 배포 (생산성 향상)
+- Git = Source of Truth (감사 추적)
+- 가볍고 간단함
+
+**시작 시점**: 즉시
+
+---
+
+### 2순위: Argo Rollouts (권장)
+
+**이유**:
+- Canary 배포 (안전한 배포)
+- ArgoCD와 함께 사용 (시너지)
+- Istio 없이도 가능
+
+**시작 시점**: ArgoCD 구축 후 1주일
+
+---
+
+### 3순위: Istio (선택)
+
+**이유**:
+- 고급 기능 (mTLS, Tracing, Circuit Breaker)
+- 학습 가치 (Service Mesh 경험)
+
+**시작 조건** (다음 중 1개라도 해당 시):
+- Argo Rollouts의 트래픽 제어가 부정확함을 체감
+- Pod 간 mTLS 필요성 발생
+- Distributed Tracing 필요 (복잡한 디버깅)
+- 서비스가 10개 이상으로 증가
+
+**시작 시점**: Argo Rollouts 구축 후 1-2주 (또는 필요성 체감 시)
+
+---
+
+## 📊 리소스 사용량 예측
+
+### 현재 상태
+```bash
+kubectl top nodes
+
+# 예상 (8GB RAM 홈서버):
+NAME           CPU    MEMORY
+master-node    15%    3500Mi (43%)
+worker-node1   20%    4000Mi (50%)
+```
+
+---
+
+### ArgoCD 추가 후
+```
+Memory: +300MB (ArgoCD Pods)
+Total: 4300Mi (53%)
+```
+
+**여유**: 충분 ✅
+
+---
+
+### Argo Rollouts 추가 후
+```
+Memory: +100MB (Rollouts Controller)
+Total: 4400Mi (55%)
+```
+
+**여유**: 충분 ✅
+
+---
+
+### Istio 추가 후
+```
+Memory:
+  - Istiod (Control Plane): +200MB
+  - Envoy Sidecar: +100MB × 6 Pods = +600MB
+Total: 5200Mi (65%)
+```
+
+**여유**: 제한적 ⚠️
+
+**대책**:
+1. Envoy 리소스 제한 (64Mi → 128Mi)
+2. 불필요한 Pod Sidecar Injection 제외
+3. Ambient Mesh 검토 (Sidecar-less)
+
+---
+
+## 🎯 다음 행동
+
+### 1단계: ArgoCD 구축 (이번 주)
+
+**목표**: Git Push → 자동 배포
+
+**체크리스트**:
+- [ ] ArgoCD 설치
+- [ ] Git Repository 준비
+- [ ] Application 생성
+- [ ] Sync Policy 자동화
+- [ ] 실제 배포 테스트
+
+---
+
+### 2단계: Argo Rollouts 구축 (다음 주)
+
+**목표**: Canary 배포 (10% → 50% → 100%)
+
+**체크리스트**:
+- [ ] Argo Rollouts 설치
+- [ ] Rollout 정의
+- [ ] Canary 배포 테스트
+- [ ] Rollback 테스트
+- [ ] Prometheus 메트릭 연동
+
+---
+
+### 3단계: Istio 검토 (필요 시)
+
+**판단 기준**:
+- Argo Rollouts로 해결 안 되는 문제 발생?
+- mTLS 필요성 발생?
+- Tracing 필요성 발생?
+- 메모리 여유 확인 (50% 이하?)
+
+---
+
+**작성일**: 2026-01-19
+**환경**: Homeserver Kubernetes (Cilium + Ingress Nginx)
+**다음 단계**: ArgoCD 구축
