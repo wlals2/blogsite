@@ -68,27 +68,27 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   <h3>📅 프로젝트 타임라인</h3>
   <div class="timeline">
     <div class="timeline-item">
-      <div class="timeline-date">2025.11 ~ 현재</div>
+      <div class="timeline-date">2025.11 ~ 2026.01</div>
       <div class="timeline-content">
-        <strong>AWS EKS + Multi-Cloud DR</strong><br>
-        3-Tier 아키텍처 구축 · 99.9% 가용성 달성 · Canary 배포 자동화<br>
-        <small style="color: var(--secondary);">Kubernetes, EKS, Route53, Azure, Terraform</small>
+        <strong>Local K8s Blog (✅ 완료)</strong><br>
+        Hugo 블로그를 Kubernetes로 운영 · GitHub Actions CI/CD · 35초 배포<br>
+        <small style="color: var(--secondary);">Kubernetes, Hugo, GitHub Actions, ArgoCD, Cloudflare</small>
       </div>
     </div>
     <div class="timeline-item">
-      <div class="timeline-date">2025.09 ~ 2025.10</div>
+      <div class="timeline-date">2025.11 ~ 현재 (55일)</div>
       <div class="timeline-content">
-        <strong>CI/CD Pipeline 구축</strong><br>
-        Jenkins + ArgoCD 기반 GitOps 파이프라인 구현<br>
-        <small style="color: var(--secondary);">Jenkins, ArgoCD, Kubernetes, GitHub</small>
+        <strong>PLG Stack 모니터링</strong><br>
+        Prometheus + Loki + Grafana · 4개 대시보드 · 8개 Alert Rules<br>
+        <small style="color: var(--secondary);">Prometheus, Grafana, Loki, AlertManager, mysql-exporter</small>
       </div>
     </div>
     <div class="timeline-item">
-      <div class="timeline-date">2025.07 ~ 2025.08</div>
+      <div class="timeline-date">2026.01</div>
       <div class="timeline-content">
-        <strong>Observability 구축</strong><br>
-        Prometheus + Loki + Grafana 기반 모니터링 시스템<br>
-        <small style="color: var(--secondary);">Prometheus, Grafana, Loki, AlertManager</small>
+        <strong>HPA & GitOps 완성</strong><br>
+        Horizontal Pod Autoscaler 구성 · ArgoCD 설치 · 자동 스케일링<br>
+        <small style="color: var(--secondary);">HPA, ArgoCD, Helm, Kubernetes</small>
       </div>
     </div>
   </div>
@@ -190,7 +190,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 
   [[params.socialIcons]]
     name = "email"
-    url = "mailto:your-email@example.com"
+    url = "mailto:wlals2@naver.com"
 
 # Taxonomies
 [taxonomies]
@@ -198,7 +198,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   category = "categories"
   series = "series"
 
-# Main Menu - 간소화된 구조 (6개)
+# Main Menu - 간소화된 구조 (5개)
 [[menu.main]]
   identifier = "about"
   name = "About"
@@ -206,34 +206,28 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   weight = 1
 
 [[menu.main]]
-  identifier = "architecture"
-  name = "Architecture"
-  url = "/architecture/"
-  weight = 2
-
-[[menu.main]]
   identifier = "projects"
   name = "Projects"
   url = "/projects/"
-  weight = 3
+  weight = 2
 
 [[menu.main]]
   identifier = "study"
   name = "Study"
   url = "/study/"
-  weight = 4
+  weight = 3
 
 [[menu.main]]
   identifier = "docs"
   name = "Docs"
-  url = "/docs/"
-  weight = 5
+  url = "https://github.com/wlals2/blogsite/tree/main/docs"
+  weight = 4
 
 [[menu.main]]
   identifier = "tags"
   name = "Tags"
   url = "/tags/"
-  weight = 6
+  weight = 5
 
 buildFuture = true
 

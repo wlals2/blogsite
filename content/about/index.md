@@ -184,7 +184,7 @@ AWS Console에서 클릭, 클릭, 클릭... 매번 실수하고, 같은 작업�
 
 - **GitHub**: [github.com/wlals2](https://github.com/wlals2)
 - **Blog**: [blog.jiminhome.shop](https://blog.jiminhome.shop)
-- **Email**: (이메일 주소)
+- **Email**: wlals2@naver.com
 
 ---
 
