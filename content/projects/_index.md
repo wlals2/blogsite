@@ -187,11 +187,12 @@ EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
 
 ## 🎯 다음 목표
 
-1. **ArgoCD GitOps 전환** (Application 생성, Auto-Sync)
-2. **Phase 4 MSA 구축** (2026.02~)
-3. **Cost 최적화** (Spot Instance, Karpenter)
-4. **Security 강화** (IRSA, Secrets Manager)
-5. **Observability 개선** (Distributed Tracing, OpenTelemetry)
+1. ~~**ArgoCD GitOps 전환**~~ → ✅ **완료** (Auto-Sync, Prune, SelfHeal)
+2. **Prometheus Alert 실전 테스트** (Slack 연동, 알림 훈련)
+3. **Phase 4 MSA 구축** (2026.02~)
+4. **Cost 최적화** (Spot Instance, Karpenter)
+5. **Security 강화** (IRSA, Secrets Manager)
+6. **Observability 개선** (Distributed Tracing, OpenTelemetry)
 
 ---
 
