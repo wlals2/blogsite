@@ -154,7 +154,7 @@ config.toml에 timeline HTML을 추가했습니다.
 ## 3. 배포 프로세스
 
 ### GitHub Actions
-- **워크플로우**: `.github/workflows/deploy-improved.yml`
+- **워크플로우**: `/home/jimin/blogsite/.github/workflows/deploy-improved.yml`
 - **트리거**: main 브랜치 push
 - **자동 실행**:
   1. Hugo 빌드 (`hugo --minify`)
@@ -165,7 +165,7 @@ config.toml에 timeline HTML을 추가했습니다.
 ### 배포 확인 방법
 ```bash
 # 1. 워크플로우 로그 확인
-tail -f ~/actions-runner/_diag/Worker_*.log | grep -i "cloudflare"
+tail -f /home/jimin/actions-runner/_diag/Worker_*.log | grep -i "cloudflare"
 
 # 2. 캐시 상태 확인
 curl -I https://blog.jiminhome.shop/ | grep "cf-cache-status"
