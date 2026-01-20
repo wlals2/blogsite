@@ -311,20 +311,70 @@ ls -lt ~/actions-runner/_diag/*.log | head -1
 
 **파일명 형식**: `NN-TOPIC-NAME.md`
 
-**현재 구조**:
+**현재 구조 (절대 경로: `/home/jimin/blogsite/docs/`)**:
 ```
-docs/
-├── 01-CICD-GUIDE.md           # CI/CD (GitHub Actions + ArgoCD)
-├── 02-INFRASTRUCTURE.md        # 인프라 (Kubernetes, Cloudflare, ArgoCD)
-├── 03-TROUBLESHOOTING.md       # 트러블슈팅
-├── 04-SOURCE-CODE-GUIDE.md     # 소스코드 가이드
-└── README.md                   # 인덱스
+/home/jimin/blogsite/docs/
+├── README.md                          # 📄 인덱스
+├── 02-INFRASTRUCTURE.md               # 📄 인프라 (Kubernetes, Cloudflare, ArgoCD)
+├── 03-TROUBLESHOOTING.md              # 📄 트러블슈팅
+├── 04-SOURCE-CODE-GUIDE.md            # 📄 소스코드 가이드
+├── CURRENT-STATE.md                   # 📄 k8s-manifests 프로젝트 현황
+├── PAT-MANAGEMENT.md                  # 📄 Personal Access Token 관리
+│
+├── istio/                             # 📁 Istio Service Mesh (3 files)
+│   ├── COMPLETE-ISTIO-ARCHITECTURE.md # ⭐ 완전한 아키텍처 (추천)
+│   ├── NGINX-PROXY-ISTIO-MESH.md      # nginx proxy 통합
+│   └── TODO.md                        # 향후 개선 과제
+│
+├── cilium/                            # 📁 Cilium eBPF (4 files)
+│   ├── LOCAL-K8S-CILIUM-ARCHITECTURE.md
+│   ├── CILIUM-ENTERPRISE-USE-CASES.md
+│   ├── CILIUM-IMPROVEMENT-COMPLETE.md
+│   └── MD-FILES-STATUS-REPORT.md
+│
+├── CICD/                              # 📁 CI/CD 파이프라인 (3 files)
+│   ├── CICD-PIPELINE.md
+│   ├── CICD-VERIFICATION.md
+│   └── GITOPS-IMPLEMENTATION.md
+│
+├── monitoring/                        # 📁 모니터링 (4 files + archive/)
+│   ├── README.md
+│   ├── CURRENT-STATUS.md
+│   ├── NEXT-STEPS.md
+│   ├── TROUBLESHOOTING.md
+│   └── archive/
+│
+├── guides/                            # 📁 가이드 (11 files)
+│   ├── README-DEV.md
+│   ├── DEV-GUIDE.md
+│   ├── QUICK-START-PRIVATE.md
+│   ├── PRIVATE-CONTENT-GUIDE.md
+│   ├── SECURITY-FEATURES.md
+│   ├── DDNS_SETUP_GUIDE.md
+│   ├── TEKTON-GUIDE.md
+│   ├── MERMAID-TROUBLESHOOTING.md
+│   ├── WORKFLOW_EXPLAINED.md
+│   ├── TROUBLESHOOTING_PROCESS.md
+│   └── TROUBLESHOOTING_SUMMARY.md
+│
+├── blog-design/                       # 📁 블로그 디자인 (1 file)
+│   └── MAIN-PAGE-CUSTOMIZATION.md
+│
+├── storage/                           # 📁 스토리지 (2 files)
+│   ├── README.md
+│   └── STORAGE-ANALYSIS.md
+│
+└── archive/                           # 📁 아카이브 (구버전 문서)
+    ├── 01-CICD-GUIDE.md
+    ├── README.md
+    └── old-docs-20260119/
 ```
 
 **번호 추가 규칙**:
 - 01-09: 핵심 주제 (CI/CD, 인프라, 트러블슈팅)
 - 10-19: 세부 주제 (필요 시 추가)
 - README.md: 번호 없음 (인덱스 역할)
+- 주제별 디렉터리: istio/, cilium/, CICD/, monitoring/, guides/
 
 ### 문서 업데이트 방식
 
