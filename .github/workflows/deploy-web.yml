@@ -55,6 +55,38 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ======================================================================
+      # Step 4.5: 빌드 검증
+      # ======================================================================
+      - name: Verify Build
+        run: |
+          echo "🔍 Verifying Docker image..."
+
+          # 1. 이미지 존재 확인
+          docker pull ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+
+          # 2. 이미지 크기 확인
+          IMAGE_SIZE=$(docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
+            --format='{{.Size}}' | awk '{print int($1/1024/1024)}')
+          echo "📦 Image size: ${IMAGE_SIZE} MB"
+
+          # 3. 이미지 크기 검증 (10MB ~ 200MB 사이)
+          if [ $IMAGE_SIZE -lt 10 ]; then
+            echo "❌ Image too small: ${IMAGE_SIZE} MB (minimum: 10 MB)"
+            exit 1
+          fi
+
+          if [ $IMAGE_SIZE -gt 200 ]; then
+            echo "⚠️  Warning: Image is large: ${IMAGE_SIZE} MB (recommended: < 200 MB)"
+          fi
+
+          # 4. 레이어 수 확인
+          LAYER_COUNT=$(docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
+            --format='{{len .RootFS.Layers}}')
+          echo "📚 Layers: ${LAYER_COUNT}"
+
+          echo "✅ Build verification passed"
+
+      # ======================================================================
       # Step 5: GitOps - Update Kubernetes Manifest
       # ======================================================================
       # Git Manifest를 업데이트하면 ArgoCD가 자동으로 배포
@@ -121,3 +153,31 @@ jobs:
           echo "- **Deployment**: ${{ env.DEPLOYMENT_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "- **URL**: https://blog.jiminhome.shop/" >> $GITHUB_STEP_SUMMARY
           echo "- **Cloudflare Cache**: Purged ✅" >> $GITHUB_STEP_SUMMARY
+
+      # ======================================================================
+      # Step 9: 이메일 알림
+      # ======================================================================
+      - name: Send Email Notification
+        if: always()  # 성공/실패 모두 알림
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: |
+            ${{ job.status == 'success' && '✅' || '❌' }} WEB 배포 ${{ job.status == 'success' && '성공' || '실패' }} - v${{ github.run_number }}
+          to: fw4568@gmail.com
+          from: GitHub Actions <${{ secrets.EMAIL_USERNAME }}>
+          body: |
+            ## ${{ job.status == 'success' && '✅ 배포 성공' || '❌ 배포 실패' }}
+
+            **이미지**: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+            **커밋**: ${{ github.event.head_commit.message }}
+            **작성자**: ${{ github.event.head_commit.author.name }}
+            **시간**: ${{ github.event.head_commit.timestamp }}
+
+            **URL**: https://blog.jiminhome.shop/
+            **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ${{ job.status == 'success' && 'ArgoCD가 3분 내 자동 배포합니다.' || '로그를 확인해주세요.' }}
