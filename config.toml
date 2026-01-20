@@ -86,9 +86,9 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
     <div class="timeline-item">
       <div class="timeline-date">2026.01</div>
       <div class="timeline-content">
-        <strong>HPA & GitOps 완성</strong><br>
-        Horizontal Pod Autoscaler 구성 · ArgoCD 설치 · 자동 스케일링<br>
-        <small style="color: var(--secondary);">HPA, ArgoCD, Helm, Kubernetes</small>
+        <strong>HPA & GitOps 완성 (✅ 완료)</strong><br>
+        HPA 자동 스케일링 · ArgoCD Application 생성 · Auto-Sync 활성화<br>
+        <small style="color: var(--secondary);">HPA, ArgoCD GitOps, Auto-Sync, Prune, SelfHeal</small>
       </div>
     </div>
   </div>

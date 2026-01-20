@@ -325,24 +325,52 @@ kubectl get application blog-system -n argocd
 
 ## 문제 해결
 
-### 1. Git Push 실패
+### 1. Git Push 실패 (GitOps Manifest Update)
 
 **증상:**
 ```
 error: failed to push some refs to 'https://github.com/wlals2/k8s-manifests.git'
+fatal: Authentication failed
 ```
 
-**원인:** GitHub Token 권한 부족
+**원인:** GitHub Token 권한 부족 또는 잘못된 Token 사용
+
+**중요:** GitOps에는 2가지 Token이 필요합니다:
+
+| Secret | 용도 | 필요 Scope |
+|--------|------|-----------|
+| `GHCR_TOKEN` | Container Registry Push | `write:packages`, `read:packages` |
+| `GITOPS_TOKEN` | k8s-manifests Repo Push | `repo` (Full control) |
 
 **해결:**
-```bash
-# 1. GitHub Personal Access Token (PAT) 확인
-# Settings → Developer settings → Personal access tokens
-# Scope: repo (전체) 필요
 
-# 2. GitHub Secrets 확인
-# blogsite → Settings → Secrets → Actions
-# GHCR_TOKEN에 PAT 저장되어 있어야 함
+```bash
+# 1. GitHub Personal Access Token (PAT) 생성
+# https://github.com/settings/tokens/new
+
+# GITOPS_TOKEN 생성:
+# - Note: "GITOPS_TOKEN (k8s-manifests push)"
+# - Expiration: 90 days
+# - Scope: ✅ repo (Full control of private repositories)
+
+# 2. GitHub Secrets 추가
+# https://github.com/wlals2/blogsite/settings/secrets/actions/new
+# Name: GITOPS_TOKEN
+# Secret: 생성한 PAT 붙여넣기
+
+# 3. 배포 재시도
+git push origin main  # WEB 자동 배포 트리거
+```
+
+**검증:**
+```bash
+# Manifest가 업데이트되었는지 확인
+cd ~/k8s-manifests
+git pull
+git log --oneline blog-system/web-rollout.yaml | head -3
+
+# 최신 커밋이 github-actions[bot]인지 확인
+# 예: a1b2c3d chore: Update WEB image to v19
 ```
 
 ---

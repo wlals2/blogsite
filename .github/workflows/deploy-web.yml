@@ -92,10 +92,10 @@ jobs:
       # Git Manifest를 업데이트하면 ArgoCD가 자동으로 배포
       - name: Update Kubernetes Manifest (GitOps)
         env:
-          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
-          # 1. k8s-manifests repo clone
-          git clone https://github.com/wlals2/k8s-manifests.git /tmp/k8s-manifests
+          # 1. k8s-manifests repo clone (with authentication)
+          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git /tmp/k8s-manifests
           cd /tmp/k8s-manifests/blog-system
 
           # 2. yq로 이미지 태그 업데이트
@@ -108,8 +108,8 @@ jobs:
           git add web-rollout.yaml
           git commit -m "chore: Update WEB image to v${{ github.run_number }}"
 
-          # GitHub Token으로 Push
-          git push https://${{ secrets.GHCR_TOKEN }}@github.com/wlals2/k8s-manifests.git main
+          # GitHub Token으로 Push (GITOPS_TOKEN with repo scope required)
+          git push https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git main
 
           echo "✅ Manifest updated: v${{ github.run_number }}"
           echo "ArgoCD will deploy automatically (within 3min)"
