@@ -55,16 +55,16 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ======================================================================
-      # Step 5: Kubernetes 배포
+      # Step 5: Kubernetes 배포 (Argo Rollout)
       # ======================================================================
       # Note: Self-hosted runner already has kubeconfig at ~/.kube/config
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
+          kubectl argo rollouts set image ${{ env.DEPLOYMENT_NAME }} \
             nginx=${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
             -n ${{ env.NAMESPACE }}
 
-          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+          kubectl argo rollouts status ${{ env.DEPLOYMENT_NAME }} \
             -n ${{ env.NAMESPACE }} \
             --timeout=120s
 
