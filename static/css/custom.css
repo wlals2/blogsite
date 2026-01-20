@@ -654,3 +654,135 @@
         margin: 0 4px;
     }
 }
+
+/* ========================================
+   📊 테이블 반응형 스타일
+   ======================================== */
+
+/* 테이블 래퍼 (수평 스크롤) */
+.post-content table,
+.main table,
+article table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: var(--entry);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 테이블 헤더 */
+.post-content table thead,
+.main table thead,
+article table thead {
+    background: var(--theme);
+    border-bottom: 2px solid var(--primary);
+}
+
+.post-content table th,
+.main table th,
+article table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--primary);
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    font-size: 0.95em;
+}
+
+/* 테이블 바디 */
+.post-content table td,
+.main table td,
+article table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    word-wrap: break-word;
+    max-width: 300px;
+}
+
+/* 테이블 행 호버 */
+.post-content table tbody tr:hover,
+.main table tbody tr:hover,
+article table tbody tr:hover {
+    background: var(--code-bg);
+    transition: background 0.2s ease;
+}
+
+/* 테이블 마지막 행 */
+.post-content table tbody tr:last-child td,
+.main table tbody tr:last-child td,
+article table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 테이블 첫 번째 열 강조 */
+.post-content table tbody tr td:first-child,
+.main table tbody tr td:first-child,
+article table tbody tr td:first-child {
+    font-weight: 600;
+    color: var(--content);
+}
+
+/* 테이블 코드 스타일 (셀 내부 코드) */
+.post-content table code,
+.main table code,
+article table code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--primary);
+}
+
+/* 테이블 링크 스타일 */
+.post-content table a,
+.main table a,
+article table a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--primary);
+    transition: all 0.2s ease;
+}
+
+.post-content table a:hover,
+.main table a:hover,
+article table a:hover {
+    color: #4facfe;
+    border-bottom-style: solid;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .post-content table,
+    .main table,
+    article table {
+        font-size: 0.85em;
+    }
+
+    .post-content table th,
+    .main table th,
+    article table th {
+        padding: 8px 10px;
+        font-size: 0.9em;
+    }
+
+    .post-content table td,
+    .main table td,
+    article table td {
+        padding: 8px 10px;
+        max-width: 200px;
+    }
+}
+
+/* 다크모드 최적화 */
+.dark table {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
