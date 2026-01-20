@@ -64,9 +64,17 @@ jobs:
             nginx=${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
             -n ${{ env.NAMESPACE }}
 
+          # Wait for rollout to start
+          sleep 5
+
+          # Auto-promote canary deployment
+          kubectl argo rollouts promote ${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }}
+
+          # Wait for rollout to complete
           kubectl argo rollouts status ${{ env.DEPLOYMENT_NAME }} \
             -n ${{ env.NAMESPACE }} \
-            --timeout=120s
+            --timeout=180s
 
       # ======================================================================
       # Step 6: Health Check
