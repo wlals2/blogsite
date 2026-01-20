@@ -177,3 +177,4 @@ jobs:
             **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             ${{ job.status == 'success' && 'ArgoCD가 3분 내 자동 배포합니다.' || '로그를 확인해주세요.' }}
+# Trigger: 1768952043
