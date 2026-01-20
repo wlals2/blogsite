@@ -176,14 +176,19 @@ curl -s https://blog.jiminhome.shop/ | grep -o 'class="profile-section"'
 
 ---
 
-## 4. 주요 파일
+## 4. 주요 파일 (절대 경로)
+
+**프로젝트 루트**: `/home/jimin/blogsite/`
 
 | 파일 | 역할 | 수정 시 주의사항 |
 |------|------|-----------------|
-| `config.toml` | 사이트 설정, 프로필 | HTML 사용 가능 |
-| `static/css/custom.css` | 커스텀 스타일 | 다크모드 고려 |
-| `layouts/partials/extend_head.html` | CSS/JS 로드 | Mermaid 지원 포함 |
-| `content/projects/**/*.md` | 프로젝트 글 | front matter 필수 |
+| `/home/jimin/blogsite/config.toml` | 사이트 설정, 프로필 | HTML 사용 가능 |
+| `/home/jimin/blogsite/static/css/custom.css` | 커스텀 스타일 | 다크모드 고려 |
+| `/home/jimin/blogsite/layouts/partials/extend_head.html` | CSS/JS 로드 | Mermaid 지원 포함 |
+| `/home/jimin/blogsite/content/projects/**/*.md` | 프로젝트 글 | front matter 필수 |
+| `/home/jimin/blogsite/content/posts/**/*.md` | 블로그 포스트 | front matter 필수 |
+| `/home/jimin/blogsite/docs/**/*.md` | 프로젝트 문서 | Hugo 빌드 외부 |
+| `/home/jimin/blogsite/CLAUDE.md` | Claude 작업 규칙 | 이 파일 |
 
 ---
 
@@ -225,13 +230,13 @@ CLOUDFLARE_API_TOKEN
 curl -I https://blog.jiminhome.shop/css/custom.css
 
 # 2. extend_head.html 확인
-cat layouts/partials/extend_head.html | grep custom.css
+cat /home/jimin/blogsite/layouts/partials/extend_head.html | grep custom.css
 ```
 
 ### 배포 안 될 때
 ```bash
 # 워크플로우 상태 확인
-ls -lt ~/actions-runner/_diag/*.log | head -1
+ls -lt /home/jimin/actions-runner/_diag/*.log | head -1
 ```
 
 ---
@@ -642,6 +647,9 @@ ArgoCD 내용 추가 필요?
 
 ### 참고 문서
 
-- [docs/README.md](docs/README.md) - 프로젝트 완전 가이드 예제
-- [docs/monitoring/OBSERVABILITY-SETUP.md](docs/monitoring/OBSERVABILITY-SETUP.md) - 기술 가이드 예제
-- [docs/01-CICD-GUIDE.md](docs/01-CICD-GUIDE.md) - CI/CD 가이드 예제
+**절대 경로: `/home/jimin/blogsite/docs/`**
+
+- [`/home/jimin/blogsite/docs/README.md`](/home/jimin/blogsite/docs/README.md) - 프로젝트 완전 가이드 예제
+- [`/home/jimin/blogsite/docs/istio/COMPLETE-ISTIO-ARCHITECTURE.md`](/home/jimin/blogsite/docs/istio/COMPLETE-ISTIO-ARCHITECTURE.md) - Istio 아키텍처 가이드 (추천)
+- [`/home/jimin/blogsite/docs/CICD/CICD-PIPELINE.md`](/home/jimin/blogsite/docs/CICD/CICD-PIPELINE.md) - CI/CD 파이프라인 가이드
+- [`/home/jimin/blogsite/docs/monitoring/README.md`](/home/jimin/blogsite/docs/monitoring/README.md) - 모니터링 가이드 예제
