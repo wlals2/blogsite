@@ -1,0 +1,104 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"mysql","tier":"database"},"name":"mysql-service","namespace":"blog-system"},"spec":{"ports":[{"name":"mysql","port":3306,"protocol":"TCP","targetPort":3306}],"selector":{"app":"mysql"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-01-17T02:36:27Z"
+    labels:
+      app: mysql
+      tier: database
+    name: mysql-service
+    namespace: blog-system
+    resourceVersion: "3007162"
+    uid: f3d63f2b-cf4f-417b-851c-81ca05243a33
+  spec:
+    clusterIP: 10.99.101.181
+    clusterIPs:
+    - 10.99.101.181
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: mysql
+      port: 3306
+      protocol: TCP
+      targetPort: 3306
+    selector:
+      app: mysql
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"was","tier":"backend"},"name":"was-service","namespace":"blog-system"},"spec":{"ports":[{"name":"http","port":8080,"protocol":"TCP","targetPort":8080}],"selector":{"app":"was"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-01-17T02:40:39Z"
+    labels:
+      app: was
+      tier: backend
+    name: was-service
+    namespace: blog-system
+    resourceVersion: "3007984"
+    uid: 25b34af7-a086-4722-8a34-98a64ac26a3b
+  spec:
+    clusterIP: 10.97.248.192
+    clusterIPs:
+    - 10.97.248.192
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: was
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"web","tier":"frontend"},"name":"web-service","namespace":"blog-system"},"spec":{"ports":[{"name":"http","port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"web"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-01-16T09:53:41Z"
+    labels:
+      app: web
+      tier: frontend
+    name: web-service
+    namespace: blog-system
+    resourceVersion: "2828497"
+    uid: 9f92dc21-2c77-4e05-988e-3ef555658628
+  spec:
+    clusterIP: 10.101.135.246
+    clusterIPs:
+    - 10.101.135.246
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: web
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

@@ -66,26 +66,45 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ======================================================================
-      # Step 6: Kubernetes 배포
+      # Step 6: GitOps - Update Kubernetes Manifest
       # ======================================================================
-      # Note: Self-hosted runner already has kubeconfig at ~/.kube/config
-      - name: Deploy to Kubernetes
+      # Git Manifest를 업데이트하면 ArgoCD가 자동으로 배포
+      - name: Update Kubernetes Manifest (GitOps)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
-          kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
-            spring-boot=${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
-            -n ${{ env.NAMESPACE }}
+          # 1. k8s-manifests repo clone
+          git clone https://github.com/wlals2/k8s-manifests.git /tmp/k8s-manifests
+          cd /tmp/k8s-manifests/blog-system
 
-          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
-            -n ${{ env.NAMESPACE }} \
-            --timeout=120s
+          # 2. yq로 이미지 태그 업데이트
+          yq eval ".spec.template.spec.containers[0].image = \"${{ env.IMAGE_NAME }}:v${{ github.run_number }}\"" \
+            -i was-deployment.yaml
+
+          # 3. Git Commit & Push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add was-deployment.yaml
+          git commit -m "chore: Update WAS image to v${{ github.run_number }}"
+
+          # GitHub Token으로 Push
+          git push https://${{ secrets.GHCR_TOKEN }}@github.com/wlals2/k8s-manifests.git main
+
+          echo "✅ Manifest updated: v${{ github.run_number }}"
+          echo "ArgoCD will deploy automatically (within 3min)"
 
       # ======================================================================
-      # Step 7: Health Check
+      # Step 7: Wait for ArgoCD Sync
       # ======================================================================
-      - name: Health Check
+      - name: Wait for ArgoCD Sync
         run: |
-          sleep 10
-          kubectl get deployment ${{ env.DEPLOYMENT_NAME }} -n ${{ env.NAMESPACE }}
+          echo "Waiting for ArgoCD to sync..."
+          sleep 30  # ArgoCD는 3초마다 poll, 여유있게 30초 대기
+
+          # ArgoCD Application 상태 확인
+          kubectl get application blog-system -n argocd
+
+          # Pod 상태 확인
           kubectl get pods -n ${{ env.NAMESPACE }} -l app=was
 
       # ======================================================================

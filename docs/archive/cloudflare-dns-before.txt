@@ -1,0 +1,1 @@
+현재 CloudFlare DNS: blog.jiminhome.shop -> 104.21.60.34
