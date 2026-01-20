@@ -105,15 +105,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
-          # 1. k8s-manifests repo clone (with authentication)
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git /tmp/k8s-manifests
-          cd /tmp/k8s-manifests/blog-system
+          # 1. 기존 k8s-manifests 디렉터리 사용 (self-hosted runner)
+          cd /home/jimin/k8s-manifests
 
-          # 2. yq로 이미지 태그 업데이트
+          # 2. 최신 변경사항 pull
+          git pull origin main
+
+          cd blog-system
+
+          # 3. yq로 이미지 태그 업데이트
           yq eval ".spec.template.spec.containers[0].image = \"${{ env.IMAGE_NAME }}:v${{ github.run_number }}\"" \
             -i was-deployment.yaml
 
-          # 3. Git Commit & Push
+          # 4. Git Commit & Push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add was-deployment.yaml
