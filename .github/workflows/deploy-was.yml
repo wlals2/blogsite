@@ -1,11 +1,12 @@
 name: Deploy WAS to Kubernetes
 
 on:
-  workflow_dispatch:  # 수동 실행 (WAS 코드는 Git에 포함 안 됨)
+  workflow_dispatch:  # 수동 실행
   push:
     branches: [ main ]
     paths:
-      - '.github/workflows/deploy-was.yml'  # 워크플로우 파일 변경 시만
+      - 'blog-k8s-project/was/**'  # WAS 소스 변경 시
+      - '.github/workflows/deploy-was.yml'  # 워크플로우 파일 변경 시
 
 env:
   IMAGE_NAME: ghcr.io/wlals2/board-was
@@ -168,4 +169,4 @@ jobs:
             **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             ${{ job.status == 'success' && 'ArgoCD가 3분 내 자동 배포합니다.' || '로그를 확인해주세요.' }}
-# Trigger: 1768952043
+# Trigger: Test stateless k8s-manifests clone (WAS)
