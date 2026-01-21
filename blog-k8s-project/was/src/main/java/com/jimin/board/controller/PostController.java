@@ -1,0 +1,185 @@
+package com.jimin.board.controller;
+
+import com.jimin.board.entity.Post;
+import com.jimin.board.service.PostService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * PostController - 게시글 REST API 엔드포인트
+ *
+ * @RestController: JSON 응답을 반환하는 컨트롤러
+ * @RequestMapping: 모든 API가 /api/posts로 시작
+ */
+@RestController
+@RequestMapping("/api/posts")  // 기본 경로
+@RequiredArgsConstructor  // Lombok: final 필드 자동 생성자 주입
+public class PostController {
+
+    private final PostService postService;  // 자동 주입
+
+    /**
+     * 1. 모든 게시글 조회
+     * GET /api/posts
+     *
+     * @return 게시글 리스트 (200 OK)
+     *
+     * 예시 응답:
+     * [
+     *   {
+     *     "id": 1,
+     *     "title": "첫 번째 글",
+     *     "content": "안녕하세요!",
+     *     "author": "지민",
+     *     "createdAt": "2026-01-16T10:00:00"
+     *   }
+     * ]
+     */
+    @GetMapping
+    public ResponseEntity<List<Post>> getAllPosts() {
+        List<Post> posts = postService.getAllPosts();
+        return ResponseEntity.ok(posts);  // 200 OK
+    }
+
+    /**
+     * 2. 특정 게시글 조회
+     * GET /api/posts/{id}
+     *
+     * @param id 게시글 ID (경로 변수)
+     * @return 게시글 (200 OK) 또는 404 Not Found
+     *
+     * 예시 요청: GET /api/posts/1
+     * 예시 응답:
+     * {
+     *   "id": 1,
+     *   "title": "첫 번째 글",
+     *   "content": "안녕하세요!",
+     *   "author": "지민",
+     *   "createdAt": "2026-01-16T10:00:00"
+     * }
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Post> getPostById(@PathVariable Long id) {
+        try {
+            Post post = postService.getPostById(id);
+            return ResponseEntity.ok(post);  // 200 OK
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();  // 404 Not Found
+        }
+    }
+
+    /**
+     * 3. 게시글 작성
+     * POST /api/posts
+     *
+     * @param post 작성할 게시글 (JSON 형식)
+     * @Valid: 유효성 검증 (@NotBlank, @Size 등)
+     *
+     * @return 저장된 게시글 (201 Created)
+     *
+     * 예시 요청 Body:
+     * {
+     *   "title": "새 글",
+     *   "content": "내용입니다",
+     *   "author": "지민"
+     * }
+     *
+     * 예시 응답: (201 Created)
+     * {
+     *   "id": 2,
+     *   "title": "새 글",
+     *   "content": "내용입니다",
+     *   "author": "지민",
+     *   "createdAt": "2026-01-16T10:05:00"
+     * }
+     */
+    @PostMapping
+    public ResponseEntity<Post> createPost(@Valid @RequestBody Post post) {
+        Post savedPost = postService.createPost(post);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);  // 201 Created
+    }
+
+    /**
+     * 4. 게시글 수정
+     * PUT /api/posts/{id}
+     *
+     * @param id 수정할 게시글 ID
+     * @param post 수정 내용 (JSON 형식)
+     * @return 수정된 게시글 (200 OK) 또는 404 Not Found
+     *
+     * 예시 요청: PUT /api/posts/1
+     * 예시 Body:
+     * {
+     *   "title": "수정된 제목",
+     *   "content": "수정된 내용"
+     * }
+     *
+     * 예시 응답: (200 OK)
+     * {
+     *   "id": 1,
+     *   "title": "수정된 제목",
+     *   "content": "수정된 내용",
+     *   "author": "지민",
+     *   "createdAt": "2026-01-16T10:00:00"
+     * }
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post post) {
+        try {
+            Post updatedPost = postService.updatePost(id, post);
+            return ResponseEntity.ok(updatedPost);  // 200 OK
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();  // 404 Not Found
+        }
+    }
+
+    /**
+     * 5. 게시글 삭제
+     * DELETE /api/posts/{id}
+     *
+     * @param id 삭제할 게시글 ID
+     * @return 204 No Content (성공) 또는 404 Not Found
+     *
+     * 예시 요청: DELETE /api/posts/1
+     * 예시 응답: (204 No Content, 응답 Body 없음)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        try {
+            postService.deletePost(id);
+            return ResponseEntity.noContent().build();  // 204 No Content
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();  // 404 Not Found
+        }
+    }
+
+    /**
+     * 6. 게시글 검색
+     * GET /api/posts/search?keyword=XXX
+     *
+     * @param keyword 검색 키워드
+     * @return 검색 결과 리스트 (200 OK)
+     *
+     * 예시 요청: GET /api/posts/search?keyword=안녕
+     * 예시 응답:
+     * [
+     *   {
+     *     "id": 1,
+     *     "title": "안녕하세요",
+     *     "content": "...",
+     *     "author": "지민",
+     *     "createdAt": "..."
+     *   }
+     * ]
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Post>> searchPosts(@RequestParam String keyword) {
+        List<Post> posts = postService.searchPosts(keyword);
+        return ResponseEntity.ok(posts);  // 200 OK
+    }
+}

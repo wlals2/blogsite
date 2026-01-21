@@ -87,36 +87,37 @@ jobs:
           echo "✅ Build verification passed"
 
       # ======================================================================
-      # Step 5: GitOps - Update Kubernetes Manifest
+      # Step 5: GitOps - Update Kubernetes Manifest (Stateless)
       # ======================================================================
-      # Git Manifest를 업데이트하면 ArgoCD가 자동으로 배포
+      # Stateless 방식: 매번 임시 디렉터리로 clone하여 로컬 의존성 제거
       - name: Update Kubernetes Manifest (GitOps)
         env:
           GITHUB_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
-          # 1. 기존 k8s-manifests 디렉터리 사용 (self-hosted runner)
-          cd /home/jimin/k8s-manifests
+          # 1. 임시 디렉터리로 k8s-manifests clone (Stateless)
+          TEMP_DIR="/tmp/k8s-manifests-${{ github.run_number }}"
+          echo "📁 Cloning to: $TEMP_DIR"
 
-          # 2. 최신 변경사항 pull
-          git pull origin main
+          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git $TEMP_DIR
+          cd $TEMP_DIR/blog-system
 
-          cd blog-system
-
-          # 3. yq로 이미지 태그 업데이트
+          # 2. yq로 이미지 태그 업데이트
           yq eval ".spec.template.spec.containers[0].image = \"${{ env.IMAGE_NAME }}:v${{ github.run_number }}\"" \
             -i web-rollout.yaml
 
-          # 4. Git Commit & Push
+          # 3. Git Commit & Push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add web-rollout.yaml
           git commit -m "chore: Update WEB image to v${{ github.run_number }}"
-
-          # GitHub Token으로 Push (GITOPS_TOKEN with repo scope required)
-          git push https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git main
+          git push origin main
 
           echo "✅ Manifest updated: v${{ github.run_number }}"
           echo "ArgoCD will deploy automatically (within 3min)"
+
+          # 4. Cleanup (임시 디렉터리 삭제)
+          rm -rf $TEMP_DIR
+          echo "🧹 Cleaned up temporary directory"
 
       # ======================================================================
       # Step 6: Wait for ArgoCD Sync

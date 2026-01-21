@@ -24,7 +24,6 @@ content/private/
 update-cloudflare-ip.sh
 ddns.log
 *.env*
-blog-k8s-project/was/
 
 # 내부 문서 정리 완료 (2026-01-20)
 # docs/ 디렉터리를 Git에서 추적하여 문서 이력 관리
