@@ -7,15 +7,65 @@
 ## [Unreleased]
 
 ### 계획 중
-- nginx 프록시 설정 (`/api/` → WAS)
-- board.html 배포 확인
 - WAS Pagination 구현
 - 에러 응답 표준화 (@RestControllerAdvice)
 - Swagger UI 추가
 
 ---
 
-## [1.2.0] - 2026-01-21
+## [1.3.0] - 2026-01-21 (오후)
+
+### Fixed
+- **🔴 Istio mTLS 에러 해결** (Critical)
+  - 문제: `TLS_error: WRONG_VERSION_NUMBER` - nginx → WAS 통신 실패
+  - 원인: nginx는 Plain HTTP 전송, DestinationRule은 mTLS 강제
+  - 해결: `was-destinationrule.yaml` - `tls.mode: ISTIO_MUTUAL` → `DISABLE`
+  - Commit: [f25bf46](https://github.com/wlals2/k8s-manifests/commit/f25bf46)
+
+- **🔴 AuthorizationPolicy RBAC 에러 해결** (Critical)
+  - 문제: `RBAC: access denied` - `matched_policy[none]`
+  - 원인: mTLS DISABLE 환경에서 `source.principals`, `source.namespaces` 작동 안 함
+  - 해결 1차: `source.principals` 제거, `source.namespaces`만 유지 → 여전히 실패
+  - 해결 2차: `from` 조건 완전 제거, `to` 조건(port/path)만 사용 → 성공
+  - Commit: [78a251a](https://github.com/wlals2/k8s-manifests/commit/78a251a)
+  - 보안 트레이드오프: namespace 기반 제어 → port/path 기반 제어
+
+### Changed
+- **K8s Manifests (k8s-manifests repo)**
+  - `was-destinationrule.yaml`: mTLS DISABLE 설정
+  - `authz-was.yaml`: source identity 조건 제거
+
+### Added
+- **외부 API 접근 확인** ✅
+  - URL: `https://blog.jiminhome.shop/api/posts`
+  - 상태: 모든 CRUD 엔드포인트 정상 작동
+  - 테스트: GET, POST, PUT, DELETE, SEARCH 성공
+
+- **board.html 배포 확인** ✅
+  - URL: `https://blog.jiminhome.shop/board.html`
+  - 상태: HTTP/2 200, 정상 배포
+
+### Documentation
+- **`docs/WAS/TROUBLESHOOTING.md` 업데이트**
+  - Istio mTLS 에러 섹션 확장 (실제 해결 과정, 진단 방법)
+  - AuthorizationPolicy RBAC 에러 신규 섹션 추가
+  - 보안 트레이드오프 비교 테이블
+  - mTLS DISABLE 환경 특성 상세 설명
+
+### Known Issues Resolved
+- ✅ 외부 API 접근 불가 (404) → 해결 (실제 원인: mTLS 에러)
+- ✅ Istio mTLS 에러 → 해결
+- ✅ AuthorizationPolicy RBAC 에러 → 해결
+
+### Lessons Learned
+1. PeerAuthentication PERMISSIVE여도 DestinationRule이 우선 적용됨
+2. mTLS DISABLE 환경에서는 source identity 기반 정책 사용 불가
+3. Istio 정책 변경 시 Pod 재시작으로 sidecar 캐시 갱신 필요
+4. `rbac_access_denied_matched_policy[none]` 로그 = 정책 매치 실패
+
+---
+
+## [1.2.0] - 2026-01-21 (오전)
 
 ### Added
 - **WAS 문서 체계화**

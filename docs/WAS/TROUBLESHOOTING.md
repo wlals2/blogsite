@@ -7,14 +7,15 @@
 ## 목차
 
 1. [외부 접근 불가 (404)](#외부-접근-불가-404)
-2. [Istio mTLS 에러](#istio-mtls-에러)
-3. [MySQL 연결 실패](#mysql-연결-실패)
-4. [Port 충돌](#port-충돌)
-5. [Lombok Annotation 인식 안 됨](#lombok-annotation-인식-안-됨)
-6. [JAR 실행 시 Main Class 못 찾음](#jar-실행-시-main-class-못-찾음)
-7. [Pod 재시작 반복](#pod-재시작-반복)
-8. [Canary 배포 실패](#canary-배포-실패)
-9. [배포 후 변경사항 적용 안 됨](#배포-후-변경사항-적용-안-됨)
+2. [Istio mTLS 에러](#istio-mtls-에러) ⭐ **2026-01-21 업데이트**
+3. [AuthorizationPolicy RBAC 에러 (mTLS DISABLE 환경)](#authorizationpolicy-rbac-에러-mtls-disable-환경) ⭐ **신규 추가**
+4. [MySQL 연결 실패](#mysql-연결-실패)
+5. [Port 충돌](#port-충돌)
+6. [Lombok Annotation 인식 안 됨](#lombok-annotation-인식-안-됨)
+7. [JAR 실행 시 Main Class 못 찾음](#jar-실행-시-main-class-못-찾음)
+8. [Pod 재시작 반복](#pod-재시작-반복)
+9. [Canary 배포 실패](#canary-배포-실패)
+10. [배포 후 변경사항 적용 안 됨](#배포-후-변경사항-적용-안-됨)
 
 ---
 
@@ -120,34 +121,54 @@ curl https://blog.jiminhome.shop/api/posts
 ### 증상
 
 ```bash
-# WAS 로그
-TLS_error: WRONG_VERSION_NUMBER
+# 외부 API 접근 시
+curl https://blog.jiminhome.shop/api/posts
+# → upstream connect error or disconnect/reset before headers.
+#    retried and the latest reset reason: remote connection failure,
+#    transport failure reason: TLS_error:|268435703:SSL routines:
+#    OPENSSL_internal:WRONG_VERSION_NUMBER:TLS_error_end
 
-# 또는
-upstream connect error or disconnect/reset before headers
+# WAS Pod Istio Proxy 로그
+kubectl logs -n blog-system -l app=was -c istio-proxy --tail=50
+# [2026-01-21T03:11:48.062Z] "GET /actuator/health HTTP/1.1" 403 -
+#  rbac_access_denied_matched_policy[none]
 ```
 
 ### 원인
 
-**nginx → WAS 통신에서 mTLS 불일치**
+**nginx → WAS 통신에서 mTLS 설정 불일치**
 
-- nginx가 Plain HTTP 전송
-- WAS DestinationRule이 mTLS 요구
-- 버전 불일치 에러 발생
+1. nginx는 Plain HTTP로 요청 전송 (upstream http://was-service:8080)
+2. DestinationRule이 `tls.mode: ISTIO_MUTUAL` 강제
+3. Istio sidecar가 mTLS 연결 시도 → TLS 버전 불일치 에러
+4. **중요**: PeerAuthentication이 PERMISSIVE여도 DestinationRule이 우선
+
+```
+nginx (Plain HTTP) → Istio Sidecar (mTLS 강제) → ❌ TLS_error
+```
 
 ### 진단
 
 ```bash
 # 1. DestinationRule 확인
-kubectl get destinationrule was-dest-rule -n blog-system -o yaml
+kubectl get destinationrule was-dest-rule -n blog-system -o jsonpath='{.spec.trafficPolicy.tls.mode}'
+# 출력: ISTIO_MUTUAL (문제!)
 
-# 2. mTLS 모드 확인
-# trafficPolicy.tls.mode: ISTIO_MUTUAL
+# 2. PeerAuthentication 확인
+kubectl get peerauthentication -n blog-system
+# MODE: PERMISSIVE (이미 올바름)
+
+# 3. nginx ConfigMap 확인
+kubectl get configmap web-nginx-config -n blog-system -o yaml | grep proxy_pass
+# proxy_pass http://was-service:8080 (Plain HTTP 사용)
+
+# 4. 실제 에러 확인
+curl -v https://blog.jiminhome.shop/api/posts 2>&1 | grep -i "tls\|error"
 ```
 
-### 해결 옵션
+### 해결 방법 (권장)
 
-#### 옵션 1: DestinationRule에서 nginx → WAS는 Plain HTTP 허용
+**DestinationRule에서 mTLS DISABLE 설정**
 
 ```yaml
 # was-destinationrule.yaml
@@ -155,46 +176,64 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: was-dest-rule
+  namespace: blog-system
 spec:
   host: was-service
   trafficPolicy:
     tls:
-      mode: DISABLE  # Plain HTTP 허용
+      mode: DISABLE  # ✅ Plain HTTP 허용 (nginx → WAS 내부 통신)
     connectionPool:
-      tcp:
-        maxConnections: 100
       http:
-        http1MaxPendingRequests: 50
-        maxRequestsPerConnection: 2
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 10
+    loadBalancer:
+      simple: ROUND_ROBIN
+  subsets:
+  - name: stable
+  - name: canary
 ```
 
-**적용:**
+**적용 순서:**
 ```bash
+# 1. 파일 수정
 cd ~/k8s-manifests/blog-system
+vim was-destinationrule.yaml
+# tls.mode: ISTIO_MUTUAL → DISABLE
+
+# 2. Git push
 git add was-destinationrule.yaml
-git commit -m "fix: Disable mTLS for nginx → WAS"
+git commit -m "fix: Disable mTLS for nginx → WAS communication"
 git push origin main
 
-# ArgoCD 동기화 대기
-watch kubectl get application blog-system -n argocd
+# 3. ArgoCD 동기화 확인 (자동)
+kubectl get destinationrule was-dest-rule -n blog-system -o jsonpath='{.spec.trafficPolicy.tls.mode}'
+# 출력: DISABLE ✅
+
+# 4. Pod 재시작 (Istio sidecar 설정 적용)
+kubectl delete pod -n blog-system -l app=was
+
+# 5. 테스트
+curl https://blog.jiminhome.shop/api/posts
+# [{"id":1,"title":"First Post",...}] ✅
 ```
 
-#### 옵션 2: PeerAuthentication PERMISSIVE 모드
+### 다른 해결 옵션 (비추천)
 
-```yaml
-# mtls-peerauthentication.yaml
-apiVersion: security.istio.io/v1beta1
-kind: PeerAuthentication
-metadata:
-  name: mtls-permissive
-  namespace: blog-system
-spec:
-  mtls:
-    mode: PERMISSIVE  # mTLS 선택적 (Plain HTTP도 허용)
+#### 옵션 2: nginx에서 mTLS 사용
+
+```nginx
+# web-nginx-config ConfigMap
+location /api {
+    proxy_pass https://was-service:8080;  # https로 변경
+    proxy_ssl_verify off;  # 또는 인증서 설정
+}
 ```
 
-**이미 PERMISSIVE이면:**
-- DestinationRule 확인 필요
+**단점:**
+- nginx가 Istio mTLS 인증서 관리 필요
+- 복잡도 증가
+- 내부 통신에 불필요한 암호화
 
 #### 옵션 3: nginx → WAS 경로만 mTLS 제외
 
@@ -220,6 +259,187 @@ kubectl exec -n blog-system $(kubectl get pod -n blog-system -l app=web -o jsonp
   -c nginx -- curl -s http://was-service:8080/actuator/health
 # {"status":"UP"}
 ```
+
+---
+
+## AuthorizationPolicy RBAC 에러 (mTLS DISABLE 환경)
+
+### 증상
+
+```bash
+# API 접근 시 403 Forbidden
+curl https://blog.jiminhome.shop/api/posts
+# RBAC: access denied
+
+# Istio Proxy 로그
+kubectl logs -n blog-system -l app=was -c istio-proxy --tail=10 | grep rbac
+# [2026-01-21T03:11:48.062Z] "GET /api/posts HTTP/1.1" 403 -
+#  rbac_access_denied_matched_policy[none]
+```
+
+**핵심**: `matched_policy[none]` → 어떤 정책도 매치되지 않음!
+
+### 원인
+
+**mTLS DISABLE 모드에서는 source identity를 사용할 수 없음**
+
+1. DestinationRule: `tls.mode: DISABLE` (Plain HTTP)
+2. AuthorizationPolicy: `source.principals` 또는 `source.namespaces` 조건 사용
+3. **문제**: mTLS 없으면 Istio가 source identity를 알 수 없음
+4. 결과: 모든 요청이 정책 매치 실패 → 403 Forbidden
+
+```yaml
+# ❌ 작동하지 않는 설정 (mTLS DISABLE 환경)
+spec:
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/blog-system/sa/default"]  # mTLS 필요!
+        namespaces: ["blog-system"]  # mTLS 필요!
+    to:
+    - operation:
+        ports: ["8080"]
+        paths: ["/api/*"]
+```
+
+**Istio Identity Flow:**
+```
+mTLS ENABLED:
+  Client → [mTLS 인증서] → Istio → source.principal 파악 ✅
+
+mTLS DISABLE:
+  Client → [Plain HTTP] → Istio → source.principal 알 수 없음 ❌
+```
+
+### 진단
+
+```bash
+# 1. DestinationRule TLS 모드 확인
+kubectl get destinationrule was-dest-rule -n blog-system -o jsonpath='{.spec.trafficPolicy.tls.mode}'
+# 출력: DISABLE
+
+# 2. AuthorizationPolicy 확인
+kubectl get authorizationpolicy was-authz -n blog-system -o yaml
+
+# 3. source 조건 있는지 확인
+# from.source.principals 또는 from.source.namespaces 있으면 문제!
+
+# 4. Istio 로그에서 RBAC 에러 확인
+kubectl logs -n blog-system -l app=was -c istio-proxy --tail=50 | grep rbac
+# rbac_access_denied_matched_policy[none] ← 정책 매치 실패!
+
+# 5. 임시로 AuthorizationPolicy 삭제하고 테스트
+kubectl delete authorizationpolicy was-authz -n blog-system
+kubectl delete pod -n blog-system -l app=was
+curl https://blog.jiminhome.shop/api/posts
+# 성공하면 AuthorizationPolicy 설정 문제 확인됨
+```
+
+### 해결 방법
+
+**from 조건 제거, to 조건만 사용**
+
+```yaml
+# authz-was.yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: was-authz
+  namespace: blog-system
+spec:
+  selector:
+    matchLabels:
+      app: was
+  action: ALLOW
+  rules:
+  # ✅ from 조건 없음 (mTLS DISABLE 모드)
+  - to:
+    - operation:
+        ports: ["8080"]  # WAS 포트만 허용
+        paths: ["/api/*", "/actuator/*"]  # 특정 경로만 허용
+```
+
+**적용 순서:**
+```bash
+# 1. 파일 수정
+cd ~/k8s-manifests/blog-system
+vim authz-was.yaml
+# from 조건 전체 삭제, to 조건만 유지
+
+# 2. Git push
+git add authz-was.yaml
+git commit -m "fix: Remove source conditions from WAS AuthorizationPolicy (mTLS DISABLE mode)"
+git push origin main
+
+# 3. ArgoCD 동기화 대기 또는 수동 적용
+kubectl apply -f authz-was.yaml
+
+# 4. Pod 재시작 (중요!)
+kubectl delete pod -n blog-system -l app=was
+kubectl wait --for=condition=ready pod -l app=was -n blog-system --timeout=60s
+
+# 5. 테스트
+curl https://blog.jiminhome.shop/api/posts
+# [{"id":1,...}] ✅
+```
+
+### 보안 트레이드오프
+
+**변경 전 (mTLS + principals):**
+```yaml
+# 강력한 보안
+- from:
+    source:
+      principals: ["cluster.local/ns/blog-system/sa/default"]
+      namespaces: ["blog-system"]
+  to:
+    operation:
+      ports: ["8080"]
+      paths: ["/api/*"]
+```
+
+**변경 후 (Plain HTTP + to only):**
+```yaml
+# 느슨한 보안 (port/path만 제어)
+- to:
+    operation:
+      ports: ["8080"]
+      paths: ["/api/*"]
+```
+
+**보안 수준 비교:**
+
+| 조건 | 변경 전 | 변경 후 |
+|------|--------|--------|
+| **Source 검증** | ✅ namespace + ServiceAccount | ❌ 없음 |
+| **Port 제한** | ✅ 8080만 | ✅ 8080만 |
+| **Path 제한** | ✅ /api/*, /actuator/* | ✅ /api/*, /actuator/* |
+| **외부 직접 접근** | ❌ 차단 (Ingress 없음) | ❌ 차단 (Ingress 없음) |
+| **다른 namespace** | ❌ 차단 | ✅ 허용 (주의!) |
+
+**추가 보안 계층:**
+- WAS는 Ingress에 직접 노출 안 됨 (web nginx를 통해서만 접근)
+- Kubernetes NetworkPolicy로 namespace 간 통신 제어 가능 (선택사항)
+
+### 대안: mTLS 다시 활성화
+
+더 강력한 보안이 필요하면:
+
+```bash
+# 1. DestinationRule mTLS 활성화
+tls.mode: DISABLE → ISTIO_MUTUAL
+
+# 2. AuthorizationPolicy source 조건 사용
+from:
+  - source:
+      principals: ["cluster.local/ns/blog-system/sa/default"]
+
+# 3. nginx도 mTLS 사용하도록 설정 (복잡)
+# - Istio sidecar injection
+# - nginx Envoy 통합
+```
+
+**비추천 이유**: 내부 통신에 과도한 복잡도
 
 ---
 

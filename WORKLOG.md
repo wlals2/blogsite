@@ -57,6 +57,117 @@ docs/WAS/
 
 ---
 
+#### 2. P0 작업 완료 - API 외부 접근 문제 해결 (12:11 - 12:27)
+
+**배경:**
+- 외부에서 `https://blog.jiminhome.shop/api/posts` 접근 시 에러
+- nginx → WAS 프록시는 이미 설정되어 있었음
+- 실제 문제: Istio mTLS 설정 및 AuthorizationPolicy 충돌
+
+**문제 1: Istio mTLS 에러**
+
+**증상:**
+```bash
+curl https://blog.jiminhome.shop/api/posts
+# → upstream connect error or disconnect/reset before headers
+# TLS_error: WRONG_VERSION_NUMBER
+```
+
+**원인:**
+- nginx는 Plain HTTP로 WAS에 요청 (`proxy_pass http://was-service:8080`)
+- DestinationRule이 `tls.mode: ISTIO_MUTUAL` 강제
+- Istio sidecar가 mTLS 연결 시도 → TLS 버전 불일치
+
+**해결:**
+```yaml
+# was-destinationrule.yaml
+trafficPolicy:
+  tls:
+    mode: DISABLE  # ISTIO_MUTUAL → DISABLE
+```
+
+**커밋:** [f25bf46](https://github.com/wlals2/k8s-manifests/commit/f25bf46)
+
+**문제 2: AuthorizationPolicy RBAC 에러**
+
+**증상:**
+```bash
+curl https://blog.jiminhome.shop/api/posts
+# → RBAC: access denied
+
+# Istio 로그
+kubectl logs -l app=was -c istio-proxy
+# rbac_access_denied_matched_policy[none]
+```
+
+**원인:**
+- mTLS DISABLE 모드에서는 source identity 파악 불가
+- AuthorizationPolicy의 `source.principals`, `source.namespaces` 조건 작동 안 함
+- `matched_policy[none]` → 어떤 정책도 매치되지 않아 기본 거부
+
+**시도 1 (실패):**
+```yaml
+# from.source.namespaces만 유지
+- from:
+  - source:
+      namespaces: ["blog-system"]
+# 여전히 403 에러 (mTLS 없으면 namespace도 파악 못 함)
+```
+
+**해결:**
+```yaml
+# authz-was.yaml - from 조건 완전 제거
+rules:
+- to:  # from 조건 없음!
+  - operation:
+      ports: ["8080"]
+      paths: ["/api/*", "/actuator/*"]
+```
+
+**커밋:** [78a251a](https://github.com/wlals2/k8s-manifests/commit/78a251a)
+
+**중요 발견:**
+- **Pod 재시작 필수**: AuthorizationPolicy 변경 후 반드시 Pod 재시작
+- Istio sidecar가 정책을 캐시하므로 재시작 없이는 적용 안 됨
+
+**최종 결과:**
+```bash
+# ✅ 모든 API 엔드포인트 정상 작동
+curl https://blog.jiminhome.shop/api/posts
+# [{"id":1,"title":"First Post",...}]
+
+# ✅ CRUD 전체 테스트 성공
+GET    /api/posts           ✅
+GET    /api/posts/{id}      ✅
+POST   /api/posts           ✅
+PUT    /api/posts/{id}      ✅
+DELETE /api/posts/{id}      ✅
+GET    /api/posts/search    ✅
+
+# ✅ board.html도 배포 확인
+curl -I https://blog.jiminhome.shop/board.html
+# HTTP/2 200
+```
+
+**보안 트레이드오프:**
+- **변경 전**: namespace + ServiceAccount 기반 접근 제어
+- **변경 후**: port + path 기반 접근 제어만
+- **완화 요소**: WAS는 Ingress 직접 노출 없음 (nginx 프록시 통해서만)
+
+**학습 내용:**
+1. PeerAuthentication PERMISSIVE여도 DestinationRule이 우선 적용됨
+2. mTLS DISABLE 환경에서는 source identity 기반 정책 사용 불가
+3. Istio 정책 변경 시 Pod 재시작으로 sidecar 캐시 갱신 필요
+4. `rbac_access_denied_matched_policy[none]` 로그가 정책 매치 실패 의미
+
+**문서 업데이트:**
+- `docs/WAS/TROUBLESHOOTING.md` 업데이트
+  - Istio mTLS 에러 섹션 실제 해결 과정 추가
+  - AuthorizationPolicy RBAC 에러 신규 섹션 추가
+  - 진단 방법, 보안 트레이드오프 상세 설명
+
+---
+
 ## 2026-01-20 (월)
 
 ### ✅ 완료한 작업
