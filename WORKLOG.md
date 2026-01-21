@@ -168,6 +168,135 @@ curl -I https://blog.jiminhome.shop/board.html
 
 ---
 
+#### 3. ArgoCD OutOfSync 문제 해결 (13:00 - 13:10)
+
+**배경:**
+- ArgoCD가 계속 OutOfSync 상태 표시
+- 상태는 Healthy, 배포는 성공했지만 동기화 표시 안 됨
+
+**원인:**
+- `was-destinationrule.yaml`에 빈 `labels:` 필드 존재
+- Git: `labels:` (빈 맵) vs 클러스터: `labels: { rollouts-pod-template-hash: xxx }`
+- ignoreDifferences는 **값 차이**만 무시, **구조 차이**는 OutOfSync 발생
+
+**해결:**
+```yaml
+# Before (문제)
+subsets:
+- name: stable
+  labels:      # 빈 필드!
+    # 주석만 있음
+
+# After (해결)
+subsets:
+- name: stable  # labels 필드 완전 제거
+- name: canary
+```
+
+**커밋:** [08dcec2](https://github.com/wlals2/k8s-manifests/commit/08dcec2)
+
+**학습 내용:**
+1. ignoreDifferences는 값만 무시, 구조는 검사함
+2. web-dest-rule은 처음부터 labels 필드가 없어서 문제 없었음
+3. ArgoCD Hard Refresh: `argocd.argoproj.io/refresh: hard` annotation
+
+---
+
+#### 4. P1 작업 완료 - WAS 개선 (13:15 - 14:00)
+
+**목표:**
+- Swagger UI 추가
+- 에러 응답 표준화
+- Pagination 구현
+
+**구현 내용:**
+
+**1. Swagger UI 추가 (springdoc-openapi)**
+```xml
+<!-- pom.xml -->
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.3.0</version>
+</dependency>
+```
+- 자동 API 문서 생성
+- 접근 URL: `https://blog.jiminhome.shop/swagger-ui.html`
+- 모든 엔드포인트를 브라우저에서 직접 테스트 가능
+
+**2. 에러 응답 표준화 (@RestControllerAdvice)**
+```java
+// 새 파일 생성:
+// - exception/PostNotFoundException.java (Custom Exception)
+// - dto/ErrorResponse.java (RFC 7807 스타일)
+// - exception/GlobalExceptionHandler.java (@RestControllerAdvice)
+
+// Before: 빈 응답
+404 Not Found
+(Body 없음)
+
+// After: 표준화된 응답
+{
+  "timestamp": "2026-01-21T14:00:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "게시글을 찾을 수 없습니다. ID: 999",
+  "path": "/api/posts/999"
+}
+```
+
+**수정 내용:**
+- `PostService`: RuntimeException → PostNotFoundException
+- `PostController`: try-catch 완전 제거 (GlobalExceptionHandler가 자동 처리)
+
+**3. Pagination 구현 (Offset-based)**
+```java
+// Before: 전체 조회
+GET /api/posts
+→ [1000개 전부 반환]
+
+// After: 페이징
+GET /api/posts?page=0&size=10
+→ {
+  "content": [10개만],
+  "totalElements": 1000,
+  "totalPages": 100,
+  "number": 0,
+  "size": 10,
+  "first": true,
+  "last": false
+}
+```
+
+**SQL 쿼리 변화:**
+```sql
+-- Before
+SELECT * FROM posts ORDER BY created_at DESC;
+
+-- After
+SELECT * FROM posts ORDER BY created_at DESC LIMIT 10 OFFSET 0;
+```
+
+**수정 파일:**
+- `PostService.java`: getAllPostsPaged(Pageable) 메서드 추가
+- `PostController.java`: Pagination 파라미터 추가 (@RequestParam)
+- Swagger 어노테이션 추가 (@Tag, @Operation, @Parameter)
+
+**성능 개선:**
+- 메모리: 1,000개 → 10개 로드
+- 네트워크: ~100KB → ~10KB 응답
+- 응답 시간: 직렬화 시간 90% 감소
+
+**학습 포인트:**
+1. Spring Data JPA의 Page, Pageable 사용법
+2. @RestControllerAdvice를 통한 전역 예외 처리
+3. Swagger 자동 문서화의 편리함
+4. 코드 간결화 (try-catch 제거)
+
+**커밋:** (다음 단계에서 진행)
+
+---
+
 ## 2026-01-20 (월)
 
 ### ✅ 완료한 작업

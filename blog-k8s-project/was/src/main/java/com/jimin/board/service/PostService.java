@@ -1,8 +1,11 @@
 package com.jimin.board.service;
 
 import com.jimin.board.entity.Post;
+import com.jimin.board.exception.PostNotFoundException;
 import com.jimin.board.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +28,37 @@ public class PostService {
     /**
      * 모든 게시글 조회 (최신순)
      * @return 게시글 리스트
+     * @deprecated 페이징 적용된 getAllPostsPaged() 사용 권장
      */
     public List<Post> getAllPosts() {
         return postRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    /**
+     * 모든 게시글 조회 (페이징, 최신순)
+     *
+     * Pagination 장점:
+     * 1. 성능 최적화: 필요한 만큼만 조회 (LIMIT, OFFSET 사용)
+     * 2. 메모리 절약: 1,000개 게시글 중 10개만 로드
+     * 3. 응답 속도 향상: 데이터 직렬화 시간 단축
+     *
+     * @param pageable 페이징 정보 (page, size, sort)
+     * @return Page 객체 (content, totalElements, totalPages, etc.)
+     *
+     * 예시 요청: GET /api/posts?page=0&size=10
+     * 예시 응답:
+     * {
+     *   "content": [ 게시글 10개 ],
+     *   "totalElements": 100,
+     *   "totalPages": 10,
+     *   "number": 0,
+     *   "size": 10,
+     *   "first": true,
+     *   "last": false
+     * }
+     */
+    public Page<Post> getAllPostsPaged(Pageable pageable) {
+        return postRepository.findAll(pageable);
     }
 
     /**
@@ -37,7 +68,7 @@ public class PostService {
      */
     public Post getPostById(Long id) {
         return postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다. ID: " + id));
+                .orElseThrow(() -> new PostNotFoundException(id));
     }
 
     /**
@@ -96,7 +127,7 @@ public class PostService {
     public void deletePost(Long id) {
         // 존재 여부 확인 후 삭제
         if (!postRepository.existsById(id)) {
-            throw new RuntimeException("게시글을 찾을 수 없습니다. ID: " + id);
+            throw new PostNotFoundException(id);
         }
         postRepository.deleteById(id);
     }

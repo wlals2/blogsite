@@ -2,8 +2,15 @@ package com.jimin.board.controller;
 
 import com.jimin.board.entity.Post;
 import com.jimin.board.service.PostService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,34 +22,57 @@ import java.util.List;
  *
  * @RestController: JSON 응답을 반환하는 컨트롤러
  * @RequestMapping: 모든 API가 /api/posts로 시작
+ * @Tag: Swagger UI에서 API 그룹화
  */
 @RestController
 @RequestMapping("/api/posts")  // 기본 경로
 @RequiredArgsConstructor  // Lombok: final 필드 자동 생성자 주입
+@Tag(name = "게시글 API", description = "게시글 CRUD 및 검색 API")
 public class PostController {
 
     private final PostService postService;  // 자동 주입
 
     /**
-     * 1. 모든 게시글 조회
+     * 1. 모든 게시글 조회 (Pagination 지원)
      * GET /api/posts
+     * GET /api/posts?page=0&size=10
      *
-     * @return 게시글 리스트 (200 OK)
+     * @param page 페이지 번호 (0부터 시작, 기본값: 0)
+     * @param size 페이지당 항목 수 (기본값: 10)
+     * @return Page<Post> (페이징 정보 포함)
      *
+     * 예시 요청: GET /api/posts?page=0&size=10
      * 예시 응답:
-     * [
-     *   {
-     *     "id": 1,
-     *     "title": "첫 번째 글",
-     *     "content": "안녕하세요!",
-     *     "author": "지민",
-     *     "createdAt": "2026-01-16T10:00:00"
-     *   }
-     * ]
+     * {
+     *   "content": [
+     *     {
+     *       "id": 1,
+     *       "title": "첫 번째 글",
+     *       "content": "안녕하세요!",
+     *       "author": "지민",
+     *       "createdAt": "2026-01-16T10:00:00"
+     *     }
+     *   ],
+     *   "totalElements": 100,
+     *   "totalPages": 10,
+     *   "number": 0,
+     *   "size": 10,
+     *   "first": true,
+     *   "last": false
+     * }
      */
     @GetMapping
-    public ResponseEntity<List<Post>> getAllPosts() {
-        List<Post> posts = postService.getAllPosts();
+    @Operation(summary = "게시글 목록 조회", description = "페이징을 지원하는 게시글 목록 조회 API")
+    public ResponseEntity<Page<Post>> getAllPosts(
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지당 항목 수", example = "10")
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        // Pageable 객체 생성: page, size, 정렬(최신순)
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> posts = postService.getAllPostsPaged(pageable);
         return ResponseEntity.ok(posts);  // 200 OK
     }
 
@@ -62,15 +92,13 @@ public class PostController {
      *   "author": "지민",
      *   "createdAt": "2026-01-16T10:00:00"
      * }
+     *
+     * 에러 처리: GlobalExceptionHandler가 자동 처리
      */
     @GetMapping("/{id}")
     public ResponseEntity<Post> getPostById(@PathVariable Long id) {
-        try {
-            Post post = postService.getPostById(id);
-            return ResponseEntity.ok(post);  // 200 OK
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();  // 404 Not Found
-        }
+        Post post = postService.getPostById(id);
+        return ResponseEntity.ok(post);  // 200 OK
     }
 
     /**
@@ -127,15 +155,13 @@ public class PostController {
      *   "author": "지민",
      *   "createdAt": "2026-01-16T10:00:00"
      * }
+     *
+     * 에러 처리: GlobalExceptionHandler가 자동 처리
      */
     @PutMapping("/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post post) {
-        try {
-            Post updatedPost = postService.updatePost(id, post);
-            return ResponseEntity.ok(updatedPost);  // 200 OK
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();  // 404 Not Found
-        }
+        Post updatedPost = postService.updatePost(id, post);
+        return ResponseEntity.ok(updatedPost);  // 200 OK
     }
 
     /**
@@ -147,15 +173,13 @@ public class PostController {
      *
      * 예시 요청: DELETE /api/posts/1
      * 예시 응답: (204 No Content, 응답 Body 없음)
+     *
+     * 에러 처리: GlobalExceptionHandler가 자동 처리
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        try {
-            postService.deletePost(id);
-            return ResponseEntity.noContent().build();  // 204 No Content
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();  // 404 Not Found
-        }
+        postService.deletePost(id);
+        return ResponseEntity.noContent().build();  // 204 No Content
     }
 
     /**

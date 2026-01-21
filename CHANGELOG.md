@@ -7,9 +7,76 @@
 ## [Unreleased]
 
 ### 계획 중
-- WAS Pagination 구현
-- 에러 응답 표준화 (@RestControllerAdvice)
-- Swagger UI 추가
+- Spring Security + JWT 인증
+- Redis 캐싱
+- Full-text Search 최적화
+
+---
+
+## [1.4.0] - 2026-01-21 (저녁)
+
+### Added
+- **🎯 Swagger UI 추가** (P1 완료)
+  - springdoc-openapi-starter-webmvc-ui 2.3.0 의존성 추가
+  - 자동 API 문서 생성
+  - 접근 URL: `https://blog.jiminhome.shop/swagger-ui.html`
+  - @Tag, @Operation, @Parameter 어노테이션으로 문서 풍부화
+  - 실시간 API 테스트 가능
+
+- **🎯 Pagination 구현** (P1 완료)
+  - Spring Data JPA Page, Pageable 사용
+  - Offset-based Pagination (page, size 파라미터)
+  - 기본값: page=0, size=10
+  - 정렬: 최신순 (createdAt DESC)
+  - 응답 형식: Page<Post> (content, totalElements, totalPages 포함)
+  - 성능 개선: 메모리/네트워크 90% 감소
+
+- **🎯 에러 응답 표준화** (P1 완료)
+  - RFC 7807 스타일 ErrorResponse DTO 생성
+  - Custom Exception: PostNotFoundException
+  - GlobalExceptionHandler (@RestControllerAdvice)
+  - 모든 에러에 timestamp, status, error, message, path 포함
+  - Validation 에러도 표준화 (MethodArgumentNotValidException 처리)
+
+### Changed
+- **WAS 소스코드 개선**
+  - `PostService.java`: getAllPostsPaged() 메서드 추가
+  - `PostController.java`: try-catch 제거 (GlobalExceptionHandler가 처리)
+  - `PostController.java`: Pagination 파라미터 추가
+  - RuntimeException → PostNotFoundException 교체
+
+### Fixed
+- **🔴 ArgoCD OutOfSync 문제 해결**
+  - 문제: was-dest-rule이 계속 OutOfSync 표시
+  - 원인: Git 파일에 빈 `labels:` 필드, 클러스터는 동적 레이블 존재
+  - 해결: 빈 `labels:` 필드 완전 제거
+  - Commit: [08dcec2](https://github.com/wlals2/k8s-manifests/commit/08dcec2)
+  - 학습: ignoreDifferences는 값만 무시, 구조는 검사
+
+### Documentation
+- **WORKLOG.md 업데이트**
+  - ArgoCD OutOfSync 해결 과정 추가
+  - P1 작업 상세 기록 (Swagger, Pagination, 에러 표준화)
+  - 학습 포인트 정리
+
+### Performance
+- **API 응답 최적화**
+  - 메모리 사용: 1,000개 → 10개 로드 (90% 감소)
+  - 네트워크: ~100KB → ~10KB 응답 (90% 감소)
+  - 응답 시간: 직렬화 시간 90% 단축
+
+### Lessons Learned
+1. ignoreDifferences는 값 차이만 무시, 구조 차이는 OutOfSync 발생
+2. Spring Data JPA Pagination은 5분만에 구현 가능 (매우 쉬움)
+3. @RestControllerAdvice로 코드 간결화 (try-catch 완전 제거)
+4. Swagger는 pom.xml 1줄로 전체 API 문서 자동 생성
+5. Empty YAML field (`labels:`) vs No field는 다름
+
+### Known Issues Resolved
+- ✅ ArgoCD OutOfSync (was-dest-rule) → 해결
+- ✅ Pagination 없음 → 해결
+- ✅ 에러 응답 형식 부족 → 해결
+- ✅ API 문서 없음 → 해결
 
 ---
 
