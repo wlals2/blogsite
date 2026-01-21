@@ -1,0 +1,121 @@
+# Changelog
+
+> 프로젝트 주요 변경사항 기록 - [Keep a Changelog](https://keepachangelog.com) 형식
+
+---
+
+## [Unreleased]
+
+### 계획 중
+- nginx 프록시 설정 (`/api/` → WAS)
+- board.html 배포 확인
+- WAS Pagination 구현
+- 에러 응답 표준화 (@RestControllerAdvice)
+- Swagger UI 추가
+
+---
+
+## [1.2.0] - 2026-01-21
+
+### Added
+- **WAS 문서 체계화**
+  - `docs/WAS/ARCHITECTURE.md`: 전체 아키텍처, 현재 상태, API 레퍼런스, 설정 가이드
+  - `docs/WAS/TODO.md`: 개선 계획 (P0/P1/P2), 배경지식, 트레이드오프
+  - `docs/WAS/TROUBLESHOOTING.md`: 문제 해결 가이드 (9가지 일반적 문제)
+  - 기존 6개 파일 → 3개로 통합 (관리 용이성 향상)
+
+### Changed
+- **문서 구조 개선**
+  - 6개 분산 파일 → 3개 집중 파일
+  - 모든 현재 상태를 ARCHITECTURE.md에 통합
+  - 중복 제거, 내용 손실 없음
+
+---
+
+## [1.1.0] - 2026-01-20
+
+### Added
+- **WAS Canary 배포 구현**
+  - Argo Rollouts로 Deployment → Rollout 전환
+  - Canary 전략: 20% → 50% → 80% → 100% (각 1분 대기)
+  - Istio VirtualService + DestinationRule 통합
+  - ArgoCD ignoreDifferences 설정 (동적 레이블 무시)
+  - Commit: [05abae3](https://github.com/wlals2/blogsite/commit/05abae3)
+
+- **CI/CD 문서**
+  - `docs/CICD/CANARY-COMPARISON.md`: WEB vs WAS Canary 전략 비교
+  - 배포 전략, VirtualService, DestinationRule 차이점 설명
+
+### Changed
+- **was-rollout.yaml**: Deployment → Rollout
+- **was-destinationrule.yaml**: stable/canary subset 추가
+- **was-retry-timeout.yaml**: route 이름 "primary" 추가
+- **argocd-application.yaml**: was-dest-rule ignoreDifferences 추가
+
+### Fixed
+- ArgoCD selfHeal로 인한 Rollout 동적 레이블 되돌림 문제
+
+---
+
+## [1.0.0] - 2026-01-17
+
+### Added
+- **블로그 시스템 초기 구축**
+  - Hugo 정적 사이트 (PaperMod 테마)
+  - Spring Boot WAS (게시판 API)
+  - MySQL 8.0.44 데이터베이스
+  - Kubernetes 배포 (Ingress, Services)
+
+- **WAS 기능**
+  - 게시글 CRUD API (6개 엔드포인트)
+  - JPA + Hibernate ORM
+  - Spring Validation
+  - Health Check (Actuator)
+  - MySQL posts 테이블 자동 생성
+
+- **배포 인프라**
+  - GitHub Actions CI/CD
+  - ArgoCD GitOps
+  - Cloudflare CDN
+  - Istio Service Mesh (mTLS)
+
+### Known Issues
+- 🔴 외부에서 `/api/posts` 접근 불가 (404)
+  - 원인: nginx → WAS 프록시 설정 누락
+  - 해결: web-nginx-config ConfigMap에 `/api/` location 추가 필요
+
+- 🔴 Istio mTLS 에러
+  - 원인: nginx → WAS Plain HTTP vs mTLS 불일치
+  - 해결: DestinationRule `tls.mode: DISABLE` 또는 PERMISSIVE
+
+- 🟡 board.html 미배포
+  - 파일은 존재하나 외부 접근 불가
+  - Hugo 빌드 및 배포 확인 필요
+
+---
+
+## 변경사항 카테고리 정의
+
+### Added
+- 새로운 기능 추가
+
+### Changed
+- 기존 기능 변경
+
+### Deprecated
+- 곧 제거될 기능
+
+### Removed
+- 제거된 기능
+
+### Fixed
+- 버그 수정
+
+### Security
+- 보안 관련 변경
+
+---
+
+**포맷**: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/)
+**버저닝**: [Semantic Versioning](https://semver.org/lang/ko/)
+**마지막 업데이트**: 2026-01-21
