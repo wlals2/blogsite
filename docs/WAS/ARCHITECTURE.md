@@ -807,6 +807,419 @@ curl https://blog.jiminhome.shop/api/posts
 
 ---
 
+## v1.4.0 변경사항 및 확인 방법
+
+> P1 작업 완료 (2026-01-21) - Swagger UI, Pagination, 에러 응답 표준화
+
+### 🎯 1. Swagger UI 추가
+
+#### 어디서 확인하나요?
+
+**로컬 환경:**
+```bash
+# WAS 실행 후 브라우저에서 접속
+http://localhost:8080/swagger-ui/index.html
+```
+
+**프로덕션 (배포 후):**
+```bash
+# nginx 프록시 설정 필요 (현재 미구현)
+https://blog.jiminhome.shop/api/swagger-ui/index.html
+```
+
+#### 무엇이 달라졌나요?
+
+**Before (v9):**
+- API 문서 없음
+- Postman/cURL로만 테스트 가능
+- 각 API 스펙을 README에서 찾아야 함
+
+**After (v1.4.0):**
+- 자동 생성된 인터랙티브 API 문서
+- 브라우저에서 바로 API 테스트 가능
+- Request/Response 예시 자동 표시
+- Validation 규칙 자동 문서화
+
+**Swagger UI 스크린샷 예시:**
+```
+┌─────────────────────────────────────────────────┐
+│ 게시글 API                                       │
+│                                                 │
+│ GET    /api/posts        게시글 목록 조회        │
+│ POST   /api/posts        게시글 작성            │
+│ GET    /api/posts/{id}   특정 게시글 조회       │
+│ PUT    /api/posts/{id}   게시글 수정            │
+│ DELETE /api/posts/{id}   게시글 삭제            │
+│ GET    /api/posts/search 게시글 검색            │
+└─────────────────────────────────────────────────┘
+```
+
+**추가된 파일:**
+- [pom.xml](../../blog-k8s-project/was/pom.xml#L50-L55): `springdoc-openapi-starter-webmvc-ui` 의존성
+
+**수정된 파일:**
+- [PostController.java](../../blog-k8s-project/was/src/main/java/com/jimin/board/controller/PostController.java#L30): `@Tag` 애노테이션 추가
+- [PostController.java](../../blog-k8s-project/was/src/main/java/com/jimin/board/controller/PostController.java#L65): `@Operation`, `@Parameter` 애노테이션 추가
+
+---
+
+### 🎯 2. Pagination 구현
+
+#### 어디서 확인하나요?
+
+**API 호출 방법:**
+```bash
+# 기본 (page=0, size=10)
+curl http://localhost:8080/api/posts
+
+# 페이지 지정
+curl "http://localhost:8080/api/posts?page=0&size=5"
+curl "http://localhost:8080/api/posts?page=1&size=5"
+
+# 큰 페이지 사이즈
+curl "http://localhost:8080/api/posts?page=0&size=20"
+```
+
+#### 무엇이 달라졌나요?
+
+**Before (v9) - 전체 조회:**
+
+```bash
+GET /api/posts
+```
+
+**응답:**
+```json
+[
+  {"id": 100, "title": "글 100", ...},
+  {"id": 99, "title": "글 99", ...},
+  ...
+  {"id": 1, "title": "글 1", ...}
+]
+```
+
+**문제점:**
+- 1,000개 게시글 → 1,000개 모두 반환 (~100KB)
+- 메모리: 1,000개 객체 직렬화
+- 네트워크: 대역폭 낭비
+- 클라이언트: 렌더링 느림
+
+---
+
+**After (v1.4.0) - Pagination:**
+
+```bash
+GET /api/posts?page=0&size=10
+```
+
+**응답:**
+```json
+{
+  "content": [
+    {"id": 100, "title": "글 100", ...},
+    {"id": 99, "title": "글 99", ...},
+    ...
+    {"id": 91, "title": "글 91", ...}
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 10,
+    "sort": {"sorted": true, "unsorted": false},
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "totalElements": 1000,
+  "totalPages": 100,
+  "last": false,
+  "number": 0,
+  "size": 10,
+  "numberOfElements": 10,
+  "first": true,
+  "empty": false
+}
+```
+
+**개선 효과:**
+- 메모리: 1,000개 → 10개 로드 (90% 감소)
+- 네트워크: ~100KB → ~10KB (90% 감소)
+- 응답 속도: 빠름
+- UX: 무한 스크롤 구현 가능
+
+---
+
+**SQL 쿼리 비교:**
+
+Before:
+```sql
+SELECT * FROM posts ORDER BY created_at DESC;
+-- 1,000 rows
+```
+
+After:
+```sql
+SELECT * FROM posts ORDER BY created_at DESC LIMIT 10 OFFSET 0;
+-- 10 rows (90% 감소)
+```
+
+---
+
+**변경된 코드:**
+
+1. **PostService.java**
+   - [PostService.java:33-35](../../blog-k8s-project/was/src/main/java/com/jimin/board/service/PostService.java#L33-L35): 기존 `getAllPosts()` → `@deprecated` 표시
+   - [PostService.java:60-62](../../blog-k8s-project/was/src/main/java/com/jimin/board/service/PostService.java#L60-L62): 새로운 `getAllPostsPaged(Pageable)` 추가
+
+2. **PostController.java**
+   - [PostController.java:66-76](../../blog-k8s-project/was/src/main/java/com/jimin/board/controller/PostController.java#L66-L76): `page`, `size` 파라미터 추가, `Page<Post>` 반환
+
+---
+
+### 🎯 3. 에러 응답 표준화
+
+#### 어디서 확인하나요?
+
+**404 Not Found 테스트:**
+```bash
+# 존재하지 않는 게시글 조회
+curl -i http://localhost:8080/api/posts/999
+```
+
+**400 Bad Request 테스트:**
+```bash
+# Validation 실패 (title 누락)
+curl -X POST http://localhost:8080/api/posts \
+  -H "Content-Type: application/json" \
+  -d '{"content":"내용만 있음"}'
+```
+
+#### 무엇이 달라졌나요?
+
+**Before (v9) - 일관성 없는 에러:**
+
+```bash
+# 404 Not Found
+curl -i http://localhost:8080/api/posts/999
+```
+
+**응답:**
+```http
+HTTP/1.1 500 Internal Server Error
+Content-Length: 0
+```
+
+**문제점:**
+- 빈 응답 (에러 이유 불명)
+- 500 에러 (실제로는 404여야 함)
+- 클라이언트가 디버깅 불가
+
+---
+
+**After (v1.4.0) - RFC 7807 표준:**
+
+```bash
+# 404 Not Found
+curl -i http://localhost:8080/api/posts/999
+```
+
+**응답:**
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "timestamp": "2026-01-21T15:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "게시글을 찾을 수 없습니다. ID: 999",
+  "path": "/api/posts/999"
+}
+```
+
+---
+
+**Validation 에러:**
+
+```bash
+# 400 Bad Request
+curl -X POST http://localhost:8080/api/posts \
+  -H "Content-Type: application/json" \
+  -d '{"content":"제목 없음"}'
+```
+
+**응답:**
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "timestamp": "2026-01-21T15:31:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "입력값 검증 실패: title: 공백일 수 없습니다",
+  "path": "/api/posts"
+}
+```
+
+---
+
+**개선 효과:**
+- ✅ 표준화된 에러 형식 (RFC 7807)
+- ✅ 올바른 HTTP Status Code
+- ✅ 명확한 에러 메시지
+- ✅ 에러 발생 경로 포함
+- ✅ 클라이언트 디버깅 용이
+
+---
+
+**추가된 파일:**
+
+1. **[PostNotFoundException.java](../../blog-k8s-project/was/src/main/java/com/jimin/board/exception/PostNotFoundException.java)**
+   - 커스텀 예외 클래스
+   - `RuntimeException` 상속
+   - `postId` 필드로 컨텍스트 저장
+
+2. **[ErrorResponse.java](../../blog-k8s-project/was/src/main/java/com/jimin/board/dto/ErrorResponse.java)**
+   - 표준화된 에러 응답 DTO
+   - RFC 7807 스타일
+   - 필드: `timestamp`, `status`, `error`, `message`, `path`
+
+3. **[GlobalExceptionHandler.java](../../blog-k8s-project/was/src/main/java/com/jimin/board/exception/GlobalExceptionHandler.java)**
+   - `@RestControllerAdvice` 전역 예외 처리
+   - 3가지 예외 처리:
+     - `PostNotFoundException` → 404
+     - `MethodArgumentNotValidException` → 400
+     - `Exception` (Fallback) → 500
+
+**수정된 파일:**
+
+1. **PostService.java**
+   - [PostService.java:69-72](../../blog-k8s-project/was/src/main/java/com/jimin/board/service/PostService.java#L69-L72): `RuntimeException` → `PostNotFoundException` 변경
+   - [PostService.java:127-133](../../blog-k8s-project/was/src/main/java/com/jimin/board/service/PostService.java#L127-L133): `deletePost()`도 동일 변경
+
+2. **PostController.java**
+   - [PostController.java:98-102](../../blog-k8s-project/was/src/main/java/com/jimin/board/controller/PostController.java#L98-L102): try-catch 제거 (3곳)
+   - GlobalExceptionHandler가 자동 처리
+
+**코드 간소화:**
+```java
+// Before
+@GetMapping("/{id}")
+public ResponseEntity<Post> getPostById(@PathVariable Long id) {
+    try {
+        Post post = postService.getPostById(id);
+        return ResponseEntity.ok(post);
+    } catch (RuntimeException e) {
+        return ResponseEntity.notFound().build();
+    }
+}
+
+// After
+@GetMapping("/{id}")
+public ResponseEntity<Post> getPostById(@PathVariable Long id) {
+    Post post = postService.getPostById(id);  // GlobalExceptionHandler가 처리
+    return ResponseEntity.ok(post);
+}
+```
+
+---
+
+### 📊 성능 비교
+
+| 항목 | Before (v9) | After (v1.4.0) | 개선율 |
+|------|-------------|----------------|--------|
+| **응답 크기** | ~100KB (1,000개) | ~10KB (10개) | 90% ↓ |
+| **메모리 사용** | 1,000 객체 | 10 객체 | 90% ↓ |
+| **DB 조회** | SELECT * (Full) | SELECT * LIMIT 10 | 90% ↓ |
+| **API 문서** | 없음 | Swagger UI | ✅ |
+| **에러 응답** | 빈 응답 | RFC 7807 JSON | ✅ |
+| **코드 복잡도** | try-catch 3곳 | 0곳 (전역 처리) | ✅ |
+
+---
+
+### 🧪 테스트 방법
+
+#### 1. Swagger UI 테스트
+
+```bash
+# 1. WAS 실행
+cd ~/blogsite/blog-k8s-project/was
+./mvnw spring-boot:run
+
+# 2. 브라우저 접속
+open http://localhost:8080/swagger-ui/index.html
+
+# 3. "Try it out" 버튼 클릭
+# 4. 파라미터 입력 후 "Execute" 클릭
+# 5. Response 확인
+```
+
+#### 2. Pagination 테스트
+
+```bash
+# 1,000개 게시글 생성 (테스트 데이터)
+for i in {1..1000}; do
+  curl -X POST http://localhost:8080/api/posts \
+    -H "Content-Type: application/json" \
+    -d "{\"title\":\"게시글 $i\",\"content\":\"내용 $i\",\"author\":\"테스터\"}"
+done
+
+# 첫 페이지 (최신 10개)
+curl "http://localhost:8080/api/posts?page=0&size=10" | jq '.content[].title'
+
+# 두 번째 페이지
+curl "http://localhost:8080/api/posts?page=1&size=10" | jq '.content[].title'
+
+# 전체 페이지 수 확인
+curl "http://localhost:8080/api/posts?page=0&size=10" | jq '.totalPages'
+# 출력: 100
+```
+
+#### 3. 에러 응답 테스트
+
+```bash
+# 404 Not Found
+curl -i http://localhost:8080/api/posts/999999 | grep -A 20 "HTTP"
+
+# 400 Bad Request (Validation)
+curl -i -X POST http://localhost:8080/api/posts \
+  -H "Content-Type: application/json" \
+  -d '{"content":"제목 없음"}' | grep -A 20 "HTTP"
+
+# 예상 출력:
+# HTTP/1.1 400 Bad Request
+# {
+#   "timestamp": "...",
+#   "status": 400,
+#   "error": "Bad Request",
+#   "message": "입력값 검증 실패: title: 공백일 수 없습니다",
+#   "path": "/api/posts"
+# }
+```
+
+---
+
+### 📚 학습 포인트
+
+#### 1. Swagger/OpenAPI
+- **springdoc-openapi**: Spring Boot 3.x와 호환
+- **자동 문서화**: `@Operation`, `@Parameter` 애노테이션만 추가
+- **대안**: Springfox (Spring Boot 2.x, deprecated)
+
+#### 2. Pagination
+- **Spring Data JPA**: `Page<T>`, `Pageable` 인터페이스
+- **Offset 방식**: `LIMIT 10 OFFSET 0` (표준적, 구현 쉬움)
+- **대안**: Cursor 방식 (무한 스크롤, 성능 좋음, 구현 복잡)
+- **Trade-off**: Offset은 깊은 페이지(page=1000)에서 느림 → Cursor 고려
+
+#### 3. 예외 처리
+- **@RestControllerAdvice**: Spring 4.3+ 전역 예외 처리
+- **RFC 7807**: Problem Details for HTTP APIs 표준
+- **장점**: Controller 코드 간결, 에러 응답 일관성
+- **단점**: 전역 처리로 특정 Controller만 다르게 처리 어려움 (해결: `@ControllerAdvice(basePackages)`)
+
+---
+
 **작성일:** 2026-01-21
-**버전:** WAS v9
-**마지막 업데이트:** 현재 상태 통합
+**버전:** WAS v1.4.0 (이미지 v9 기반)
+**마지막 업데이트:** P1 작업 완료 후 검증 가이드 추가
