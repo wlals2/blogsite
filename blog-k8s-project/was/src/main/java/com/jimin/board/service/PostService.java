@@ -62,13 +62,34 @@ public class PostService {
     }
 
     /**
-     * ID로 게시글 조회
+     * ID로 게시글 조회 (조회수 증가 없음)
+     * - 내부 로직용 (수정, 삭제 시 사용)
+     *
      * @param id 게시글 ID
      * @return 게시글 (없으면 예외 발생)
      */
     public Post getPostById(Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
+    }
+
+    /**
+     * ID로 게시글 조회 + 조회수 증가
+     * - API 조회용 (사용자가 게시글 상세 조회 시)
+     * - 조회할 때마다 viewCount + 1
+     *
+     * @param id 게시글 ID
+     * @return 게시글 (조회수 증가됨)
+     */
+    @Transactional  // 쓰기 트랜잭션 (조회수 업데이트)
+    public Post getPostByIdWithView(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new PostNotFoundException(id));
+
+        // 조회수 증가
+        post.setViewCount(post.getViewCount() + 1);
+
+        return postRepository.save(post);
     }
 
     /**

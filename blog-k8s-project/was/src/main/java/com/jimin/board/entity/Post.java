@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
  *  - title: 제목 (필수, 최대 200자)
  *  - content: 내용 (TEXT 타입)
  *  - author: 작성자 (최대 50자)
+ *  - viewCount: 조회수 (기본값 0)
  *  - createdAt: 작성일 (자동 생성)
  */
 @Entity  // 이 클래스가 DB 테이블과 매핑됨
@@ -42,6 +43,13 @@ public class Post {
     @Size(max = 50, message = "작성자는 최대 50자입니다")
     @Column(length = 50)
     private String author;
+
+    /**
+     * 조회수 - 게시글 조회 시마다 1씩 증가
+     * 기본값 0, NOT NULL
+     */
+    @Column(name = "view_count", nullable = false)
+    private Long viewCount = 0L;
 
     @Column(name = "created_at", nullable = false, updatable = false)  // 수정 불가
     private LocalDateTime createdAt;

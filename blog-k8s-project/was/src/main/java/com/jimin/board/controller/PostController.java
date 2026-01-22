@@ -50,6 +50,7 @@ public class PostController {
      *       "title": "첫 번째 글",
      *       "content": "안녕하세요!",
      *       "author": "지민",
+     *       "viewCount": 42,
      *       "createdAt": "2026-01-16T10:00:00"
      *     }
      *   ],
@@ -77,7 +78,7 @@ public class PostController {
     }
 
     /**
-     * 2. 특정 게시글 조회
+     * 2. 특정 게시글 조회 (조회수 자동 증가)
      * GET /api/posts/{id}
      *
      * @param id 게시글 ID (경로 변수)
@@ -90,14 +91,16 @@ public class PostController {
      *   "title": "첫 번째 글",
      *   "content": "안녕하세요!",
      *   "author": "지민",
+     *   "viewCount": 42,
      *   "createdAt": "2026-01-16T10:00:00"
      * }
      *
      * 에러 처리: GlobalExceptionHandler가 자동 처리
      */
     @GetMapping("/{id}")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 조회 시 조회수가 자동으로 1 증가합니다")
     public ResponseEntity<Post> getPostById(@PathVariable Long id) {
-        Post post = postService.getPostById(id);
+        Post post = postService.getPostByIdWithView(id);  // 조회수 증가
         return ResponseEntity.ok(post);  // 200 OK
     }
 
