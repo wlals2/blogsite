@@ -257,11 +257,13 @@ kubectl get ns blog-system
 
 ### 배포 리소스
 
-**Deployments:**
+> **Note:** WEB은 Argo Rollouts (Canary 배포)를 사용합니다. 상세 설정은 [05-ARCHITECTURE.md](./05-ARCHITECTURE.md) 참조.
+
+**Rollout (WEB - Canary 배포):**
 ```yaml
-# WEB (Hugo 블로그)
-apiVersion: apps/v1
-kind: Deployment
+# WEB (Hugo 블로그) - Argo Rollouts
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: web
   namespace: blog-system
@@ -275,11 +277,20 @@ spec:
       labels:
         app: web
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway  # 2-worker 클러스터 호환
       containers:
       - name: nginx
-        image: ghcr.io/wlals2/blog-web:v10
+        image: ghcr.io/wlals2/blog-web:latest
         ports:
         - containerPort: 80
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+            add: ["NET_BIND_SERVICE", "CHOWN", "SETUID", "SETGID"]
         resources:
           requests:
             cpu: 100m
@@ -287,6 +298,22 @@ spec:
           limits:
             cpu: 200m
             memory: 256Mi
+  strategy:
+    canary:
+      trafficRouting:
+        istio:
+          virtualService:
+            name: web-vs
+            routes: ["primary"]
+          destinationRule:
+            name: web-dest-rule
+      steps:
+        - setWeight: 10
+        - pause: {duration: 30s}
+        - setWeight: 50
+        - pause: {duration: 30s}
+        - setWeight: 90
+        - pause: {duration: 30s}
 
 ---
 # WAS (Spring Boot)
@@ -1290,9 +1317,11 @@ kubectl logs -n monitoring -l app=grafana
 **Kubernetes:**
 - ✅ 3-node 클러스터 (k8s-cp, k8s-worker1, k8s-worker2)
 - ✅ Namespace: blog-system, argocd, monitoring
-- ✅ Deployments: web (v10, 2 replicas), was (v1, 2 replicas), mysql (1 replica)
+- ✅ **Argo Rollouts**: web (Canary 배포, Istio 트래픽 분할)
+- ✅ Deployments: was (v1, 2 replicas), mysql (1 replica)
 - ✅ Ingress: nginx-ingress (LoadBalancer via MetalLB)
 - ✅ MetalLB: 192.168.1.200 (LoadBalancer IP)
+- ✅ **TopologySpread**: ScheduleAnyway (2-worker 클러스터 호환)
 - ✅ **HPA**: was-hpa (2-10 replicas, CPU 70%/Memory 80%), web-hpa (2-5 replicas, CPU 60%)
 
 **GitOps:**

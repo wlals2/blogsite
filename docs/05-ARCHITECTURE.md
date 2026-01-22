@@ -118,8 +118,8 @@ defaultSettings:
 
 | 서비스 | Namespace | Replicas | topologySpread | 다운타임 |
 |--------|-----------|----------|----------------|----------|
-| **WEB** | blog-system | 2 | ✅ DoNotSchedule | 0초 |
-| **WAS** | blog-system | 2~10 (HPA) | ✅ DoNotSchedule | 0초 |
+| **WEB** | blog-system | 2 | ✅ ScheduleAnyway | 0초 |
+| **WAS** | blog-system | 2~10 (HPA) | ✅ ScheduleAnyway | 0초 |
 | **Istio Ingress** | istio-system | 2 | ✅ DoNotSchedule | 0초 |
 | **Alertmanager** | monitoring | 1 | N/A | 5분 |
 | **kube-state-metrics** | monitoring | 1 | N/A | 5분 |
@@ -418,6 +418,10 @@ HEALTHCHECK --interval=30s --timeout=3s \
   CMD wget --spider http://localhost:8080/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
+
+**빌드 옵션:**
+- `-DskipTests`: Docker 빌드 환경에 MySQL 없음 → 통합 테스트 실패 방지
+- 테스트는 별도 CI 단계에서 Testcontainers 또는 H2로 실행 권장 (P1)
 
 **최적화:**
 - Multi-stage build (JDK → JRE)
