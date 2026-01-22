@@ -74,22 +74,33 @@ public class PostService {
     }
 
     /**
-     * ID로 게시글 조회 + 조회수 증가
+     * ID로 게시글 조회 + 조회수 증가 (원자적 UPDATE)
      * - API 조회용 (사용자가 게시글 상세 조회 시)
-     * - 조회할 때마다 viewCount + 1
+     * - DB 레벨에서 원자적 증가 → Race Condition 방지
+     *
+     * 기존 방식 (문제):
+     *   SELECT → Java +1 → UPDATE (동시 요청 시 손실)
+     *
+     * 개선된 방식:
+     *   UPDATE SET viewCount = viewCount + 1 (원자적)
+     *   → SELECT (최신 데이터 조회)
      *
      * @param id 게시글 ID
      * @return 게시글 (조회수 증가됨)
      */
     @Transactional  // 쓰기 트랜잭션 (조회수 업데이트)
     public Post getPostByIdWithView(Long id) {
-        Post post = postRepository.findById(id)
+        // 1. 원자적 조회수 증가 (DB 레벨)
+        int updated = postRepository.incrementViewCount(id);
+
+        // 2. 게시글이 없으면 예외 발생
+        if (updated == 0) {
+            throw new PostNotFoundException(id);
+        }
+
+        // 3. 최신 데이터 조회 후 반환
+        return postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
-
-        // 조회수 증가
-        post.setViewCount(post.getViewCount() + 1);
-
-        return postRepository.save(post);
     }
 
     /**
