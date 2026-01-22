@@ -92,12 +92,14 @@ draft: false
 - **Health Check**: `/` 엔드포인트
 
 **WAS Rollout (Spring Boot Board):**
-- **Image**: ghcr.io/wlals2/board-was:v1 (Spring Boot 3.2)
-- **Deployment**: Argo Rollouts (Canary 전략)
+- **Image**: ghcr.io/wlals2/board-was:v16 (Spring Boot 3.2)
+- **Deployment**: Argo Rollouts (Canary 전략 + Istio Traffic Routing)
 - **HPA**: 2-10 replicas (CPU 70% 기준)
 - **ConfigMap**: 환경 변수 주입 (DB 연결 정보)
 - **Service**: ClusterIP
 - **DB 연결**: MySQL Service → MySQL Pod
+- **JVM 튜닝**: -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100
+- **HA 설정**: topologySpreadConstraints (DoNotSchedule) + dynamicStableScale
 
 **MySQL StatefulSet:**
 - **Image**: mysql:8.0
@@ -250,7 +252,34 @@ COPY --from=builder /src/public /usr/share/nginx/html
 - 정적 파일 서빙 (CPU 낮음)
 - 최소 2개로 가용성 보장
 
-### 6. PLG Stack 모니터링 (55일 운영)
+### 6. JVM 튜닝 (컨테이너 최적화)
+
+**WAS Dockerfile JVM 설정**:
+```dockerfile
+ENTRYPOINT ["java", \
+  "-Xms256m", \
+  "-Xmx512m", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxGCPauseMillis=100", \
+  "-XX:+UseContainerSupport", \
+  "-jar", "app.jar"]
+```
+
+**설정 설명**:
+| 옵션 | 값 | 목적 |
+|------|-----|------|
+| **-Xms** | 256m | 최소 힙 (시작 시 할당) |
+| **-Xmx** | 512m | 최대 힙 (K8s limit 1Gi의 50%) |
+| **-XX:+UseG1GC** | - | G1 GC (짧은 pause time) |
+| **-XX:MaxGCPauseMillis** | 100ms | GC pause 목표 |
+| **-XX:+UseContainerSupport** | - | 컨테이너 메모리 인식 |
+
+**배운 것**:
+- Xmx는 K8s memory limit의 50-75%가 적정
+- G1GC는 API 서버에 적합 (짧은 GC pause)
+- UseContainerSupport로 cgroup 메모리 제한 인식
+
+### 7. PLG Stack 모니터링 (55일 운영)
 
 **Prometheus + Loki + Grafana**:
 - **4개 Dashboard**: Cluster, Node, Storage, Application
@@ -264,7 +293,7 @@ COPY --from=builder /src/public /usr/share/nginx/html
 - Longhorn vs Local-path 스토리지 성능 비교
 - 리소스 사용 패턴 파악
 
-### 7. Ingress Path Routing
+### 8. Ingress Path Routing
 
 **하나의 IP로 여러 서비스 접근**:
 - `/` → Hugo 블로그
@@ -281,7 +310,7 @@ COPY --from=builder /src/public /usr/share/nginx/html
 
 1. ✅ **Bare-metal Kubernetes 클러스터 구축** (kubeadm + Cilium + Longhorn)
 2. ✅ **Hugo 블로그 Pod 배포** (nginx:alpine, Multi-stage Build)
-3. ✅ **Spring Boot WAS 배포** (board-was:v1, MySQL 연동)
+3. ✅ **Spring Boot WAS 배포** (board-was:v16, MySQL 연동, JVM 튜닝)
 4. ✅ **MySQL StatefulSet 배포** (Longhorn PVC 5Gi, 3 replica)
 5. ✅ **nginx Ingress 설정** (Path-based Routing: `/`, `/board`, `/api`)
 6. ✅ **GitHub Actions CI/CD** (Self-hosted Runner, 35초 배포)
@@ -290,6 +319,9 @@ COPY --from=builder /src/public /usr/share/nginx/html
 9. ✅ **HPA 자동 스케일링** (WAS 2-10, WEB 2-5)
 10. ✅ **PLG Stack 모니터링** (Prometheus + Loki + Grafana, 4 Dashboard, 8 Alert)
 11. ✅ **스토리지 최적화** (Nextcloud 삭제, 30Gi 절약)
+12. ✅ **WAS v1.4.0 기능** (viewCount 조회수 + 원자적 UPDATE 최적화)
+13. ✅ **JVM 튜닝** (G1GC, Heap 256-512MB, 컨테이너 최적화)
+14. ✅ **HA 설정** (topologySpreadConstraints DoNotSchedule + dynamicStableScale)
 
 ### 📈 운영 성과 (2025.11.27 ~ 현재)
 
@@ -304,6 +336,7 @@ COPY --from=builder /src/public /usr/share/nginx/html
 | **Alert 규칙** | **8개** | PodCrashLooping, HighMemoryUsage 등 |
 | **Dashboard** | **4개** | Cluster, Node, Storage, Application |
 | **Uptime** | **99%+** | 단 1회 재부팅 (커널 업데이트) |
+| **WAS 버전** | **v16** | JVM 튜닝, viewCount, HA 설정 적용 |
 
 ---
 
@@ -411,10 +444,13 @@ Local K8s Blog 완성 후 운영 개선 예정 (2026.02~):
 - **2026-01-15**: PLG Stack 모니터링 완성 (4 Dashboard, 8 Alert)
 - **2026-01-20**: Nextcloud 삭제 (30Gi 절약), 스토리지 최적화 완료
 - **2026-01-20**: 프로젝트 페이지 업데이트 (55일 운영 성과 반영)
+- **2026-01-22**: WAS v1.4.0 기능 추가 (viewCount 조회수, 원자적 UPDATE)
+- **2026-01-22**: JVM 튜닝 적용 (G1GC, Heap 256-512MB)
+- **2026-01-22**: HA 설정 완료 (topologySpreadConstraints, dynamicStableScale)
 
 ---
 
-**작성일**: 2026-01-20 (최종 업데이트)
+**작성일**: 2026-01-22 (최종 업데이트)
 **프로젝트 상태**: ✅ **완료** (55일 안정 운영 중, 2025.11.27 시작)
 **난이도**: ⭐⭐⭐⭐ (Advanced - GitOps + Monitoring + Storage 운영 경험)
 **실제 소요 시간**: 55일 (지속적 개선)

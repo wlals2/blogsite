@@ -1,8 +1,8 @@
 ---
 title: "Homeserver K8s 현재 상태 및 다음 구축 계획"
-date: 2026-01-19
-summary: "실제 구축된 Homeserver Kubernetes 아키텍처 정리 및 향후 로드맵 (ArgoCD → Argo Rollouts → Istio)"
-tags: ["kubernetes", "homeserver", "architecture", "planning"]
+date: 2026-01-22
+summary: "Homeserver Kubernetes 아키텍처 완성: GitHub Actions CI + ArgoCD GitOps + Argo Rollouts Canary 배포 구현 완료"
+tags: ["kubernetes", "homeserver", "architecture", "argocd", "argo-rollouts", "gitops"]
 categories: ["kubernetes"]
 series: ["Infrastructure Learning Journey"]
 weight: 1
@@ -11,7 +11,7 @@ tocopen: true
 draft: false
 ---
 
-## 📌 현재 상태 (2026-01-20 업데이트)
+## 📌 현재 상태 (2026-01-22 업데이트)
 
 ### 실제 구축된 아키텍처
 
@@ -188,14 +188,14 @@ argocd-server-5f8b4dfd84-bbqlt                      1/1     Running
 
 ---
 
-## ❌ 현재 없는 것 (구축 필요)
+## ✅ CI/CD 완료 (2026-01-22 업데이트)
 
-### 1. CI/CD
-- ❌ Jenkins: CI 파이프라인 없음
-- 🚧 ArgoCD: 설치 완료, Application 생성 대기
-- ❌ Argo Rollouts: Canary 배포 없음
+### 1. GitOps 자동 배포 - 완료!
+- ✅ **GitHub Actions**: CI 파이프라인 (Self-hosted Runner, 35초 배포)
+- ✅ **ArgoCD**: GitOps 완전 자동화 (Auto-Sync, Prune, SelfHeal)
+- ✅ **Argo Rollouts**: Canary 배포 구현 완료 (20% → 50% → 80% → 100%)
 
-**현재 배포 방식**: 수동 `kubectl apply`
+**현재 배포 방식**: Git Push → GitHub Actions → ArgoCD Auto-Sync (완전 자동화)
 
 ---
 
@@ -467,24 +467,22 @@ Total: 5200Mi (65%)
   - 명령어: `cloudflared tunnel route dns home-network argocd.jiminhome.shop`
   - 외부 접속: https://argocd.jiminhome.shop (DNS 전파 대기 중)
 
-- [ ] **Git Repository 준비** (대기 중)
-  - blog-system manifest 정리
-  - Git Repository 생성 또는 기존 repo 활용
+- [x] **Git Repository 준비** ✅
+  - k8s-manifests repo (https://github.com/wlals2/k8s-manifests)
+  - blog-system namespace manifests 관리
 
-- [ ] **Application 생성** (대기 중)
-  - ArgoCD UI 로그인
-  - blog-system Application 생성
-  - Git Repository 연동
+- [x] **Application 생성** ✅
+  - blog-system Application 생성 완료
+  - Git Repository 연동 완료
 
-- [ ] **Sync Policy 자동화** (대기 중)
+- [x] **Sync Policy 자동화** ✅
   - Auto-Sync 활성화
   - Self-Heal 설정
   - Auto-Prune 설정
 
-- [ ] **실제 배포 테스트** (대기 중)
-  - Git에서 replicas 변경
-  - ArgoCD 자동 동기화 확인
-  - Pod 증감 테스트
+- [x] **실제 배포 테스트** ✅
+  - Git Push → 3초 내 자동 동기화
+  - 35초 완전 배포 (GitHub Actions + ArgoCD)
 
 **배운 것**:
 - Helm의 가치: 26,951줄 YAML을 values.yaml 수정만으로 관리
@@ -505,16 +503,16 @@ Total: 5200Mi (65%)
 
 ---
 
-### 2단계: Argo Rollouts 구축 (다음 주)
+### 2단계: Argo Rollouts 구축 - ✅ 완료!
 
-**목표**: Canary 배포 (10% → 50% → 100%)
+**목표**: Canary 배포 (20% → 50% → 80% → 100%)
 
 **체크리스트**:
-- [ ] Argo Rollouts 설치
-- [ ] Rollout 정의
-- [ ] Canary 배포 테스트
-- [ ] Rollback 테스트
-- [ ] Prometheus 메트릭 연동
+- [x] Argo Rollouts 설치 ✅
+- [x] Rollout 정의 (WEB + WAS) ✅
+- [x] Canary 배포 테스트 ✅
+- [x] Istio Traffic Routing 연동 ✅
+- [x] dynamicStableScale + topologySpreadConstraints ✅
 
 ---
 
@@ -529,7 +527,7 @@ Total: 5200Mi (65%)
 ---
 
 **최초 작성일**: 2026-01-19
-**최종 업데이트**: 2026-01-20
-**환경**: Homeserver Kubernetes (Cilium + Ingress Nginx + ArgoCD)
-**현재 단계**: ArgoCD 구축 진행 중 (Application 생성 대기)
-**다음 단계**: Git Repository 연동 및 첫 번째 Application 생성
+**최종 업데이트**: 2026-01-22
+**환경**: Homeserver Kubernetes (Cilium + Ingress Nginx + ArgoCD + Argo Rollouts)
+**현재 단계**: ✅ Phase 1 (ArgoCD) + Phase 2 (Argo Rollouts) 완료!
+**다음 단계**: Phase 3 (Istio Service Mesh) - 필요 시 구축
