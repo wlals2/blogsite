@@ -1,21 +1,194 @@
 # 블로그 시스템 아키텍처
 
-> WEB + WAS 2-Tier 구조 (Hugo 정적 블로그 + Spring Boot API)
+> WEB + WAS 3-TIER 구조 (Hugo 정적 블로그 + Spring Boot API)
 
 **작성일**: 2026-01-21
-**상태**: ✅ Production 운영 중 (55일)
+**최종 수정**: 2026-01-22
+**상태**: ✅ Production 운영 중 (56일)
 
 ---
 
 ## 목차
 
-1. [전체 아키텍처](#전체-아키텍처)
-2. [WEB (Hugo 블로그)](#web-hugo-블로그)
-3. [WAS (Spring Boot API)](#was-spring-boot-api)
-4. [데이터베이스 (MySQL)](#데이터베이스-mysql)
-5. [네트워킹 (Istio)](#네트워킹-istio)
-6. [CI/CD 파이프라인](#cicd-파이프라인)
-7. [WAS 개선 가능 항목](#was-개선-가능-항목)
+1. [클러스터 구성](#클러스터-구성)
+2. [서비스별 HA/Failover 설정](#서비스별-hafailover-설정)
+3. [전체 아키텍처](#전체-아키텍처)
+4. [WEB (Hugo 블로그)](#web-hugo-블로그)
+5. [WAS (Spring Boot API)](#was-spring-boot-api)
+6. [데이터베이스 (MySQL)](#데이터베이스-mysql)
+7. [네트워킹 (Istio)](#네트워킹-istio)
+8. [CI/CD 파이프라인](#cicd-파이프라인)
+9. [WAS 개선 가능 항목](#was-개선-가능-항목)
+
+---
+
+## 클러스터 구성
+
+### 노드 구성
+
+| 노드 | 역할 | IP | 비고 |
+|------|------|-----|------|
+| **k8s-cp** | Control Plane | 192.168.0.101 | Master, etcd, API Server |
+| **k8s-worker1** | Worker | 192.168.0.61 | 대부분의 워크로드 |
+| **k8s-worker2** | Worker | 192.168.0.62 | 분산 배치된 워크로드 |
+
+### Kubernetes 버전
+
+```
+Kubernetes: v1.32.0
+Container Runtime: containerd://1.7.24
+CNI: Cilium (eBPF 기반)
+CSI: Longhorn v1.7.2
+```
+
+### 스토리지 구성
+
+| 스토리지 | 용도 | 특징 |
+|----------|------|------|
+| **Longhorn** | Stateful 서비스 (MySQL, Loki) | Replica 2, 자동 Failover |
+| **NFS** | Monitoring (Grafana, Prometheus) | 단일 노드 (NAS) |
+| **Local Path** | 임시 데이터 | 노드 로컬 디스크 |
+
+---
+
+## 서비스별 HA/Failover 설정
+
+### Failover 메커니즘 이해
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Failover 종류                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. Kubernetes 기본 Failover (Stateless)                        │
+│     ┌─────────┐     5분 후     ┌─────────┐                      │
+│     │ Node    │ ───────────→  │ Taint   │ → Pod Eviction       │
+│     │ 장애    │  (기본값)     │ 적용    │ → 다른 노드에 재생성  │
+│     └─────────┘               └─────────┘                       │
+│                                                                  │
+│  2. Longhorn Failover (Stateful)                                │
+│     ┌─────────┐     30초~2분   ┌─────────┐                      │
+│     │ Node    │ ───────────→  │ Pod     │ → 다른 노드에서      │
+│     │ 장애    │  (빠른 탐지)  │ 삭제    │ → Replica로 복구     │
+│     └─────────┘               └─────────┘                       │
+│                                                                  │
+│  3. topologySpreadConstraints (사전 분산)                        │
+│     ┌─────────────────────────────────────┐                     │
+│     │  Worker1      │    Worker2          │                     │
+│     │   Pod A       │     Pod B           │  ← 처음부터 분산    │
+│     │               │                     │  → 다운타임 최소화  │
+│     └─────────────────────────────────────┘                     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 서비스 분류
+
+#### 1️⃣ Stateful + Longhorn (자동 Failover 30초~2분)
+
+| 서비스 | Namespace | PVC | Replicas | 복구 시간 |
+|--------|-----------|-----|----------|----------|
+| **MySQL** | blog-system | mysql-pvc (5Gi) | 1 | 30초~2분 |
+| **Loki** | monitoring | storage-loki-stack-0 (10Gi) | 1 | 30초~2분 |
+
+**Longhorn 설정:**
+```yaml
+# /k8s-manifests/docs/helm/longhorn/values.yaml
+defaultSettings:
+  defaultReplicaCount: 2
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+```
+
+**왜 Longhorn Failover가 빠른가?**
+- Longhorn Manager가 노드 상태를 지속적으로 모니터링
+- `nodeDownPodDeletionPolicy` 설정으로 Pod 자동 삭제
+- 다른 노드에 이미 Replica가 있으므로 즉시 복구 가능
+
+#### 2️⃣ Stateful + NFS (수동 복구 필요)
+
+| 서비스 | Namespace | PVC | 복구 방법 |
+|--------|-----------|-----|----------|
+| **Grafana** | monitoring | grafana-data-pvc (10Gi) | NAS 의존, K8s 기본 Failover |
+| **Prometheus** | monitoring | prometheus-data-pvc (50Gi) | NAS 의존, K8s 기본 Failover |
+| **Pushgateway** | monitoring | pushgateway-data-pvc (5Gi) | NAS 의존, K8s 기본 Failover |
+
+**주의:** NFS는 단일 NAS에 의존하므로 NAS 장애 시 전체 서비스 중단
+
+#### 3️⃣ Stateless (K8s 기본 Failover 5분)
+
+| 서비스 | Namespace | Replicas | topologySpread | 다운타임 |
+|--------|-----------|----------|----------------|----------|
+| **WEB** | blog-system | 2 | ✅ DoNotSchedule | 0초 |
+| **WAS** | blog-system | 2~10 (HPA) | ✅ DoNotSchedule | 0초 |
+| **Istio Ingress** | istio-system | 2 | ✅ DoNotSchedule | 0초 |
+| **Alertmanager** | monitoring | 1 | N/A | 5분 |
+| **kube-state-metrics** | monitoring | 1 | N/A | 5분 |
+| **ArgoCD** | argocd | 각 1 | N/A | 5분 |
+
+### 현재 Pod 분포
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        k8s-worker1                               │
+├─────────────────────────────────────────────────────────────────┤
+│ blog-system:  mysql, was(1), web(1)          ← 분산 배치        │
+│ monitoring:   alertmanager, kube-state-metrics, loki-stack,     │
+│               cadvisor, node-exporter, promtail, nginx-exporter,│
+│               prometheus-adapter                                 │
+│ argocd:       controller, dex, notifications, redis, server     │
+│ istio:        istiod, ingress(1), egress, jaeger, kiali        │
+│ longhorn:     manager, csi-plugin, ui                           │
+│ cert-manager: 전체                                               │
+│ metallb:      controller, speaker                                │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        k8s-worker2                               │
+├─────────────────────────────────────────────────────────────────┤
+│ blog-system:  was(1), web(1)                 ← 분산 배치        │
+│ monitoring:   grafana, prometheus, pushgateway, cadvisor        │
+│ argocd:       repo-server                                       │
+│ istio:        ingress(1)                     ← 분산 배치        │
+│ longhorn:     manager, csi-plugin, instance-manager             │
+│ metallb:      speaker                                           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        k8s-cp (Control Plane)                    │
+├─────────────────────────────────────────────────────────────────┤
+│ monitoring:   promtail (로그 수집만)                            │
+│ metallb:      speaker                                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 복구 시간 요약표
+
+| 서비스 유형 | 저장소 | 복구 방식 | 예상 다운타임 |
+|-------------|--------|-----------|---------------|
+| Stateful + Longhorn | Longhorn | 자동 (Longhorn Failover) | **30초~2분** |
+| Stateful + NFS | NFS | 자동 (K8s 기본) | **5분** |
+| Stateless (replicas=1) | 없음 | 자동 (K8s 기본) | **5분** |
+| Stateless (replicas≥2, spread) | 없음 | 즉시 (미리 분산) | **0초** |
+| Stateless (replicas≥2, no spread) | 없음 | 부분 (일부만 분산) | **0~5분** |
+
+### ✅ 완료된 개선사항
+
+1. **WEB/WAS에 topologySpreadConstraints + dynamicStableScale 적용** ✅
+   - 적용: DoNotSchedule (hard constraint)로 노드별 분산 강제
+   - dynamicStableScale: true로 Canary 배포 중에도 Pod 수 유지
+   - 효과: 다운타임 0초, HA 보장
+   - 참고: [CANARY-HA-STRATEGY.md](/home/jimin/k8s-manifests/docs/CANARY-HA-STRATEGY.md)
+
+2. **Istio Ingress Gateway HA 적용** ✅
+   - 적용: replicas 2 + topologySpreadConstraints (DoNotSchedule)
+   - 효과: Gateway 장애 시에도 다운타임 0초
+
+### 선택적 개선사항
+
+1. **tolerationSeconds 조정 (선택)**
+   - 현재: 300초 (5분) 기본값
+   - 개선: 60초로 단축 가능
+   - 주의: 너무 짧으면 일시적 네트워크 문제에도 eviction 발생
 
 ---
 
@@ -200,7 +373,7 @@ Steps:
 | **Build** | Maven (mvnw clean package) |
 | **Image** | ghcr.io/wlals2/board-was:v1 |
 | **Image Size** | ~150MB |
-| **Deployment** | Deployment (일반) |
+| **Deployment** | Argo Rollout (Canary) |
 | **Replicas** | 2 (HPA 2-10) |
 | **HPA** | CPU 70%, Memory 80% |
 | **Service** | ClusterIP (was-service:8080) |
@@ -412,44 +585,40 @@ Email Notification ✅
 
 ## WAS 개선 가능 항목
 
-### P0 (우선순위 높음)
+### ✅ 완료된 개선 (P0)
 
-#### 1. Argo Rollouts로 전환 (Canary 배포)
+#### 1. Argo Rollouts로 전환 (Canary 배포) ✅
 
-**현재:**
-- Deployment (Rolling Update)
-- 일괄 배포 → 위험 높음
+**완료일:** 2026-01-22
 
-**개선 후:**
+**적용 내용:**
 ```yaml
-# WAS를 Argo Rollout으로 전환
-apiVersion: argoproj.io/v1alpha1
-kind: Rollout
-metadata:
-  name: was
-spec:
-  strategy:
-    canary:
-      steps:
-      - setWeight: 20
-      - pause: {duration: 1m}
-      - setWeight: 50
-      - pause: {duration: 1m}
-      - setWeight: 80
-      - pause: {duration: 1m}
+# was-rollout.yaml
+strategy:
+  canary:
+    dynamicStableScale: true  # Pod 수 유지
+    steps:
+    - setWeight: 20
+    - pause: {duration: 1m}
+    - setWeight: 50
+    - pause: {duration: 1m}
+    - setWeight: 80
+    - pause: {duration: 1m}
+    trafficRouting:
+      istio:
+        virtualService:
+          name: was-retry-timeout
 ```
 
 **효과:**
-- 점진적 배포로 위험 최소화
-- API 장애 시 즉시 롤백
-- WEB과 동일한 배포 전략
-
-**예상 작업:**
-- was-deployment.yaml → was-rollout.yaml
-- Istio VirtualService 수정 (/api/ routing)
-- GitHub Actions 워크플로우 수정
+- ✅ 점진적 배포로 위험 최소화
+- ✅ API 장애 시 즉시 롤백
+- ✅ WEB과 동일한 배포 전략
+- ✅ dynamicStableScale + DoNotSchedule로 HA 보장
 
 ---
+
+### P1 (선택적 개선)
 
 #### 2. 메트릭 기반 Auto-Rollback
 
@@ -551,6 +720,121 @@ V2__add_comment_table.sql
 
 ---
 
+---
+
+## 전체 서비스 목록
+
+### blog-system Namespace (핵심 서비스)
+
+| 서비스 | 타입 | 역할 | 저장소 | Replicas |
+|--------|------|------|--------|----------|
+| **web** | Argo Rollout | Hugo 정적 블로그 | 없음 | 2 (고정) |
+| **was** | Argo Rollout | Spring Boot API | 없음 | 2-10 (HPA) |
+| **mysql** | Deployment | 데이터베이스 | Longhorn 5Gi | 1 |
+| **mysql-exporter** | Deployment | MySQL 메트릭 수집 | 없음 | 1 |
+
+### monitoring Namespace (모니터링 스택)
+
+| 서비스 | 타입 | 역할 | 저장소 | Replicas |
+|--------|------|------|--------|----------|
+| **prometheus** | Deployment | 메트릭 수집/저장 | NFS 50Gi | 1 |
+| **grafana** | Deployment | 시각화 대시보드 | NFS 10Gi | 1 |
+| **loki-stack** | StatefulSet | 로그 수집/저장 | Longhorn 10Gi | 1 |
+| **promtail** | DaemonSet | 로그 수집 (각 노드) | 없음 | 3 (노드당 1) |
+| **alertmanager** | Deployment | 알림 관리 | 없음 | 1 |
+| **pushgateway** | Deployment | 배치 작업 메트릭 | NFS 5Gi | 1 |
+| **kube-state-metrics** | Deployment | K8s 리소스 메트릭 | 없음 | 1 |
+| **prometheus-adapter** | Deployment | Custom Metrics API | 없음 | 1 |
+| **cadvisor** | DaemonSet | 컨테이너 메트릭 | 없음 | 2 (Worker당 1) |
+| **node-exporter** | DaemonSet | 노드 메트릭 | 없음 | 3 (노드당 1) |
+| **nginx-exporter** | DaemonSet | Nginx 메트릭 | 없음 | 2 |
+
+### istio-system Namespace (Service Mesh)
+
+| 서비스 | 타입 | 역할 |
+|--------|------|------|
+| **istiod** | Deployment | Control Plane |
+| **istio-ingressgateway** | Deployment | 외부 트래픽 인입 |
+| **istio-egressgateway** | Deployment | 외부 트래픽 송출 |
+| **kiali** | Deployment | Service Mesh 시각화 |
+| **jaeger** | Deployment | 분산 추적 |
+| **prometheus** | Deployment | Istio 메트릭 수집 |
+
+### argocd Namespace (GitOps)
+
+| 서비스 | 역할 |
+|--------|------|
+| **argocd-server** | API Server / Web UI |
+| **argocd-repo-server** | Git Repository 관리 |
+| **argocd-application-controller** | Application 동기화 |
+| **argocd-dex-server** | SSO/OIDC 인증 |
+| **argocd-redis** | 캐시 |
+| **argocd-notifications-controller** | 알림 |
+
+### longhorn-system Namespace (스토리지)
+
+| 서비스 | 타입 | 역할 |
+|--------|------|------|
+| **longhorn-manager** | DaemonSet | 볼륨 관리 |
+| **longhorn-driver-deployer** | Deployment | CSI 드라이버 배포 |
+| **longhorn-ui** | Deployment | Web UI |
+| **longhorn-csi-plugin** | DaemonSet | CSI 플러그인 |
+| **csi-attacher/provisioner/resizer/snapshotter** | Deployment | CSI 컴포넌트 |
+| **instance-manager** | Pod | 볼륨 인스턴스 관리 |
+| **engine-image** | DaemonSet | 스토리지 엔진 |
+
+### 기타 Namespace
+
+| Namespace | 서비스 | 역할 |
+|-----------|--------|------|
+| **argo-rollouts** | argo-rollouts | Canary/Blue-Green 배포 |
+| **cert-manager** | cert-manager | TLS 인증서 관리 |
+| **metallb-system** | controller, speaker | LoadBalancer IP 할당 |
+| **ingress-nginx** | ingress-nginx-controller | Nginx Ingress |
+| **kubernetes-dashboard** | dashboard | K8s Web UI |
+| **local-path-storage** | local-path-provisioner | 로컬 스토리지 |
+
+---
+
+## Helm Chart 관리
+
+### 현재 Helm으로 관리하는 서비스
+
+| Chart | Version | Namespace | Values 위치 |
+|-------|---------|-----------|-------------|
+| **argo-cd** | 9.3.4 | argocd | [argocd/values.yaml](../k8s-manifests/docs/helm/argocd/values.yaml) |
+| **longhorn** | 1.7.2 | longhorn-system | [longhorn/values.yaml](../k8s-manifests/docs/helm/longhorn/values.yaml) |
+| **loki-stack** | 2.10.2 | monitoring | [loki-stack/values.yaml](../k8s-manifests/docs/helm/loki-stack/values.yaml) |
+| **kube-state-metrics** | 5.27.0 | monitoring | [kube-state-metrics/values.yaml](../k8s-manifests/docs/helm/kube-state-metrics/values.yaml) |
+
+### Helm Values 요약
+
+**Longhorn:**
+```yaml
+defaultSettings:
+  defaultReplicaCount: 2  # 노드 2개이므로
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod  # 자동 Failover
+```
+
+**Loki-Stack:**
+```yaml
+loki:
+  persistence:
+    enabled: true
+    size: 10Gi
+  config:
+    retention_period: 0s  # 무제한 보관
+promtail:
+  enabled: true
+```
+
+**ArgoCD:**
+```yaml
+# 기본값으로 설치 (오버라이드 없음)
+```
+
+---
+
 ## 관련 문서
 
 | 문서 | 설명 |
@@ -559,9 +843,10 @@ V2__add_comment_table.sql
 | [GITOPS-IMPLEMENTATION.md](CICD/GITOPS-IMPLEMENTATION.md) | GitOps 구현 가이드 |
 | [02-INFRASTRUCTURE.md](02-INFRASTRUCTURE.md) | 인프라 구성 |
 | [monitoring/README.md](monitoring/README.md) | 모니터링 설정 |
+| [istio/COMPLETE-ISTIO-ARCHITECTURE.md](istio/COMPLETE-ISTIO-ARCHITECTURE.md) | Istio 아키텍처 |
 
 ---
 
 **작성:** Claude Code
-**최종 수정:** 2026-01-21
-**상태:** ✅ Production 운영 중
+**최종 수정:** 2026-01-22 (HA 구현 반영)
+**상태:** ✅ Production 운영 중 (WEB/WAS/Istio HA 적용 완료)
