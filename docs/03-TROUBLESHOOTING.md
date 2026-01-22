@@ -13,6 +13,7 @@
 5. [WAS Docker 빌드 경로 오류](#5-was-docker-빌드-경로-오류)
 6. [ArgoCD 트러블슈팅](#6-argocd-트러블슈팅)
 7. [Longhorn 스토리지 트러블슈팅](#7-longhorn-스토리지-트러블슈팅)
+8. [MySQL 백업 CronJob 트러블슈팅](#8-mysql-백업-cronjob-트러블슈팅)
 
 ---
 
@@ -1586,5 +1587,336 @@ kubectl get storageclass longhorn -o yaml | grep numberOfReplicas
 | Volume Robustness | healthy |
 | Replica 수 | 노드 수 이하 |
 | Disk Status | schedulable: true |
+
+---
+
+## 8. MySQL 백업 CronJob 트러블슈팅
+
+**발생일**: 2026-01-22
+
+### 8.1 CiliumNetworkPolicy로 인한 MySQL 연결 거부
+
+#### 증상
+
+MySQL 백업 CronJob이 MySQL 서버에 연결할 수 없음:
+
+```
+ERROR 2003 (HY000): Can't connect to MySQL server on 'mysql-service:3306' (110)
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+CiliumNetworkPolicy `mysql-isolation`이 `app: was` 레이블을 가진 Pod에서만 MySQL 접근을 허용하도록 설정됨. 백업 Job의 레이블 `app: mysql-backup`은 허용 목록에 없었음.
+
+```yaml
+# 기존 mysql-isolation 정책 (문제)
+ingress:
+- fromEndpoints:
+  - matchLabels:
+      app: was  # ← mysql-backup 없음
+```
+
+**Hubble CLI로 확인한 결과:**
+```bash
+hubble observe --namespace blog-system --protocol TCP --port 3306
+
+# 출력:
+# mysql-backup → mysql-service:3306 DROPPED (policy denied)
+```
+
+#### 해결 방법
+
+**1. mysql-isolation 정책에 mysql-backup 허용 추가**
+
+```yaml
+# cilium-netpol.yaml
+ingress:
+# Rule 3: mysql-backup → mysql:3306 허용 (CronJob 백업)
+- fromEndpoints:
+  - matchLabels:
+      app: mysql-backup
+      io.kubernetes.pod.namespace: blog-system
+  toPorts:
+  - ports:
+    - port: "3306"
+      protocol: TCP
+```
+
+**2. mysql-backup-isolation 정책 생성 (Egress 허용)**
+
+```yaml
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: mysql-backup-isolation
+  namespace: blog-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: mysql-backup
+  egress:
+  # MySQL 접근
+  - toEndpoints:
+    - matchLabels:
+        app: mysql
+    toPorts:
+    - ports:
+      - port: "3306"
+        protocol: TCP
+  # DNS 허용
+  - toEndpoints:
+    - matchLabels:
+        io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+  # S3 접근 (HTTPS)
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+```
+
+#### 확인 방법
+
+```bash
+# 1. 정책 적용 확인
+kubectl get ciliumnetworkpolicies -n blog-system
+
+# 2. Hubble로 트래픽 확인
+hubble observe --namespace blog-system -l app=mysql-backup
+
+# 3. 수동 백업 테스트
+kubectl create job --from=cronjob/mysql-backup mysql-backup-test -n blog-system
+kubectl logs job/mysql-backup-test -n blog-system -c mysqldump
+```
+
+---
+
+### 8.2 Istio Sidecar 주입으로 인한 Job 실패
+
+#### 증상
+
+MySQL 백업 Job이 `Init:0/2` 상태에서 멈춤:
+
+```bash
+kubectl get pods -n blog-system -l job-name=mysql-backup-manual
+
+# 출력:
+# mysql-backup-manual-xxxxx   Init:0/2   0          2m
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Istio sidecar가 Job Pod에 자동 주입되어 2개의 initContainer가 생성됨:
+1. `istio-init` (Istio가 주입)
+2. `mysqldump` (우리 설정)
+
+Istio sidecar는 장기 실행 서비스용으로 설계되어 Job과 호환되지 않음.
+
+**잘못된 annotation 위치:**
+```yaml
+# ❌ 잘못된 위치 (spec 레벨)
+spec:
+  annotations:
+    sidecar.istio.io/inject: "false"  # 무시됨
+```
+
+#### 해결 방법
+
+**annotation을 template.metadata 레벨로 이동:**
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+spec:
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: mysql-backup
+          annotations:  # ✅ 올바른 위치
+            sidecar.istio.io/inject: "false"
+        spec:
+          # ...
+```
+
+#### 확인 방법
+
+```bash
+# 1. Pod에 sidecar가 없는지 확인
+kubectl get pod -l app=mysql-backup -n blog-system -o jsonpath='{.items[*].spec.containers[*].name}'
+
+# 예상 출력: s3-upload (istio-proxy 없어야 함)
+
+# 2. initContainer 개수 확인
+kubectl get pod -l app=mysql-backup -n blog-system -o jsonpath='{.items[*].spec.initContainers[*].name}'
+
+# 예상 출력: mysqldump (istio-init 없어야 함)
+```
+
+---
+
+### 8.3 Longhorn PVC Attach 타임아웃
+
+#### 증상
+
+백업 Job이 PVC 연결 대기 중 타임아웃:
+
+```
+Warning  FailedAttachVolume  Multi-Attach error for volume "pvc-xxx"
+AttachVolume.Attach failed for volume "pvc-xxx": rpc error: code = DeadlineExceeded
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+1. Longhorn 볼륨이 다른 노드에 attach된 상태
+2. 2노드 클러스터에서 replica 3 설정으로 인한 스케줄링 실패
+3. 노드 간 볼륨 마이그레이션 지연
+
+#### 해결 방법
+
+**emptyDir 사용 (권장)**
+
+백업 파일은 S3에 영구 저장되므로 로컬 스토리지가 불필요:
+
+```yaml
+volumes:
+- name: backup-storage
+  emptyDir: {}  # Job 종료 시 자동 정리
+```
+
+**장점:**
+- ✅ PVC 연결 문제 없음
+- ✅ 노드 간 스케줄링 자유로움
+- ✅ S3가 primary storage이므로 데이터 손실 없음
+
+**단점:**
+- ❌ Pod 재시작 시 임시 파일 손실 (S3 업로드 전 실패 시)
+
+#### 대안: RWX PVC 사용
+
+여러 Pod에서 동시 접근이 필요한 경우:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+spec:
+  accessModes:
+    - ReadWriteMany  # RWX
+  storageClassName: longhorn
+```
+
+**주의**: Longhorn RWX는 NFS 기반으로 성능 저하 가능
+
+---
+
+### 8.4 AWS S3 인증 실패
+
+#### 증상
+
+S3 업로드 시 인증 오류:
+
+```
+An error occurred (InvalidAccessKeyId) when calling the PutObject operation
+```
+
+#### 원인 분석
+
+1. AWS 자격 증명 Secret이 없거나 잘못됨
+2. IAM 사용자에 S3 권한 없음
+3. 버킷 정책이 접근 차단
+
+#### 해결 방법
+
+**1. Secret 생성**
+
+```bash
+kubectl create secret generic aws-s3-credentials \
+  -n blog-system \
+  --from-literal=AWS_ACCESS_KEY_ID=AKIA... \
+  --from-literal=AWS_SECRET_ACCESS_KEY=... \
+  --from-literal=AWS_DEFAULT_REGION=ap-northeast-2
+```
+
+**2. IAM 권한 확인**
+
+최소 권한 정책:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::jimin-mysql-backup",
+        "arn:aws:s3:::jimin-mysql-backup/*"
+      ]
+    }
+  ]
+}
+```
+
+**3. 버킷 존재 확인**
+
+```bash
+aws s3 ls s3://jimin-mysql-backup/
+```
+
+#### 확인 방법
+
+```bash
+# 수동 S3 업로드 테스트
+kubectl run s3-test --rm -it --image=amazon/aws-cli:2.15.0 \
+  --env="AWS_ACCESS_KEY_ID=$(kubectl get secret aws-s3-credentials -n blog-system -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)" \
+  --env="AWS_SECRET_ACCESS_KEY=$(kubectl get secret aws-s3-credentials -n blog-system -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)" \
+  --env="AWS_DEFAULT_REGION=ap-northeast-2" \
+  -- s3 ls s3://jimin-mysql-backup/
+```
+
+---
+
+### 8.5 운영 점검 체크리스트
+
+**MySQL 백업 상태 확인**
+
+```bash
+# 1. CronJob 상태
+kubectl get cronjob mysql-backup -n blog-system
+
+# 2. 최근 Job 히스토리
+kubectl get jobs -n blog-system -l app=mysql-backup --sort-by=.metadata.creationTimestamp
+
+# 3. 마지막 백업 로그
+kubectl logs job/$(kubectl get jobs -n blog-system -l app=mysql-backup -o name | tail -1 | cut -d/ -f2) -n blog-system --all-containers
+
+# 4. S3 백업 목록 (최근 5개)
+aws s3 ls s3://jimin-mysql-backup/ | tail -5
+```
+
+**정상 상태 기준**
+
+| 항목 | 정상 값 |
+|------|--------|
+| CronJob LAST SCHEDULE | 24시간 이내 |
+| Job STATUS | Succeeded |
+| S3 파일 개수 | 1-7개 (Lifecycle 정책) |
+| 백업 파일 크기 | > 1KB |
 
 ---
