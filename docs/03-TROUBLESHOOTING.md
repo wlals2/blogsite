@@ -12,6 +12,7 @@
 4. [Cloudflare 캐시 퍼지 실패](#4-cloudflare-캐시-퍼지-실패)
 5. [WAS Docker 빌드 경로 오류](#5-was-docker-빌드-경로-오류)
 6. [ArgoCD 트러블슈팅](#6-argocd-트러블슈팅)
+7. [Longhorn 스토리지 트러블슈팅](#7-longhorn-스토리지-트러블슈팅)
 
 ---
 
@@ -1303,5 +1304,287 @@ spec:
   mtls:
     mode: STRICT
 ```
+
+---
+
+## 7. Longhorn 스토리지 트러블슈팅
+
+### 7.1 CSI Plugin CrashLoopBackOff
+
+**발생일**: 2026-01-22
+
+#### 증상
+
+```bash
+kubectl get pods -A | grep -v Running | grep -v Completed
+
+# 출력:
+# longhorn-system   longhorn-csi-plugin-bb6t8   2/3   CrashLoopBackOff   37   57d
+```
+
+```bash
+kubectl logs -n longhorn-system longhorn-csi-plugin-bb6t8 --all-containers --tail=30
+
+# 출력:
+# E0122 03:14:23.017453  1 main.go:68] "Failed to establish connection to CSI driver" err="context deadline exceeded"
+# ... (반복)
+```
+
+---
+
+#### 원인 분석
+
+**1. Longhorn Manager 로그 확인**
+
+```bash
+kubectl logs -n longhorn-system -l app=longhorn-manager --tail=20
+
+# 출력:
+# level=warning msg="Precheck failed for creating new replica: disks are unavailable: no disk candidates found"
+# ... node=k8s-worker1 volume=pvc-xxx
+```
+
+**2. Volume 상태 확인**
+
+```bash
+kubectl get volumes.longhorn.io -n longhorn-system
+
+# 출력:
+# NAME          STATE      ROBUSTNESS   SIZE          NODE
+# pvc-xxx       attached   degraded     5368709120    k8s-worker1
+# pvc-yyy       attached   degraded     10737418240   k8s-worker1
+```
+
+**핵심 문제**: Volume이 `degraded` 상태
+
+---
+
+**3. 근본 원인: Replica 수 vs 노드 수 불일치**
+
+```bash
+kubectl get volumes.longhorn.io -n longhorn-system -o yaml | grep numberOfReplicas
+
+# 출력:
+# numberOfReplicas: 3  # ← 3개 필요
+```
+
+```bash
+kubectl get nodes
+
+# 출력:
+# k8s-cp        Ready   control-plane
+# k8s-worker1   Ready   worker
+# k8s-worker2   Ready   worker
+#
+# → Worker 노드: 2개
+```
+
+**문제**:
+- 설정: `numberOfReplicas: 3` (replica 3개 필요)
+- 현실: Worker 노드 2개 (replica 최대 2개 가능)
+- Longhorn Anti-Affinity: 같은 노드에 같은 볼륨의 replica 2개 불가
+- 결과: 3번째 replica 생성 불가 → `degraded` 상태 → CSI 연결 문제
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                Longhorn Replica 분산                     │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  numberOfReplicas: 3                                    │
+│                                                         │
+│  ┌─────────────┐    ┌─────────────┐    ┌──────────┐   │
+│  │ k8s-worker1 │    │ k8s-worker2 │    │    ???   │   │
+│  │  Replica 1  │    │  Replica 2  │    │ Replica 3│   │
+│  │     ✅      │    │     ✅      │    │    ❌    │   │
+│  └─────────────┘    └─────────────┘    └──────────┘   │
+│                                                         │
+│  → 3번째 replica 만들 노드 없음 → degraded              │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### 해결 방법
+
+**Step 1: 기존 볼륨 Replica 수 변경 (kubectl patch)**
+
+```bash
+# 볼륨 1
+kubectl patch volume pvc-1427badd-727a-4907-9005-01b5fb42f727 \
+  -n longhorn-system \
+  --type merge \
+  -p '{"spec":{"numberOfReplicas":2}}'
+
+# 볼륨 2
+kubectl patch volume pvc-ea4dd4e0-dfd3-4161-96b5-b88aad5697b9 \
+  -n longhorn-system \
+  --type merge \
+  -p '{"spec":{"numberOfReplicas":2}}'
+```
+
+**Step 2: Longhorn Helm Values 업데이트 (새 PVC용)**
+
+```bash
+# values.yaml 생성/수정
+cat > ~/k8s-manifests/docs/helm/longhorn/values.yaml << 'EOF'
+defaultSettings:
+  defaultReplicaCount: 2
+EOF
+
+# Helm upgrade
+cd ~/k8s-manifests/docs/helm/longhorn && ./install.sh
+```
+
+**Step 3: Git 커밋**
+
+```bash
+cd ~/k8s-manifests
+git add docs/helm/longhorn/values.yaml
+git commit -m "fix: Set Longhorn defaultReplicaCount to 2 (match node count)"
+git push
+```
+
+---
+
+#### 확인 방법
+
+```bash
+# 1. Volume 상태 확인
+kubectl get volumes.longhorn.io -n longhorn-system
+
+# 예상 결과:
+# NAME          STATE      ROBUSTNESS   SIZE          NODE
+# pvc-xxx       attached   healthy      5368709120    k8s-worker1   ✅
+# pvc-yyy       attached   healthy      10737418240   k8s-worker1   ✅
+
+# 2. CSI Plugin 상태 확인
+kubectl get pods -n longhorn-system | grep csi-plugin
+
+# 예상 결과:
+# longhorn-csi-plugin-bb6t8   3/3   Running   0   1m   ✅
+
+# 3. Replica 확인
+kubectl get replicas.longhorn.io -n longhorn-system
+
+# 각 볼륨당 2개 replica (worker1, worker2에 분산)
+```
+
+---
+
+#### 배운 점
+
+**1. Longhorn Replica 수 = 노드 수 이하로 설정**
+
+| 노드 수 | 권장 Replica 수 | 이유 |
+|---------|----------------|------|
+| 1 | 1 | 분산 불가 |
+| 2 | 2 | 최대 분산 |
+| 3+ | 2~3 | 3개 권장 |
+
+**2. Degraded vs Healthy**
+
+| 상태 | 의미 | 데이터 안전성 |
+|------|------|--------------|
+| **healthy** | 모든 replica 정상 | ✅ 안전 |
+| **degraded** | replica 부족 | ⚠️ 일부만 보호 |
+| **faulted** | 복구 불가 | ❌ 위험 |
+
+**3. Helm Values 관리 중요성**
+
+```
+문제 발생 시:
+1. 기존 리소스: kubectl patch (긴급)
+2. 새 리소스: Helm values 수정 (영구)
+3. Git 커밋: 변경 이력 추적 (필수)
+```
+
+**4. 운영 점검 체크리스트 추가**
+
+```bash
+# Longhorn 상태 확인 (주기적)
+kubectl get volumes.longhorn.io -n longhorn-system
+# → 모두 healthy여야 함
+
+kubectl get pods -n longhorn-system | grep -v Running
+# → 출력 없어야 함
+```
+
+---
+
+### 7.2 StorageClass numberOfReplicas 불일치
+
+**발생일**: 2026-01-22
+
+#### 증상
+
+Longhorn 볼륨은 healthy로 변경됐지만, StorageClass는 여전히 replica 3으로 설정됨.
+
+```bash
+kubectl get storageclass longhorn -o yaml | grep numberOfReplicas
+
+# 출력:
+# numberOfReplicas: "3"  # ← 새 PVC 생성 시 문제 발생
+```
+
+---
+
+#### 해결 방법
+
+**Helm Upgrade로 StorageClass 설정 변경**
+
+```bash
+cd ~/k8s-manifests/docs/helm/longhorn
+./install.sh
+```
+
+**또는 직접 Patch (Helm 사용 안 할 경우)**
+
+```bash
+kubectl patch storageclass longhorn -p '{"parameters":{"numberOfReplicas":"2"}}'
+```
+
+---
+
+#### 확인
+
+```bash
+kubectl get storageclass longhorn -o yaml | grep numberOfReplicas
+
+# 예상:
+# numberOfReplicas: "2"  ✅
+```
+
+---
+
+### 7.3 운영 점검 체크리스트
+
+**Longhorn 상태 확인 명령어**
+
+```bash
+# 1. 전체 Pod 상태
+kubectl get pods -n longhorn-system | grep -v Running
+
+# 2. Volume 상태 (healthy 확인)
+kubectl get volumes.longhorn.io -n longhorn-system
+
+# 3. Replica 분산 확인
+kubectl get replicas.longhorn.io -n longhorn-system
+
+# 4. Node 디스크 상태
+kubectl get nodes.longhorn.io -n longhorn-system -o yaml | grep -A5 "diskStatus"
+
+# 5. StorageClass 설정
+kubectl get storageclass longhorn -o yaml | grep numberOfReplicas
+```
+
+**정상 상태 기준**
+
+| 항목 | 정상 값 |
+|------|--------|
+| CSI Plugin | 3/3 Running |
+| Volume Robustness | healthy |
+| Replica 수 | 노드 수 이하 |
+| Disk Status | schedulable: true |
 
 ---
