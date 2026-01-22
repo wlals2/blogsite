@@ -56,7 +56,7 @@ draft: false
 
 ## 🏗️ 상세 아키텍처
 
-![Homeserver Kubernetes Architecture](/images/architecture/phase4-home-server.png)
+![Homeserver Kubernetes Architecture](/images/architecture/phase4-home-server.webp)
 
 **아키텍처 구성 요소:**
 

@@ -162,7 +162,7 @@ Phase 2에서 Kubernetes로 자동화는 성공했지만:
 
 ### 상세 Multi-Cloud DR 아키텍처
 
-![Phase 3 - Multi-Cloud DR Architecture](/images/architecture/phase3-multicloud-dr-architecture.png)
+![Phase 3 - Multi-Cloud DR Architecture](/images/architecture/phase3-multicloud-dr-architecture.webp)
 
 **아키텍처 구성 요소:**
 

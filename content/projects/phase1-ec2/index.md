@@ -133,7 +133,7 @@ terraform apply (15분)
 
 ### 3-Tier 아키텍처
 
-![Phase 1 - 3-Tier Architecture](/images/architecture/phase1-3tier-architecture.png)
+![Phase 1 - 3-Tier Architecture](/images/architecture/phase1-3tier-architecture.webp)
 
 **아키텍처 구성 요소:**
 

@@ -138,7 +138,7 @@ Phase 2: Kubernetes 기반
 
 ### 상세 아키텍처
 
-![Phase 2 - Kubernetes on EC2 Architecture](/images/architecture/phase2-k8s-architecture.png)
+![Phase 2 - Kubernetes on EC2 Architecture](/images/architecture/phase2-k8s-architecture.webp)
 
 **아키텍처 구성 요소:**
 
