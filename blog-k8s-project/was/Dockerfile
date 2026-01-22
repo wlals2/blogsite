@@ -49,5 +49,21 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# 애플리케이션 실행
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# ==============================================================================
+# JVM 튜닝 옵션 설명
+# ==============================================================================
+# -Xms256m: 최소 힙 256MB (시작 시 할당)
+# -Xmx512m: 최대 힙 512MB (상한선, 메모리 제한)
+# -XX:+UseG1GC: G1 Garbage Collector (짧은 GC pause 목표)
+# -XX:MaxGCPauseMillis=100: GC pause 100ms 이하 목표 (응답성 유지)
+# -XX:+UseContainerSupport: 컨테이너 메모리 제한 인식 (JDK 10+ 기본)
+# ==============================================================================
+
+# 애플리케이션 실행 (JVM 튜닝 적용)
+ENTRYPOINT ["java", \
+  "-Xms256m", \
+  "-Xmx512m", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxGCPauseMillis=100", \
+  "-XX:+UseContainerSupport", \
+  "-jar", "app.jar"]
