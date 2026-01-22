@@ -28,19 +28,31 @@ RUN ./mvnw dependency:go-offline
 # 소스 코드 복사
 COPY src ./src
 
-# Maven 빌드 (테스트 스킵)
-# -DskipTests: 빌드 시간 단축 (CI/CD에서 별도 테스트)
-RUN ./mvnw clean package -DskipTests
+# Maven 빌드 (테스트 포함)
+# 단위 테스트 실행 후 JAR 패키징
+# 테스트 실패 시 빌드 중단 → 결함 코드 프로덕션 배포 방지
+RUN ./mvnw clean package
 
 # ==============================================================================
 # Stage 2: Runtime - JAR 실행
 # ==============================================================================
 FROM eclipse-temurin:17-jre-alpine
 
+# Non-Root User 생성 (보안 강화)
+# - 컨테이너 탈출 시 호스트 root 접근 방지
+# - PodSecurityStandard 준수
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
 
 # Builder 스테이지에서 JAR 파일만 복사
 COPY --from=builder /app/target/*.jar app.jar
+
+# 파일 소유권 변경
+RUN chown -R appuser:appgroup /app
+
+# Non-Root User로 전환
+USER appuser:appgroup
 
 # 포트 노출
 EXPOSE 8080

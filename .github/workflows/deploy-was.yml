@@ -89,6 +89,18 @@ jobs:
           echo "✅ Build verification passed"
 
       # ======================================================================
+      # Step 5.6: Trivy 이미지 보안 스캔 (DevSecOps)
+      # ======================================================================
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+          format: 'table'
+          exit-code: '0'  # 취약점 발견해도 빌드 실패 안 함 (경고만)
+          severity: 'CRITICAL,HIGH'
+          timeout: '5m'
+
+      # ======================================================================
       # Step 6: GitOps - Update Kubernetes Manifest (Stateless)
       # ======================================================================
       # Stateless 방식: 매번 임시 디렉터리로 clone하여 로컬 의존성 제거
