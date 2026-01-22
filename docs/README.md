@@ -4,8 +4,8 @@
 >
 > **프로젝트 목표**: 개인 블로그를 Kubernetes 네이티브 아키텍처로 구축하여 DevOps 실무 경험 습득 및 포트폴리오 구성
 
-**최종 업데이트:** 2026-01-20
-**문서 버전:** 2.1 (ArgoCD 추가)
+**최종 업데이트:** 2026-01-22
+**문서 버전:** 2.2 (Falco IDS 추가)
 **시스템 상태:** ✅ 프로덕션 운영 중 (https://blog.jiminhome.shop/)
 
 ---
@@ -44,9 +44,10 @@ Hugo 정적 사이트 생성기로 만든 개인 블로그를 **Kubernetes 클�
 | **Kubernetes 노드** | 3대 (1 control-plane + 2 workers) |
 | **애플리케이션** | 3개 (WEB, WAS, MySQL) |
 | **Pod 복제본** | WEB 2개, WAS 2개, MySQL 1개 |
-| **네임스페이스** | blog-system, argocd, monitoring |
+| **네임스페이스** | blog-system, argocd, monitoring, falco |
 | **HPA** | WEB (2-5 replicas), WAS (2-10 replicas) |
 | **모니터링** | PLG Stack (55일 운영, 4 Dashboards, 8 Alert Rules) |
+| **보안 모니터링** | Falco IDS (Runtime Security, Loki 연동) |
 | **배포 시간** | 35초 (GitHub Actions) |
 | **월간 트래픽** | ~1,000 방문 (예상) |
 | **운영 비용** | $0 (자체 서버 + 무료 서비스) |
@@ -565,6 +566,8 @@ sudo ./svc.sh start
 | **GHCR** | GitHub | Docker 이미지 저장소 |
 | **MySQL** | 8.0 | WAS 데이터베이스 |
 | **Hugo** | 0.111.3 | 정적 사이트 생성 |
+| **Falco** | 0.42+ (modern-ebpf) | 런타임 보안 모니터링 (IDS) |
+| **Falcosidekick** | latest | Alert 전송 (Loki, WebUI) |
 
 **네트워크 구성:**
 ```
@@ -788,9 +791,10 @@ Pods (Container isolated)
 **보안 레이어:**
 1. **Cloudflare**: L3/L4/L7 공격 차단
 2. **로컬 방화벽**: 443 포트만 외부 노출
-3. **Kubernetes Network Policy**: (미래) Pod 간 통신 제한
-4. **Container Security**: Non-root user, Read-only filesystem
-5. **Secret Management**: Kubernetes Secret으로 민감 정보 관리
+3. **Falco IDS**: 런타임 보안 모니터링 (syscall 기반 침입 탐지)
+4. **Kubernetes Network Policy**: (미래) Pod 간 통신 제한
+5. **Container Security**: Non-root user, Read-only filesystem
+6. **Secret Management**: Kubernetes Secret으로 민감 정보 관리
 
 ---
 
@@ -990,6 +994,34 @@ Pods (Container isolated)
 #### 3. [03-TROUBLESHOOTING.md](03-TROUBLESHOOTING.md) - 트러블슈팅 가이드
 
 **파일 크기:** 16KB (ArgoCD 추가)
+
+#### 4. [security/security-falco.md](security/security-falco.md) - Falco IDS 상세 가이드 🆕
+
+**파일 크기:** 15KB
+**읽는 시간:** 15분
+**최종 업데이트:** 2026-01-22
+
+**담고 있는 내용:**
+
+**📌 Falco IDS 개요**
+- **왜 Falco인가**: 런타임 보안의 필요성, IDS vs IPS 차이
+- **modern-ebpf 드라이버**: Cilium CNI와 충돌 없이 eBPF 사용
+- **탐지 시나리오**: Shell 실행, /etc/shadow 접근, 패키지 매니저 실행 등
+
+**📌 아키텍처**
+- Falco → Falcosidekick → Loki/WebUI 파이프라인
+- gRPC/HTTP 출력 설정
+- Alert 전송 흐름 및 라벨 구조
+
+**📌 실제 사용 방법 ⭐**
+- **Alert 확인 방법 3가지**: Grafana/Loki, Falcosidekick UI, kubectl logs
+- **Loki 쿼리 예제**: `{priority="Warning"}`, `{rule=~".+"}`
+- **테스트 방법**: TTY 조건 (`proc.tty != 0`) 이해
+- **실제 테스트 결과**: 2026-01-22 검증 완료
+
+**📌 트러블슈팅**
+- TTY 문제: `-it` 플래그 필수
+- Loki 라벨 구조: priority, rule, k8s_ns_name, k8s_pod_name 등
 **읽는 시간:** 12-18분
 **최종 업데이트:** 2026-01-20
 
@@ -1314,6 +1346,51 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/7895fe2aef761351db71892
 - ⏳ ArgoCD UI 로그인 및 Application 생성
 - ⏳ Auto-Sync 활성화 및 테스트
 
+### Falco IDS 구축 (2026-01-22 완료) 🆕
+
+**배경:**
+- 런타임 보안 모니터링 필요 (컨테이너 내부 비정상 행위 탐지)
+- Kubernetes 환경에서 침입 탐지 시스템 (IDS) 구축
+- PLG Stack과 통합하여 Alert 중앙화
+
+**Falco IDS 구축 완료:**
+- ✅ **Falco Helm 설치**
+  - Namespace: falco
+  - Driver: modern-ebpf (Cilium CNI와 충돌 없음)
+  - 리소스: CPU 100m-500m, Memory 256Mi-512Mi
+- ✅ **Falcosidekick 설정**
+  - Loki 연동: `http://loki-stack.monitoring.svc.cluster.local:3100`
+  - WebUI 활성화 (Alert 실시간 확인)
+  - minimumpriority: warning
+- ✅ **Loki 연동 검증**
+  - 쿼리: `{priority="Warning"}`, `{rule=~".+"}`
+  - 실제 Alert 수집 확인 (2026-01-22 테스트 완료)
+- ✅ **문서화 완료**
+  - [security/security-falco.md](security/security-falco.md) - 상세 가이드
+  - 02-INFRASTRUCTURE.md, 05-ARCHITECTURE.md 링크 업데이트
+
+**탐지 가능한 보안 이벤트:**
+1. **Shell 실행**: 컨테이너 내 shell spawned (TTY 필요)
+2. **민감 파일 접근**: /etc/shadow, /etc/passwd 읽기
+3. **패키지 매니저 실행**: apk, apt-get 등 (공급망 공격 탐지)
+4. **네트워크 스캔**: 비정상 네트워크 활동
+5. **권한 상승 시도**: Privilege escalation 탐지
+
+**테스트 결과 (2026-01-22):**
+```
+15:18:15.912267839: Warning Sensitive file opened for reading by non-trusted program
+  file=/etc/shadow
+  k8s_pod_name=web-db54c48f5-c6qx8
+  k8s_ns_name=blog-system
+  mitre_credential_access=T1555
+```
+
+**학습 성과:**
+- ✅ **eBPF 기반 syscall 모니터링 이해**: 커널 레벨 탐지
+- ✅ **Falco 룰 조건 이해**: `proc.tty != 0` (TTY 할당 조건)
+- ✅ **IDS vs IPS 개념**: 탐지(Detection) vs 차단(Prevention)
+- ✅ **Loki 라벨 구조**: priority, rule, k8s_ns_name, k8s_pod_name
+
 ### PLG Stack 모니터링 구축 (2024-11-26 ~ 현재 55일 운영)
 
 **배경:**
@@ -1533,6 +1610,6 @@ Copyright (c) 2026 Jimin
 
 ---
 
-**마지막 업데이트:** 2026-01-20
-**문서 버전:** 2.1 (ArgoCD 추가)
+**마지막 업데이트:** 2026-01-22
+**문서 버전:** 2.2 (Falco IDS 추가)
 **프로젝트 상태:** ✅ 프로덕션 운영 중

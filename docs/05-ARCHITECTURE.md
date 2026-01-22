@@ -793,6 +793,7 @@ V2__add_comment_table.sql
 |-----------|--------|------|
 | **argo-rollouts** | argo-rollouts | Canary/Blue-Green 배포 |
 | **cert-manager** | cert-manager | TLS 인증서 관리 |
+| **falco** | falco, falcosidekick | 런타임 보안 (IDS) |
 | **metallb-system** | controller, speaker | LoadBalancer IP 할당 |
 | **ingress-nginx** | ingress-nginx-controller | Nginx Ingress |
 | **kubernetes-dashboard** | dashboard | K8s Web UI |
@@ -807,6 +808,7 @@ V2__add_comment_table.sql
 | Chart | Version | Namespace | Values 위치 |
 |-------|---------|-----------|-------------|
 | **argo-cd** | 9.3.4 | argocd | [argocd/values.yaml](../k8s-manifests/docs/helm/argocd/values.yaml) |
+| **falco** | 0.42.1 | falco | [falco/values.yaml](../k8s-manifests/docs/helm/falco/values.yaml) |
 | **longhorn** | 1.7.2 | longhorn-system | [longhorn/values.yaml](../k8s-manifests/docs/helm/longhorn/values.yaml) |
 | **loki-stack** | 2.10.2 | monitoring | [loki-stack/values.yaml](../k8s-manifests/docs/helm/loki-stack/values.yaml) |
 | **kube-state-metrics** | 5.27.0 | monitoring | [kube-state-metrics/values.yaml](../k8s-manifests/docs/helm/kube-state-metrics/values.yaml) |
@@ -837,6 +839,17 @@ promtail:
 # 기본값으로 설치 (오버라이드 없음)
 ```
 
+**Falco (런타임 보안):**
+```yaml
+driver:
+  kind: modern_ebpf  # Cilium 충돌 방지
+falcosidekick:
+  enabled: true
+  config:
+    loki:
+      hostport: "http://loki-stack.monitoring.svc.cluster.local:3100"
+```
+
 ---
 
 ## 관련 문서
@@ -848,6 +861,7 @@ promtail:
 | [02-INFRASTRUCTURE.md](02-INFRASTRUCTURE.md) | 인프라 구성 |
 | [monitoring/README.md](monitoring/README.md) | 모니터링 설정 |
 | [istio/COMPLETE-ISTIO-ARCHITECTURE.md](istio/COMPLETE-ISTIO-ARCHITECTURE.md) | Istio 아키텍처 |
+| [security/security-falco.md](security/security-falco.md) | Falco 런타임 보안 |
 
 ---
 

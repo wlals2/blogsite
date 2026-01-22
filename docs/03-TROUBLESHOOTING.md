@@ -14,6 +14,7 @@
 6. [ArgoCD 트러블슈팅](#6-argocd-트러블슈팅)
 7. [Longhorn 스토리지 트러블슈팅](#7-longhorn-스토리지-트러블슈팅)
 8. [MySQL 백업 CronJob 트러블슈팅](#8-mysql-백업-cronjob-트러블슈팅)
+9. [Falco 런타임 보안 트러블슈팅](#9-falco-런타임-보안-트러블슈팅)
 
 ---
 
@@ -2422,5 +2423,286 @@ spring.jpa.hibernate.ddl-auto=create-drop
 - Trivy는 Docker 빌드 **후**에 실행됨
 - `exit-code: '0'` 설정으로 경고만 출력
 - 실제 빌드 실패는 Maven 테스트 단계에서 발생
+
+---
+
+## 9. Falco 런타임 보안 트러블슈팅
+
+> Falco (eBPF 기반 IDS) 운영 중 발생하는 이슈와 해결 방법
+
+**관련 문서:** [infrastructure/security-falco.md](infrastructure/security-falco.md)
+
+---
+
+### 9.1 inotify 초기화 실패
+
+#### 증상
+
+```bash
+kubectl logs -n falco -l app.kubernetes.io/name=falco
+
+# 에러 메시지:
+Error: could not initialize inotify handler
+```
+
+**Pod 상태:**
+```bash
+kubectl get pods -n falco
+# NAME           READY   STATUS             RESTARTS
+# falco-xxxxx    0/2     CrashLoopBackOff   5
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Linux 커널의 `inotify` 시스템은 파일 시스템 이벤트를 모니터링합니다. Falco는 룰 파일 변경을 감지하기 위해 inotify를 사용합니다.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  inotify 리소스 제한                                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  max_user_watches    = 감시할 수 있는 파일/디렉터리 수           │
+│  max_user_instances  = 생성할 수 있는 inotify 인스턴스 수        │
+│                                                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  기본값                                                    │  │
+│  │  max_user_watches:    8192                                │  │
+│  │  max_user_instances:  128                                 │  │
+│  │                                                           │  │
+│  │  Kubernetes 환경에서는 부족할 수 있음                      │  │
+│  │  - 다수의 컨테이너 실행                                   │  │
+│  │  - Falco, Prometheus 등 모니터링 도구                     │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 해결 방법
+
+**1. 현재 값 확인:**
+```bash
+# 해당 노드에 SSH 접속 후
+cat /proc/sys/fs/inotify/max_user_watches
+cat /proc/sys/fs/inotify/max_user_instances
+```
+
+**2. 임시 적용 (재부팅 시 초기화):**
+```bash
+sudo sysctl -w fs.inotify.max_user_watches=524288
+sudo sysctl -w fs.inotify.max_user_instances=512
+```
+
+**3. 영구 적용:**
+```bash
+echo "fs.inotify.max_user_watches=524288" | sudo tee -a /etc/sysctl.conf
+echo "fs.inotify.max_user_instances=512" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+**4. Falco Pod 재시작:**
+```bash
+# 특정 노드의 Falco Pod 삭제 (DaemonSet이 재생성)
+kubectl delete pod -n falco -l app.kubernetes.io/name=falco --field-selector spec.nodeName=<노드명>
+```
+
+#### 확인 방법
+
+```bash
+# Pod 상태 확인
+kubectl get pods -n falco -o wide
+# NAME           READY   STATUS    NODE
+# falco-xxxxx    2/2     Running   k8s-worker1  ← 정상
+
+# 로그 확인
+kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | head -20
+```
+
+---
+
+### 9.2 Falcosidekick 연결 실패
+
+#### 증상
+
+```bash
+kubectl logs -n falco deploy/falco-falcosidekick
+
+# 에러 메시지:
+[ERROR] Loki - Post "http://loki-stack.monitoring.svc.cluster.local:3100/loki/api/v1/push": dial tcp: lookup loki-stack.monitoring.svc.cluster.local: no such host
+```
+
+#### 원인 분석
+
+Falcosidekick이 Loki 서비스에 연결할 수 없습니다. 가능한 원인:
+
+1. **Loki 서비스가 실행 중이 아님**
+2. **서비스 이름이 잘못됨**
+3. **Namespace가 다름**
+4. **NetworkPolicy가 차단**
+
+#### 해결 방법
+
+**1. Loki 서비스 확인:**
+```bash
+kubectl get svc -n monitoring | grep loki
+# NAME         TYPE        CLUSTER-IP     PORT(S)
+# loki-stack   ClusterIP   10.96.xxx.xx   3100/TCP
+```
+
+**2. values.yaml 설정 확인:**
+```yaml
+# /home/jimin/k8s-manifests/docs/helm/falco/values.yaml
+falcosidekick:
+  config:
+    loki:
+      hostport: "http://loki-stack.monitoring.svc.cluster.local:3100"
+```
+
+**3. DNS 해상도 테스트:**
+```bash
+kubectl run -it --rm debug --image=busybox --restart=Never -- nslookup loki-stack.monitoring.svc.cluster.local
+```
+
+**4. Helm upgrade (설정 변경 시):**
+```bash
+helm upgrade falco falcosecurity/falco \
+  -n falco \
+  -f /home/jimin/k8s-manifests/docs/helm/falco/values.yaml
+```
+
+---
+
+### 9.3 modern_ebpf 드라이버 실패
+
+#### 증상
+
+```bash
+kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco
+
+# 에러 메시지:
+Error: failed to load modern BPF probe
+```
+
+#### 원인 분석
+
+**커널 버전이 modern_ebpf를 지원하지 않습니다.**
+
+| 드라이버 | 최소 커널 버전 | 비고 |
+|----------|---------------|------|
+| modern_ebpf | 5.8+ | 권장 (CO-RE 기반) |
+| ebpf (classic) | 4.14+ | 폭넓은 호환성 |
+| kmod | 2.6+ | 커널 모듈 필요 |
+
+#### 해결 방법
+
+**1. 커널 버전 확인:**
+```bash
+uname -r
+# 5.8 이상이어야 modern_ebpf 사용 가능
+```
+
+**2. 드라이버 변경 (커널이 5.8 미만인 경우):**
+```yaml
+# values.yaml 수정
+driver:
+  kind: ebpf  # modern_ebpf → ebpf로 변경
+```
+
+**3. Helm upgrade:**
+```bash
+helm upgrade falco falcosecurity/falco \
+  -n falco \
+  -f /home/jimin/k8s-manifests/docs/helm/falco/values.yaml
+```
+
+---
+
+### 9.4 Alert가 Loki에 저장되지 않음
+
+#### 증상
+
+Grafana에서 Falco alert를 조회해도 결과가 없음:
+```
+{job="falco"} | json
+# 결과 없음
+```
+
+#### 확인 순서
+
+**1. Falco가 이벤트를 탐지하는지 확인:**
+```bash
+# 테스트 이벤트 발생 (shell 실행)
+kubectl exec -it $(kubectl get pod -l app=web -o name | head -1) -n blog-system -- /bin/sh -c "exit"
+
+# Falco 로그 확인
+kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -i "terminal"
+```
+
+**2. Falcosidekick 로그 확인:**
+```bash
+kubectl logs -n falco deploy/falco-falcosidekick | tail -20
+# [INFO] Loki - Post OK (204)  ← 정상
+# [ERROR] Loki - ...           ← 문제
+```
+
+**3. Loki에서 직접 확인:**
+```bash
+kubectl port-forward -n monitoring svc/loki-stack 3100:3100 &
+curl -G "http://localhost:3100/loki/api/v1/query" --data-urlencode 'query={job="falco"}'
+```
+
+**4. minimumpriority 확인:**
+```yaml
+# values.yaml
+config:
+  loki:
+    minimumpriority: "warning"  # notice 이하는 전송 안 됨
+```
+
+---
+
+### 9.5 Falco UI 접속 불가
+
+#### 증상
+
+```bash
+kubectl port-forward -n falco svc/falco-falcosidekick-ui 2802:2802
+# 브라우저에서 http://localhost:2802 접속 실패
+```
+
+#### 해결 방법
+
+**1. UI Pod 상태 확인:**
+```bash
+kubectl get pods -n falco | grep ui
+# falco-falcosidekick-ui-xxx   1/1   Running
+```
+
+**2. 서비스 확인:**
+```bash
+kubectl get svc -n falco | grep ui
+# falco-falcosidekick-ui   ClusterIP   10.96.xxx.xx   2802/TCP
+```
+
+**3. UI가 비활성화된 경우:**
+```yaml
+# values.yaml 확인
+falcosidekick:
+  webui:
+    enabled: true  # false면 UI 없음
+```
+
+---
+
+### Quick Reference
+
+| 증상 | 원인 | 해결 |
+|------|------|------|
+| `CrashLoopBackOff` + inotify 에러 | inotify 제한 | sysctl 설정 증가 |
+| Loki no such host | DNS/서비스 문제 | Loki 서비스 확인 |
+| BPF probe 실패 | 커널 버전 낮음 | ebpf 드라이버로 변경 |
+| Alert 없음 | priority 필터 | minimumpriority 확인 |
+| UI 접속 불가 | UI 비활성화 | webui.enabled: true |
 
 ---

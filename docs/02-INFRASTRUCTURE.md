@@ -1358,3 +1358,35 @@ kubectl logs -n monitoring -l app=grafana
 2. ~~MetalLB 구축~~ ✅ (완료)
 3. cert-manager 구축 (SSL 자동화)
 4. PLG Stack 모니터링 구축
+
+---
+
+## 런타임 보안 (Falco)
+
+### 상태: ✅ 구축 완료 (2026-01-22)
+
+**Falco**는 eBPF 기반 런타임 보안 도구로, 컨테이너에서 이상 행위를 탐지합니다.
+
+| 항목 | 값 |
+|------|-----|
+| **버전** | 0.42.1 |
+| **모드** | IDS (탐지만) |
+| **드라이버** | modern_ebpf |
+| **Alert 전송** | Loki, Slack (선택) |
+
+**주요 탐지 항목:**
+- 컨테이너 내 shell 실행
+- 민감 파일 읽기/쓰기 (/etc/shadow, /etc/passwd)
+- 패키지 관리자 실행 (apt, yum)
+- 비정상 네트워크 연결
+
+**상세 문서:** [security/security-falco.md](security/security-falco.md)
+
+**확인 명령:**
+```bash
+# Pod 상태
+kubectl get pods -n falco
+
+# UI 접속
+kubectl port-forward -n falco svc/falco-falcosidekick-ui 2802:2802
+```
