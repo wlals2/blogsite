@@ -226,6 +226,238 @@ draft: false
 
 ---
 
+## 📚 핵심 기술 상세
+
+### 전체 DevSecOps 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         External Traffic (HTTPS)                            │
+│                               blog.jiminhome.shop                           │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    ↓
+┌───────────────────────────────────────────────────────────────────────────────┐
+│  ☁️ Cloudflare (CDN + WAF + Tunnel)                                          │
+│  ├─ DDoS Protection (Layer 3/4/7)                                            │
+│  ├─ WAF Rules (SQL Injection, XSS 차단)                                      │
+│  └─ Tunnel → NodePort 30080                                                  │
+└───────────────────────────────────┬───────────────────────────────────────────┘
+                                    ↓
+┌───────────────────────────────────────────────────────────────────────────────┐
+│  🌐 Kubernetes Cluster (Bare-metal, kubeadm v1.31.13)                        │
+│  ├─ Control Plane (1) + Workers (2)                                          │
+│  └─ CNI: Cilium eBPF (kube-proxy 미대체, Hubble Observability)               │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 📦 Namespace: ingress-nginx                                             │ │
+│  │ ├─ nginx-ingress-controller                                             │ │
+│  │ ├─ Path Routing: / → web, /api → was, /board → was                      │ │
+│  │ └─ NodePort 30080                                                       │ │
+│  └───────────────────────────────────┬─────────────────────────────────────┘ │
+│                                      ↓                                       │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 📦 Namespace: blog-system                              [Istio Mesh]     │ │
+│  │ ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐      │ │
+│  │ │   web-rollout   │    │   was-rollout   │    │  mysql-stateful │      │ │
+│  │ │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │      │ │
+│  │ │ │ nginx       │ │    │ │ Spring Boot │ │    │ │ MySQL 8.0   │ │      │ │
+│  │ │ │ Hugo Static │ │    │ │ board-was   │ │    │ │ PVC 5Gi     │ │      │ │
+│  │ │ ├─────────────┤ │    │ ├─────────────┤ │    │ │ (no sidecar)│ │      │ │
+│  │ │ │istio-proxy  │◀─mTLS─▶│istio-proxy  │ │    │ └─────────────┘ │      │ │
+│  │ │ │ (sidecar)   │ │    │ │ (sidecar)   │◀JDBC▶│     plain      │      │ │
+│  │ │ └─────────────┘ │    │ └─────────────┘ │    └─────────────────┘      │ │
+│  │ │ HPA: 2-5       │    │ HPA: 2-10       │                             │ │
+│  │ │ Canary Deploy  │    │ Canary + Istio  │                             │ │
+│  │ └─────────────────┘    └─────────────────┘                             │ │
+│  │                                                                        │ │
+│  │ 🛡️ Security Layer:                                                     │ │
+│  │ ├─ PeerAuthentication (PERMISSIVE mTLS)                                │ │
+│  │ ├─ DestinationRule (mTLS ISTIO_MUTUAL)                                 │ │
+│  │ ├─ AuthorizationPolicy (Zero Trust)                                    │ │
+│  │ └─ CiliumNetworkPolicy (L3/L4 filtering)                               │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 📦 Namespace: monitoring (PLG Stack)                                    │ │
+│  │ ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐        │ │
+│  │ │ Prometheus │  │   Loki     │  │  Grafana   │  │Pushgateway │        │ │
+│  │ │ 50Gi       │  │ 10Gi       │  │ 10Gi       │  │ 5Gi        │        │ │
+│  │ │ 15d retain │  │ 7d retain  │  │ 4 Dashboard│  │ Batch Job  │        │ │
+│  │ │ 8 Alerts   │  │ Promtail   │  │ Alert View │  │ Metrics    │        │ │
+│  │ └────────────┘  └────────────┘  └────────────┘  └────────────┘        │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 📦 Namespace: falco (Runtime Security)                                  │ │
+│  │ ┌────────────┐  ┌────────────┐                                         │ │
+│  │ │   Falco    │  │Falcosidekick│──────────────────▶ Loki               │ │
+│  │ │  DaemonSet │  │ (forwarder) │                                        │ │
+│  │ │ eBPF probes│  │             │                                        │ │
+│  │ └────────────┘  └────────────┘                                         │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 📦 Namespace: argocd (GitOps CD)                                        │ │
+│  │ ├─ ArgoCD Server (Auto-Sync, Prune, SelfHeal)                          │ │
+│  │ └─ Git Source: github.com/wlals2/k8s-manifests                         │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 📦 Namespace: argo-rollouts                                             │ │
+│  │ ├─ Rollouts Controller                                                  │ │
+│  │ └─ Canary + Istio Traffic Routing                                       │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ 💾 Storage Layer                                                        │ │
+│  │ ├─ Longhorn (15Gi): MySQL PVC (3 replica, 복제)                         │ │
+│  │ └─ Local-path (75Gi): Prometheus, Grafana, Pushgateway                  │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+                                    ↑
+┌───────────────────────────────────────────────────────────────────────────────┐
+│  🔄 CI/CD Pipeline (GitHub Actions Self-hosted Runner)                       │
+│  ├─ blogsite repo (Hugo) → Docker Build → GHCR Push → k8s-manifests 업데이트 │
+│  └─ ArgoCD Auto-Sync (3초) → Argo Rollouts Canary → 35초 배포 완료           │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**아키텍처 계층별 역할:**
+
+| 계층 | 기술 | 역할 |
+|------|------|------|
+| **Edge** | Cloudflare | DDoS 방어, WAF, CDN, Tunnel |
+| **Ingress** | nginx-ingress | L7 라우팅, SSL Termination |
+| **Service Mesh** | Istio | mTLS, Traffic Routing, AuthZ |
+| **CNI** | Cilium | eBPF 네트워킹, Hubble Observability |
+| **Runtime Security** | Falco | eBPF IDS, 이상 행위 탐지 |
+| **Monitoring** | PLG Stack | 메트릭, 로그, 대시보드, 알람 |
+| **GitOps** | ArgoCD | 자동 동기화, Rollback, SelfHeal |
+| **Deployment** | Argo Rollouts | Canary 배포, 트래픽 라우팅 |
+| **Storage** | Longhorn + Local-path | 분산 스토리지 (90Gi) |
+
+---
+
+### Istio Service Mesh 핵심
+
+**mTLS 트래픽 플로우:**
+```
+[External Traffic]
+       ↓ HTTPS
+[Nginx Ingress Controller]
+       ↓ HTTP (plain text)
+[web pod]
+ ├─ nginx (reverse proxy)
+ ├─ istio-proxy (sidecar)
+       ↓ mTLS (encrypted) ← 자동 암호화
+[was pod]
+ ├─ Spring Boot WAS
+ ├─ istio-proxy (sidecar)
+       ↓ plain text (JDBC)
+[mysql] ← mesh 제외
+```
+
+**주요 구성:**
+
+| 리소스 | 개수 | 역할 |
+|--------|------|------|
+| PeerAuthentication | 2개 | mTLS 모드 설정 (PERMISSIVE) |
+| DestinationRule | 3개 | 서비스별 mTLS 강제 |
+| VirtualService | 1개 | L7 트래픽 라우팅 |
+| AuthorizationPolicy | 2개 | Zero Trust 접근 제어 |
+
+**왜 PERMISSIVE인가?**
+- Nginx Ingress는 mesh 외부에서 동작
+- STRICT 설정 시 Ingress → web 통신에서 502 에러 발생
+- PERMISSIVE로 plain text + mTLS 둘 다 허용
+
+**nginx Host 헤더 문제 해결:**
+```nginx
+# Before (문제)
+proxy_set_header Host $host;  # → blog.jiminhome.shop
+
+# After (해결)
+proxy_set_header Host was-service;  # 서비스명으로 변경
+```
+
+---
+
+### Cilium eBPF 핵심
+
+**kube-proxy vs Cilium eBPF 비교:**
+
+| 항목 | kube-proxy | Cilium eBPF |
+|------|------------|-------------|
+| **구현** | iptables 규칙 | eBPF 프로그램 |
+| **성능** | 보통 | **30-40% 빠름** |
+| **Latency** | 보통 | **30% 감소** |
+| **CPU 사용량** | 보통 | **낮음** |
+| **Service 타입** | ClusterIP, NodePort, LB | 모두 + DSR 지원 |
+
+**현재 선택: kube-proxy 유지**
+- 로컬 클러스터 환경 (3노드)
+- 실험 및 학습 목적
+- 안정성 우선 (불필요한 리스크 회피)
+- Hubble UI/Relay로 충분한 Observability 확보
+
+**Hubble 네트워크 관찰:**
+```bash
+# 실시간 트래픽 관찰
+hubble observe --namespace blog-system
+
+# mTLS 상태 확인
+hubble observe --verdict FORWARDED | grep ENCRYPTED
+```
+
+---
+
+### Falco Runtime Security 핵심
+
+**eBPF 기반 IDS 아키텍처:**
+```
+[Kernel Space]
+     ↑ eBPF probes
+[Falco Engine]
+     ↓ Alerts
+[Falcosidekick]
+     ↓ Forward
+[Loki] → [Grafana Dashboard]
+```
+
+**주요 탐지 규칙:**
+
+| 규칙 | 심각도 | 탐지 대상 |
+|------|--------|----------|
+| Terminal shell in container | Warning | 컨테이너 내 쉘 접근 |
+| Drop and execute new binary | Critical | 새 바이너리 실행 |
+| Sensitive file access | Warning | /etc/passwd 등 접근 |
+| Network tool in container | Notice | curl, wget 실행 |
+
+**False Positive 처리 (BuildKit):**
+```yaml
+# BuildKit 예외 규칙
+customRules:
+  blog-rules.yaml: |-
+    - rule: Drop and execute new binary in container
+      append: true
+      exceptions:
+        - name: buildkit_binaries
+          fields: [container.image.repository]
+          values: [[moby/buildkit]]
+```
+
+**Quick Reference:**
+
+| 증상 | 원인 | 해결 |
+|------|------|------|
+| CrashLoopBackOff + inotify | inotify 제한 | sysctl 설정 증가 |
+| Loki no such host | DNS/서비스 | Loki 서비스 확인 |
+| BPF probe 실패 | 커널 버전 | ebpf 드라이버 변경 |
+
+---
+
 ## 🔧 주요 트러블슈팅
 
 실제 운영 중 발생한 문제들과 해결 과정:
@@ -237,6 +469,223 @@ draft: false
 | Cloudflare 캐시 미삭제 | ZONE_ID Secret 누락 | [해결 가이드](/study/2026-01-23-cloudflare-cache-purge-fail/) |
 | Docker 빌드 실패 | .gitignore 문제 | [해결 가이드](/study/2026-01-23-was-docker-build-path-error/) |
 | Canary Pod Pending | TopologySpread 충돌 | [해결 가이드](/study/2026-01-23-canary-topology-spread/) |
+
+### 트러블슈팅 상세 기록
+
+#### 1. kubectl Connection Refused (Self-hosted Runner)
+
+**문제**: GitHub Actions에서 kubectl 명령 실행 시 Connection Refused
+```
+Error: The connection to the server xxx:6443 was refused
+```
+
+**원인 분석**:
+- GitHub Actions Default Runner는 Azure 데이터센터에서 실행
+- Private K8s 클러스터의 API Server는 외부 접근 불가
+- kubeconfig의 server 주소가 내부 IP (192.168.x.x)
+
+**해결 방법**: Self-hosted Runner 구축
+```bash
+# Runner 설치 (k8s 노드에서)
+mkdir actions-runner && cd actions-runner
+curl -o actions-runner-linux-x64-2.311.0.tar.gz -L \
+  https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
+./config.sh --url https://github.com/wlals2/k8s-manifests --token XXX
+./run.sh
+```
+
+**결과**:
+- Before: Connection Refused (외부 Runner)
+- After: 정상 연결 (Self-hosted Runner, kubectl 직접 실행)
+
+---
+
+#### 2. kubectl이 HTML을 반환하는 문제
+
+**문제**: kubectl 명령 결과로 HTML 페이지 반환
+```bash
+$ kubectl get pods
+<!DOCTYPE html>
+<html>
+<head><title>403 Forbidden</title>...
+```
+
+**원인**: kubeconfig가 프록시 서버를 가리킴 (Cloudflare Tunnel)
+
+**진단**:
+```bash
+# kubeconfig 확인
+cat ~/.kube/config | grep server
+# server: https://blog.jiminhome.shop:443  ← 잘못됨!
+
+# 정상 설정
+# server: https://192.168.122.10:6443
+```
+
+**해결**: 올바른 kubeconfig 설정
+```bash
+# Control Plane에서 kubeconfig 복사
+scp control-plane:/etc/kubernetes/admin.conf ~/.kube/config
+
+# server 주소 확인
+server: https://192.168.122.10:6443  # 내부 IP
+```
+
+---
+
+#### 3. ArgoCD 트러블슈팅 모음
+
+**문제 1: OutOfSync 무한 반복**
+```
+App Status: OutOfSync → Synced → OutOfSync (반복)
+```
+
+**원인**: kubectl로 직접 수정 → SelfHeal이 Git으로 되돌림
+
+**해결**: Git을 통해서만 수정 (kubectl edit 사용 금지)
+
+---
+
+**문제 2: Sync 실패 (Health Check 실패)**
+```
+SyncFailed: one or more objects failed to apply
+```
+
+**원인**: Pod가 Ready 상태 도달 전에 Health Check 실패
+
+**해결**: Health Check Timeout 증가
+```yaml
+spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+  # Health check 재시도 설정
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+```
+
+---
+
+#### 4. Canary Pod Pending (TopologySpread 충돌)
+
+**문제**: Canary 배포 시 새 Pod가 Pending 상태 유지
+```
+Events:
+  Warning  FailedScheduling  0/3 nodes are available:
+  1 node(s) didn't match pod topology spread constraints
+```
+
+**원인**: TopologySpread + 동적 Replica 수 충돌
+- `whenUnsatisfiable: DoNotSchedule` 설정
+- Canary 배포 시 Replica가 늘어나면 spread 제약 위반
+
+**해결 1: ScheduleAnyway 사용**
+```yaml
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway  # DoNotSchedule → ScheduleAnyway
+```
+
+**해결 2: dynamicStableScale 활성화** (Argo Rollouts)
+```yaml
+spec:
+  strategy:
+    canary:
+      dynamicStableScale: true  # Stable replica 동적 조정
+```
+
+---
+
+#### 5. GitHub Actions Runner Job 미실행
+
+**문제**: Runner 상태는 Active인데 Job이 실행되지 않음
+```
+Waiting for a self-hosted runner to pick up this job...
+```
+
+**원인**: Runner Label 불일치
+
+**진단**:
+```bash
+# Workflow의 runs-on
+runs-on: self-hosted
+
+# Runner 실제 label
+./config.sh --labels self-hosted,linux,x64
+```
+
+**해결**: Label 정확히 매칭
+```yaml
+# workflow.yml
+runs-on: [self-hosted, linux, x64]
+```
+
+---
+
+#### 6. Longhorn CSI CrashLoopBackOff
+
+**문제**: longhorn-csi-plugin Pod가 CrashLoopBackOff
+```
+Error: rpc error: code = Internal
+desc = fail to create longhorn client
+```
+
+**원인**: Longhorn Manager가 아직 Ready가 아닌 상태에서 CSI 시작
+
+**해결**: Longhorn 재설치 순서
+```bash
+# 1. Longhorn 삭제
+kubectl delete ns longhorn-system --grace-period=0 --force
+
+# 2. 남은 리소스 정리
+kubectl get crd | grep longhorn | xargs kubectl delete crd
+
+# 3. Helm으로 재설치
+helm install longhorn longhorn/longhorn --namespace longhorn-system --create-namespace
+
+# 4. Manager Ready 확인 후 CSI 확인
+kubectl wait --for=condition=Ready pod -l app=longhorn-manager -n longhorn-system --timeout=300s
+```
+
+---
+
+#### 7. MySQL 백업 CronJob (Cilium + Istio 환경)
+
+**문제**: CronJob Pod가 S3 업로드 실패
+```
+Error: unable to connect to s3.amazonaws.com
+```
+
+**원인**: CiliumNetworkPolicy가 egress 트래픽 차단
+
+**해결**: egress 규칙 추가
+```yaml
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: mysql-backup-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: mysql-backup
+  egress:
+    - toFQDNs:
+        - matchPattern: "*.amazonaws.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+```
+
+**Istio Sidecar 문제**:
+- CronJob에 sidecar가 inject되면 Job이 종료되지 않음
+- `sidecar.istio.io/inject: "false"` annotation 필수
 
 ---
 
