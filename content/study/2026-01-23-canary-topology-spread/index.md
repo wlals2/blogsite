@@ -3,7 +3,7 @@ title: "Canary 배포에서 Pod가 Pending 되는 문제"
 date: 2026-01-23
 description: "TopologySpreadConstraints + Argo Rollouts Canary 배포에서 발생한 삽질 기록"
 tags: ["kubernetes", "argo-rollouts", "canary", "troubleshooting"]
-categories: ["posts"]
+categories: ["study"]
 ---
 
 ## 상황

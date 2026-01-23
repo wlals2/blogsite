@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(kubectl:*)"
+      "Bash(kubectl:*)",
+      "Read(//etc/nginx/sites-available/**)"
     ]
   }
 }
