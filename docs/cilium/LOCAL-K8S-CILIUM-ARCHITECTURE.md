@@ -328,10 +328,10 @@ http:
         ┌────────────────┼────────────────┐
         │                │                │
    ┌────▼────┐      ┌────▼────┐     ┌────▼────┐
-   │ Cilium  │      │ Cilium  │     │ Cilium  │
-   │ Agent   │      │ Agent   │     │ Agent   │
-   └─────────┘      └─────────┘     └─────────┘
-     k8s-cp          worker1          worker2
+   │ Cilium  │      │ Cilium  │     │ Cilium  │     │ Cilium  │
+   │ Agent   │      │ Agent   │     │ Agent   │     │ Agent   │
+   └─────────┘      └─────────┘     └─────────┘     └─────────┘
+     k8s-cp          worker1          worker2          worker3
 ```
 
 **현재 상태**: ConfigMap에서 enable-hubble: true 설정되었지만, Hubble Relay/UI는 미배포

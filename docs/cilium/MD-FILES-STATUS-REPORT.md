@@ -77,7 +77,7 @@
 ### LOCAL-K8S-CILIUM-ARCHITECTURE.md (573 lines)
 
 **포함 내용**:
-1. 로컬 K8s 클러스터 상태 (3 노드)
+1. 로컬 K8s 클러스터 상태 (4 노드 - 문서 작성 당시 3노드)
 2. Cilium v1.18.4 구성
 3. Cilium 컴포넌트 (Agent, Envoy, Operator)
 4. 네트워크 동작 원리 (VXLAN Tunnel)

@@ -284,7 +284,7 @@ spec:
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway  # 2-worker 클러스터 호환
+          whenUnsatisfiable: ScheduleAnyway  # 3-worker 클러스터 호환
       containers:
       - name: nginx
         image: ghcr.io/wlals2/blog-web:v60  # Private Registry
@@ -1648,13 +1648,13 @@ kubectl logs -n monitoring -l app=grafana
 - ✅ Cloudflare Tunnel: blog.jiminhome.shop, argocd.jiminhome.shop
 
 **Kubernetes:**
-- ✅ 3-node 클러스터 (k8s-cp, k8s-worker1, k8s-worker2)
+- ✅ 4-node 클러스터 (k8s-cp, k8s-worker1, k8s-worker2, k8s-worker3)
 - ✅ Namespace: blog-system, argocd, monitoring
 - ✅ **Argo Rollouts**: web (Canary 배포, Istio 트래픽 분할)
 - ✅ Deployments: was (v1, 2 replicas), mysql (1 replica)
 - ✅ Ingress: nginx-ingress (LoadBalancer via MetalLB)
 - ✅ MetalLB: 192.168.X.200 (LoadBalancer IP)
-- ✅ **TopologySpread**: ScheduleAnyway (2-worker 클러스터 호환)
+- ✅ **TopologySpread**: ScheduleAnyway (3-worker 클러스터 호환)
 - ✅ **HPA**: was-hpa (2-10 replicas, CPU 70%/Memory 80%), web-hpa (2-5 replicas, CPU 60%)
 - ✅ **Private GHCR**: imagePullSecrets (ghcr-secret) - 이미지 무단 접근 방지 (2026-01-23)
 

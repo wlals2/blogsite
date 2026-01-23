@@ -591,7 +591,7 @@ tocopen: true
 
 ### Project 1: 홈서버 Kubernetes (이 블로그)
 - 목적: 베어메탈 K8s 학습 + 블로그 운영
-- 환경: 홈서버 (3노드 클러스터)
+- 환경: 홈서버 (4노드 클러스터)
 - 애플리케이션: Hugo 블로그 + Spring Boot 게시판
 - 비용: 무료 (전기료만)
 - 운영: 58일+
@@ -795,7 +795,7 @@ jobs:
   <h3>🏠 홈서버 인프라</h3>
   <div class="highlight-box">
     <strong>이 블로그는 홈서버 Kubernetes Pod에서 운영 중입니다!</strong>
-    베어메탈 K8s 클러스터 직접 구축 (3노드) · Hugo Blog Pod
+    베어메탈 K8s 클러스터 직접 구축 (4노드) · Hugo Blog Pod
     <span class='metric-badge' data-count='58' data-suffix='일'>0일</span> 무중단 운영 중
     <a href="/architecture/">📐 전체 아키텍처 보기 →</a>
   </div>
