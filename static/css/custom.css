@@ -656,6 +656,53 @@
 }
 
 /* ========================================
+   📦 코드 블록 스타일 (너비 문제 수정)
+   ======================================== */
+
+/* 코드 블록 너비 100% 적용 */
+pre {
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    border-radius: 8px;
+    margin: 16px 0;
+}
+
+/* 인라인 코드가 아닌 블록 코드 */
+.post-content pre,
+.entry-content pre,
+article pre {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* highlight (Hugo 코드 하이라이팅) */
+.highlight {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 16px 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.highlight pre {
+    margin: 0;
+    border-radius: 8px;
+}
+
+/* blockquote 너비 수정 */
+blockquote {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 16px 0;
+    padding: 12px 20px;
+    border-left: 4px solid var(--primary);
+    background: var(--code-bg);
+    border-radius: 0 8px 8px 0;
+}
+
+/* ========================================
    📊 테이블 반응형 스타일
    ======================================== */
 
