@@ -31,15 +31,15 @@
 
 ```bash
 # Windows (PowerShell 관리자 권한)
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.1.200 monitoring.jiminhome.shop"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.X.200 monitoring.jiminhome.shop"
 
 # Linux/Mac
-echo "192.168.1.200 monitoring.jiminhome.shop" | sudo tee -a /etc/hosts
+echo "192.168.X.200 monitoring.jiminhome.shop" | sudo tee -a /etc/hosts
 ```
 
 ### 3. 접근 제한
 
-- **허용 네트워크**: 192.168.1.0/24
+- **허용 네트워크**: 192.168.X.0/24
 - **외부 접근**: 차단 (403 Forbidden)
 
 ---
@@ -77,9 +77,9 @@ echo "192.168.1.200 monitoring.jiminhome.shop" | sudo tee -a /etc/hosts
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  External (192.168.1.0/24)                      │
+│  External (192.168.X.0/24)                      │
 │                                                 │
-│  Windows PC (192.168.1.195)                    │
+│  Windows PC (192.168.X.195)                    │
 │      ↓ DNS: monitoring.jiminhome.shop          │
 │      ↓ hosts file                              │
 └──────┼──────────────────────────────────────────┘
@@ -89,8 +89,8 @@ echo "192.168.1.200 monitoring.jiminhome.shop" | sudo tee -a /etc/hosts
 │  Kubernetes Cluster                              │
 │                                                  │
 │  ┌────────────────────────────────┐             │
-│  │  Ingress (192.168.1.200)       │             │
-│  │  - IP Whitelist: 192.168.1.0/24│             │
+│  │  Ingress (192.168.X.200)       │             │
+│  │  - IP Whitelist: 192.168.X.0/24│             │
 │  └────────┬───────────────────────┘             │
 │           │                                       │
 │  ┌────────┴───────────────────┐                 │

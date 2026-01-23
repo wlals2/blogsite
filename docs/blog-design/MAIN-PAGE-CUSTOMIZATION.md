@@ -360,7 +360,7 @@ function animateCounter(element) {
 
 **왜 수정했나?**
 - Hugo의 `absURL` 함수는 `http://localhost:1313/css/custom.css` 같은 **절대 URL** 생성
-- 사용자가 `192.168.1.187:1313`로 접속하면 Hugo는 여전히 `localhost` URL 생성
+- 사용자가 `192.168.X.187:1313`로 접속하면 Hugo는 여전히 `localhost` URL 생성
 - 브라우저가 잘못된 도메인으로 요청하고 **취소(cancelled)** 처리
 - `/css/custom.css` 같은 **루트 상대 경로**를 사용하면 어떤 도메인으로 접속해도 작동
 
@@ -428,7 +428,7 @@ animations.js Status: (cancelled)  Type: script
 
 **원인**:
 - `absURL` 함수가 `http://localhost:1313/css/custom.css` 생성
-- 사용자가 `192.168.1.187:1313`로 접속
+- 사용자가 `192.168.X.187:1313`로 접속
 - 브라우저가 `localhost`로 요청 → 실패 → 취소
 
 **해결**:

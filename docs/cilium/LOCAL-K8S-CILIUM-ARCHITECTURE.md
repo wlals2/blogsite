@@ -24,7 +24,7 @@
 │  │ Control      │   │ Worker Node  │   │ Worker Node  │   │
 │  │ Plane        │   │              │   │              │   │
 │  └──────────────┘   └──────────────┘   └──────────────┘   │
-│   192.168.1.187      192.168.1.61       192.168.1.62      │
+│   192.168.X.187      192.168.X.61       192.168.X.62      │
 │                                                             │
 │  CNI: Cilium v1.18.4 (DaemonSet on all nodes)             │
 │  Container Runtime: containerd 2.1.5                        │
@@ -36,9 +36,9 @@
 
 | 노드 | 역할 | 상태 | IP | 이유 |
 |------|------|------|----|------|
-| **k8s-cp** | Control Plane | ✅ Ready | 192.168.1.187 | 정상 |
-| **k8s-worker1** | Worker | ❌ NotReady | 192.168.1.61 | Kubelet stopped |
-| **k8s-worker2** | Worker | ❌ NotReady | 192.168.1.62 | Kubelet stopped |
+| **k8s-cp** | Control Plane | ✅ Ready | 192.168.X.187 | 정상 |
+| **k8s-worker1** | Worker | ❌ NotReady | 192.168.X.61 | Kubelet stopped |
+| **k8s-worker2** | Worker | ❌ NotReady | 192.168.X.62 | Kubelet stopped |
 
 **문제**: Worker 노드들이 4일 21시간 전부터 연결 끊김 (물리적 다운 또는 네트워크 단절)
 
@@ -183,8 +183,8 @@ Pod A (10.0.0.10)                         Pod B (10.0.2.20)
    │   └─ VXLAN 캡슐화                        │
    │                                          │
    └───► VXLAN Tunnel (UDP 8472) ────────────┼─► Cilium Agent (eBPF)
-       (외부 IP: 192.168.1.187)               │   ├─ VXLAN 역캡슐화
-        → (외부 IP: 192.168.1.61)             │   ├─ 정책 검사
+       (외부 IP: 192.168.X.187)               │   ├─ VXLAN 역캡슐화
+        → (외부 IP: 192.168.X.61)             │   ├─ 정책 검사
                                               │   └─ Pod B로 전달
                                               │
                                               └─► Pod B
@@ -192,7 +192,7 @@ Pod A (10.0.0.10)                         Pod B (10.0.2.20)
 
 **VXLAN 터널**:
 - Overlay 네트워크 구성
-- Pod CIDR (10.0.0.0/8)과 노드 IP (192.168.1.x) 분리
+- Pod CIDR (10.0.0.0/8)과 노드 IP (192.168.X.x) 분리
 - UDP 8472 포트 사용
 - 클러스터 외부 네트워크 변경 없이 Pod 네트워킹 가능
 
@@ -437,8 +437,8 @@ spec:
 **해결 방법**:
 ```bash
 # 1. Worker 노드 물리적 접근
-ssh 192.168.1.61  # k8s-worker1
-ssh 192.168.1.62  # k8s-worker2
+ssh 192.168.X.61  # k8s-worker1
+ssh 192.168.X.62  # k8s-worker2
 
 # 2. Kubelet 서비스 확인
 sudo systemctl status kubelet

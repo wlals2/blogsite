@@ -836,12 +836,12 @@ cp /path/to/image.png /home/jimin/blogsite/static/images/architecture/phase1-3ti
 
 ### 3. Hugo 서버 localhost 리다이렉트 문제
 
-**증상**: `192.168.1.187:1313` 접속 시 `localhost:1313`으로 리다이렉트
+**증상**: `192.168.X.187:1313` 접속 시 `localhost:1313`으로 리다이렉트
 
 **해결**:
 ```bash
 # 명시적 baseURL 지정
-hugo server -p 1313 --bind 0.0.0.0 --baseURL http://192.168.1.187:1313/ --disableFastRender
+hugo server -p 1313 --bind 0.0.0.0 --baseURL http://192.168.X.187:1313/ --disableFastRender
 ```
 
 ### 4. Cloudflare 캐시가 삭제되지 않을 때
@@ -903,7 +903,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/p
 - [ ] 이미지 최적화 (크기, 포맷)
 
 ### 4. 배포 확인
-- [ ] Hugo 서버에서 로컬 테스트 (`http://192.168.1.187:1313/`)
+- [ ] Hugo 서버에서 로컬 테스트 (`http://192.168.X.187:1313/`)
 - [ ] Git commit & push
 - [ ] GitHub Actions 워크플로우 성공 확인
 - [ ] 프로덕션 사이트 확인 (`https://blog.jiminhome.shop/`)

@@ -20,9 +20,9 @@
 **접속 정보**:
 ```
 Hubble UI (웹 대시보드):
-- http://192.168.1.187:31234 (k8s-cp)
-- http://192.168.1.61:31234 (k8s-worker1)
-- http://192.168.1.62:31234 (k8s-worker2)
+- http://192.168.X.187:31234 (k8s-cp)
+- http://192.168.X.61:31234 (k8s-worker1)
+- http://192.168.X.62:31234 (k8s-worker2)
 
 Hubble CLI:
 hubble observe --server localhost:4245
@@ -146,7 +146,7 @@ Cilium이 kube-proxy의 역할을 eBPF로 대체하여 성능을 향상시킵니
      --namespace kube-system \
      --reuse-values \
      --set kubeProxyReplacement=true \
-     --set k8sServiceHost=192.168.1.187 \
+     --set k8sServiceHost=192.168.X.187 \
      --set k8sServicePort=6443
    ```
 
@@ -218,7 +218,7 @@ Cilium이 kube-proxy의 역할을 eBPF로 대체하여 성능을 향상시킵니
 |------|------|----------|
 | **Cilium** | v1.18.4 | 동일 |
 | **Hubble Relay** | ✅ Running (1 replica) | 네트워크 플로우 수집 |
-| **Hubble UI** | ✅ Running (http://192.168.1.187:31234) | 웹 대시보드 |
+| **Hubble UI** | ✅ Running (http://192.168.X.187:31234) | 웹 대시보드 |
 | **Hubble CLI** | ✅ v1.18.5 설치 | CLI로 네트워크 플로우 조회 |
 | **관측성** | 🔥 **대폭 향상** | 실시간 네트워크 모니터링 |
 | **kube-proxy** | 사용 중 (대체 검토 중) | 안정성 우선 |
@@ -229,7 +229,7 @@ Cilium이 kube-proxy의 역할을 eBPF로 대체하여 성능을 향상시킵니
 
 ### 1. Hubble UI 웹 대시보드
 
-**접속**: http://192.168.1.187:31234
+**접속**: http://192.168.X.187:31234
 
 **기능**:
 - ✅ Service Dependency Map (어떤 Pod가 어디에 연결되는지)
@@ -331,7 +331,7 @@ jq -r '.flow | select(.verdict == "DROPPED") | "\(.time) \(.source.pod_name) -> 
 ### 1. Hubble UI 접속 및 탐색 ✅
 ```bash
 # 브라우저에서 접속
-http://192.168.1.187:31234
+http://192.168.X.187:31234
 ```
 
 ### 2. NetworkPolicy 테스트 (선택)

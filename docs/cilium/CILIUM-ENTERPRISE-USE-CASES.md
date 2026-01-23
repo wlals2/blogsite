@@ -470,7 +470,7 @@ ipv4NativeRoutingCIDR: 10.0.0.0/8
 
 # kube-proxy 대체
 kubeProxyReplacement: "true"
-k8sServiceHost: 192.168.1.187  # API Server IP
+k8sServiceHost: 192.168.X.187  # API Server IP
 k8sServicePort: 6443
 
 # Hubble (관측성)

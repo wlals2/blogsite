@@ -20,7 +20,7 @@
 
 **발생 일시**: 2026-01-16 17:30 ~ 18:50 (약 1시간 20분)
 
-**URL**: http://192.168.1.187:1313/projects/
+**URL**: http://192.168.X.187:1313/projects/
 
 **문제**: Projects 페이지의 "전체 학습 여정" Mermaid 다이어그램이 **코드로 표시**됨
 
@@ -48,7 +48,7 @@ graph LR
 
 ### 3. Hugo 서버는 정상 작동
 ```bash
-Web Server is available at http://192.168.1.187:1313/ (bind address 0.0.0.0)
+Web Server is available at http://192.168.X.187:1313/ (bind address 0.0.0.0)
 Built in 139 ms
 ```
 
@@ -337,7 +337,7 @@ grep -A 15 "전체 학습 여정" ~/blogsite/public/projects/index.html | grep -
 
 ### 2. 브라우저에서 확인
 
-1. http://192.168.1.187:1313/projects/ 접속
+1. http://192.168.X.187:1313/projects/ 접속
 2. 개발자 도구 (F12) 열기
 3. 콘솔 탭에서 확인:
 

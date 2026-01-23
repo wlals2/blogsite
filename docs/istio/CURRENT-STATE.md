@@ -9,7 +9,7 @@
 
 ### 기존 구조 (작동함)
 ```
-[외부] → [Nginx Ingress 192.168.1.61]
+[외부] → [Nginx Ingress 192.168.X.61]
            ├─ / → web-service:80 (Hugo)
            ├─ /board → web-service:80 (Hugo)
            └─ /api → was-service:8080 (Spring Boot) ⚠️ Istio mesh 우회

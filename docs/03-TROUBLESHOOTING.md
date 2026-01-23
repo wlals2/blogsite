@@ -31,11 +31,11 @@ The connection to the server localhost:8080 was refused - did you specify the ri
 
 **왜 발생했는가?**
 
-GitHub Actions의 `ubuntu-latest` 러너는 GitHub의 퍼블릭 클라우드에서 실행됩니다. 하지만 우리 Kubernetes 클러스터는 사설 네트워크(192.168.1.187:6443)에 있습니다.
+GitHub Actions의 `ubuntu-latest` 러너는 GitHub의 퍼블릭 클라우드에서 실행됩니다. 하지만 우리 Kubernetes 클러스터는 사설 네트워크(192.168.X.187:6443)에 있습니다.
 
 ```
 [ GitHub 클라우드 ]                  [ 홈 네트워크 ]
-  ubuntu-latest runner   ❌ 접근 불가   192.168.1.187 (k8s-cp)
+  ubuntu-latest runner   ❌ 접근 불가   192.168.X.187 (k8s-cp)
   (퍼블릭 IP)                          (RFC 1918 사설 IP)
 ```
 
@@ -122,7 +122,7 @@ $ cat ~/.kube/config
 apiVersion: v1
 clusters:
 - cluster:
-    server: https://192.168.1.187:6443
+    server: https://192.168.X.187:6443
     certificate-authority-data: <VALID_CERT>
 ```
 
@@ -178,7 +178,7 @@ kubectl config view
 
 # 정상 출력:
 # current-context: kubernetes-admin@kubernetes
-# server: https://192.168.1.187:6443
+# server: https://192.168.X.187:6443
 ```
 
 ---
@@ -611,7 +611,7 @@ warp-routing:
 
 ingress:
   - hostname: argocd.jiminhome.shop
-    service: https://192.168.1.200:443
+    service: https://192.168.X.200:443
 ```
 
 **문제**: `warp-routing` 구문 오류로 전체 설정 파일 validation 실패
@@ -628,9 +628,9 @@ credentials-file: /etc/cloudflared/65759494-dae6-4287-b92d-02a918b34722.json
 
 ingress:
   - hostname: blog.jiminhome.shop
-    service: http://192.168.1.200:80
+    service: http://192.168.X.200:80
   - hostname: argocd.jiminhome.shop
-    service: https://192.168.1.200:443
+    service: https://192.168.X.200:443
     originRequest:
       noTLSVerify: true
   - service: http_status:404
@@ -679,7 +679,7 @@ cloudflared tunnel route dns home-network argocd.jiminhome.shop
 
 **둘 다 필요**:
 ```
-사용자 → DNS (argocd → tunnel) → Ingress 규칙 (tunnel → 192.168.1.200) → ArgoCD
+사용자 → DNS (argocd → tunnel) → Ingress 규칙 (tunnel → 192.168.X.200) → ArgoCD
 ```
 
 ---
@@ -764,7 +764,7 @@ spec:
 kubectl get ingress -n argocd
 
 # 로컬 접속 테스트
-curl -k -I -H "Host: argocd.jiminhome.shop" https://192.168.1.200/
+curl -k -I -H "Host: argocd.jiminhome.shop" https://192.168.X.200/
 # HTTP/2 200 ✅
 ```
 
@@ -923,7 +923,7 @@ https://blog.jiminhome.shop/
 # Cloudflare 502 Bad Gateway 에러 페이지 표시
 
 # 로컬에서 직접 확인
-curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+curl -I http://192.168.X.200/ -H "Host: blog.jiminhome.shop"
 # HTTP/1.1 502 Bad Gateway
 ```
 
@@ -1049,7 +1049,7 @@ kubectl get peerauthentication -n blog-system
 
 **삭제 후 즉시 복구:**
 ```bash
-curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+curl -I http://192.168.X.200/ -H "Host: blog.jiminhome.shop"
 # HTTP/1.1 200 OK ✅
 
 curl -I https://blog.jiminhome.shop/
@@ -1129,7 +1129,7 @@ kubectl get peerauthentication -n blog-system -o yaml
 **2. Ingress → Pod 연결 테스트**
 ```bash
 # 로컬에서 MetalLB IP로 직접 접근
-curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+curl -I http://192.168.X.200/ -H "Host: blog.jiminhome.shop"
 
 # 502면 mTLS 문제 가능성 높음
 ```
@@ -1172,7 +1172,7 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx --tail=50 
 kubectl get peerauthentication -A
 
 # 5. 직접 테스트
-curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+curl -I http://192.168.X.200/ -H "Host: blog.jiminhome.shop"
 ```
 
 ---
@@ -1962,7 +1962,7 @@ sudo rsync -av --delete public/ /var/www/blog/
 cat /etc/nginx/sites-enabled/blog | grep proxy_pass
 
 # 출력:
-# proxy_pass http://192.168.1.187:31852;
+# proxy_pass http://192.168.X.187:31852;
 ```
 
 **문제 발견:** nginx가 `/var/www/blog`를 직접 서빙하지 않고, **Kubernetes Ingress로 프록시**하고 있었음!

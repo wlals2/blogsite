@@ -33,20 +33,20 @@ ping monitoring.jiminhome.shop → 실패
 
 ```bash
 # Windows (PowerShell 관리자 권한)
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.1.200 monitoring.jiminhome.shop"
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "192.168.1.200 prometheus.jiminhome.shop"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.X.200 monitoring.jiminhome.shop"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "192.168.X.200 prometheus.jiminhome.shop"
 
 # Linux/Mac
 sudo bash -c 'cat >> /etc/hosts << EOF
-192.168.1.200 monitoring.jiminhome.shop
-192.168.1.200 prometheus.jiminhome.shop
+192.168.X.200 monitoring.jiminhome.shop
+192.168.X.200 prometheus.jiminhome.shop
 EOF'
 ```
 
 **검증:**
 ```bash
 ping monitoring.jiminhome.shop
-# 예상: 192.168.1.200에서 응답
+# 예상: 192.168.X.200에서 응답
 ```
 
 ---
@@ -60,22 +60,22 @@ curl -I http://monitoring.jiminhome.shop
 ```
 
 **원인:**
-- IP Whitelist 설정: 192.168.1.0/24만 허용
+- IP Whitelist 설정: 192.168.X.0/24만 허용
 - 클라이언트 IP가 범위 밖
 - 또는 LoadBalancer SNAT로 원본 IP 손실
 
 **네트워크 흐름 이해:**
 ```
-Windows PC (192.168.1.195)
+Windows PC (192.168.X.195)
     ↓
-LoadBalancer Service (192.168.1.200)
+LoadBalancer Service (192.168.X.200)
     ↓ [externalTrafficPolicy: Cluster] ← SNAT 발생!
     ↓ 원본 IP 손실 (10.0.1.22로 변경)
     ↓
 Ingress Controller
     ↓ client IP: 10.0.1.22
     ↓
-IP Whitelist 체크: 10.0.1.22 ∉ 192.168.1.0/24
+IP Whitelist 체크: 10.0.1.22 ∉ 192.168.X.0/24
     ↓
 ❌ 403 Forbidden
 ```
@@ -97,14 +97,14 @@ kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ex
 ```bash
 # 단일 IP → 서브넷 전체로 확장
 kubectl annotate ingress -n monitoring grafana-ingress \
-  nginx.ingress.kubernetes.io/whitelist-source-range="192.168.1.0/24" --overwrite
+  nginx.ingress.kubernetes.io/whitelist-source-range="192.168.X.0/24" --overwrite
 ```
 
 **검증:**
 ```bash
 # Ingress 로그에서 client IP 확인
 kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx --tail=10 | grep monitoring.jiminhome.shop
-# 예상: client: 192.168.1.195 (원본 IP 보존됨)
+# 예상: client: 192.168.X.195 (원본 IP 보존됨)
 ```
 
 ---

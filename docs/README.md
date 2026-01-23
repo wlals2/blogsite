@@ -485,17 +485,17 @@ theme = "PaperMod"
 **클러스터 구성:**
 ```
 k8s-cp (Control Plane)
-  - IP: 192.168.1.187
+  - IP: 192.168.X.187
   - 역할: API Server, Scheduler, Controller Manager, etcd
   - 스펙: 2 CPU, 4GB RAM
 
 k8s-worker1
-  - IP: 192.168.1.204
+  - IP: 192.168.X.204
   - 상태: Ready (taint 설정: dns-issue=true:NoSchedule)
   - 스펙: 2 CPU, 4GB RAM
 
 k8s-worker2
-  - IP: 192.168.1.131
+  - IP: 192.168.X.131
   - 상태: Ready (모든 Pod 실행 중)
   - 스펙: 2 CPU, 4GB RAM
 ```
@@ -577,9 +577,9 @@ Cloudflare CDN (443)
   ↓
 공인 IP (포트포워딩)
   ↓
-로컬 nginx (192.168.1.187:443) - SSL Termination
+로컬 nginx (192.168.X.187:443) - SSL Termination
   ↓
-Kubernetes Ingress (192.168.1.187:80) - NodePort 31852
+Kubernetes Ingress (192.168.X.187:80) - NodePort 31852
   ↓
 Services (ClusterIP)
   ├─ web-service:80 → web Pods (nginx:80)
@@ -628,7 +628,7 @@ Services (ClusterIP)
                  │
                  ▼ Pull Image
 ┌─────────────────────────────────────────────────────────────────┐
-│           Kubernetes Cluster (3-node, 192.168.1.0/24)          │
+│           Kubernetes Cluster (3-node, 192.168.X.0/24)          │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐  │
 │  │  Namespace: blog-system                                  │  │
@@ -672,7 +672,7 @@ Services (ClusterIP)
                  │
                  ▼ NodePort 31852
 ┌─────────────────────────────────────────────────────────────────┐
-│                  로컬 nginx (192.168.1.187:443)                 │
+│                  로컬 nginx (192.168.X.187:443)                 │
 │                      SSL Termination                            │
 │                                                                 │
 │  server {                                                       │
@@ -680,7 +680,7 @@ Services (ClusterIP)
 │    server_name blog.jiminhome.shop;                            │
 │    ssl_certificate /etc/letsencrypt/live/.../fullchain.pem;   │
 │    location / {                                                │
-│      proxy_pass http://192.168.1.187:31852;  # Ingress       │
+│      proxy_pass http://192.168.X.187:31852;  # Ingress       │
 │    }                                                           │
 │  }                                                             │
 └────────────────┬────────────────────────────────────────────────┘
@@ -693,7 +693,7 @@ Services (ClusterIP)
 │  - Cache: Static files (HTML, CSS, JS, images)                │
 │  - DDoS Protection: L3/L4/L7                                   │
 │  - SSL/TLS: Cloudflare → Origin                               │
-│  - DNS: blog.jiminhome.shop → 192.168.1.187 (Proxied)        │
+│  - DNS: blog.jiminhome.shop → 192.168.X.187 (Proxied)        │
 │                                                                 │
 └────────────────┬────────────────────────────────────────────────┘
                  │
@@ -899,7 +899,7 @@ Pods (Container isolated)
 - **개요**: Cloudflare가 제공하는 것 (CDN, DDoS, SSL, DNS)
 - **현재 설정**:
   - 도메인: jiminhome.shop
-  - DNS 레코드: A blog 192.168.1.187 (Proxied)
+  - DNS 레코드: A blog 192.168.X.187 (Proxied)
   - Zone ID: 7895fe2aef761351db71892fb7c22b52
 - **Cloudflare 캐시 동작**:
   - Before (수동 퍼지): 사용자는 이전 콘텐츠
@@ -941,10 +941,10 @@ Pods (Container isolated)
   - Host 기반 라우팅 (`argocd.jiminhome.shop`)
   - TLS Passthrough (`ssl-passthrough: "true"`)
   - Backend HTTPS (`backend-protocol: "HTTPS"`)
-  - 로컬 nginx (192.168.1.200) 통한 접속
+  - 로컬 nginx (192.168.X.200) 통한 접속
 - **Cloudflare Tunnel 설정 (외부 접속)**:
   - DNS 라우팅 추가 (`cloudflared tunnel route dns`)
-  - Ingress 규칙 추가 (`service: https://192.168.1.200:443`)
+  - Ingress 규칙 추가 (`service: https://192.168.X.200:443`)
   - noTLSVerify 설정 (Self-signed 인증서 허용)
 - **Application 생성 예시 (다음 단계)**:
   - Git Repository: `https://github.com/wlals2/k8s-manifests.git`
@@ -988,7 +988,7 @@ Pods (Container isolated)
 - **Exporters**: nginx-exporter, mysql-exporter v0.16.0, node-exporter, cadvisor, kube-state-metrics
 - **대시보드 (4개)**: Nginx, WAS, MySQL, Full Stack Overview
 - **Alert Rules (8개)**: PodDown, MySQLDown, HighCPUUsage, HighMemoryUsage, HighDiskUsage, PodCrashLooping, HighErrorRate, HighResponseTime
-- **접속**: http://monitoring.jiminhome.shop (IP 화이트리스트: 192.168.1.0/24)
+- **접속**: http://monitoring.jiminhome.shop (IP 화이트리스트: 192.168.X.0/24)
 - **상세 가이드**: [docs/monitoring/README.md](./monitoring/README.md)
 
 #### 3. [03-TROUBLESHOOTING.md](03-TROUBLESHOOTING.md) - 트러블슈팅 가이드
@@ -1303,7 +1303,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/7895fe2aef761351db71892
 - ✅ **Ingress 설정 (로컬 접속)**
   - Host 기반 라우팅: argocd.jiminhome.shop
   - TLS Passthrough 설정 (Self-signed 인증서)
-  - 로컬 nginx (192.168.1.200) 통한 접속 확인
+  - 로컬 nginx (192.168.X.200) 통한 접속 확인
 - ✅ **Cloudflare Tunnel DNS 라우팅 추가**
   - DNS 라우팅: `cloudflared tunnel route dns home-network argocd.jiminhome.shop`
   - Ingress 규칙 추가 (수동 설정 필요, 미완)
@@ -1433,7 +1433,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/7895fe2aef761351db71892
 
 **접속 정보:**
 - **Grafana URL**: http://monitoring.jiminhome.shop
-- **IP 화이트리스트**: 192.168.1.0/24
+- **IP 화이트리스트**: 192.168.X.0/24
 - **Namespace**: monitoring
 
 **성과:**
@@ -1485,7 +1485,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/7895fe2aef761351db71892
    - Git 푸시
 
 2. **ArgoCD Application 생성** (30분)
-   - ArgoCD UI 로그인 (https://192.168.1.200/ 또는 argocd.jiminhome.shop)
+   - ArgoCD UI 로그인 (https://192.168.X.200/ 또는 argocd.jiminhome.shop)
    - Application 생성 (blog-system)
    - Git Repository 연동
    - Sync Policy 설정 (automated, prune, selfHeal)
@@ -1537,11 +1537,11 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/7895fe2aef761351db71892
 **목표:** 로컬 nginx 제거, 완전 Kubernetes 네이티브 아키텍처
 
 **구현 내용:**
-- MetalLB 설치 (L2 모드, IP Pool: 192.168.1.200-210)
+- MetalLB 설치 (L2 모드, IP Pool: 192.168.X.200-210)
 - cert-manager 설치 (Let's Encrypt 자동 SSL 발급)
 - Ingress TLS 설정 (blog-tls Secret)
 - LoadBalancer Service로 변경 (NodePort → LoadBalancer)
-- Cloudflare DNS 변경 (192.168.1.187 → 192.168.1.200)
+- Cloudflare DNS 변경 (192.168.X.187 → 192.168.X.200)
 - 로컬 nginx 중지
 
 **효과:**

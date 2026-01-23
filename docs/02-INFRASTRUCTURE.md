@@ -33,9 +33,9 @@
 
 **DNS 레코드:**
 ```
-A     blog      192.168.1.187    (Proxied - 주황색 구름)
+A     blog      192.168.X.187    (Proxied - 주황색 구름)
                                   ⚠️ 현재 로컬 nginx 주소
-                                  향후 192.168.1.200 (MetalLB)로 변경 예정
+                                  향후 192.168.X.200 (MetalLB)로 변경 예정
 CNAME www       blog.jiminhome.shop (Proxied)
 ```
 
@@ -236,15 +236,15 @@ web Pods
 **노드:**
 ```
 k8s-cp (Control Plane)
-  - IP: 192.168.1.187
+  - IP: 192.168.X.187
   - 역할: API Server, Scheduler, etcd
 
 k8s-worker1 (Worker)
-  - IP: 192.168.1.61
+  - IP: 192.168.X.61
   - 상태: Ready
 
 k8s-worker2 (Worker)
-  - IP: 192.168.1.62
+  - IP: 192.168.X.62
   - 상태: Ready
 ```
 
@@ -489,7 +489,7 @@ spec:
     ↓
 https://blog.jiminhome.shop (Cloudflare)
     ↓
-192.168.1.200:80/443 (MetalLB LoadBalancer)
+192.168.X.200:80/443 (MetalLB LoadBalancer)
     ↓
 Ingress Controller (nginx-ingress)
     │
@@ -571,14 +571,14 @@ kubectl top pods -n blog-system
 **상태:** ✅ 구현 완료
 
 **구성:**
-- **LoadBalancer IP:** 192.168.1.200
+- **LoadBalancer IP:** 192.168.X.200
 - **서비스 타입:** LoadBalancer
 - **네임스페이스:** ingress-nginx
 - **포트:** 80 (HTTP), 443 (HTTPS)
 
 **현재 아키텍처:**
 ```
-CloudFlare → MetalLB LoadBalancer (192.168.1.200) → Ingress Controller → Services
+CloudFlare → MetalLB LoadBalancer (192.168.X.200) → Ingress Controller → Services
                       ↓
                  표준 80/443 포트 사용
                  완전 K8s 네이티브
@@ -595,7 +595,7 @@ CloudFlare → MetalLB LoadBalancer (192.168.1.200) → Ingress Controller → S
 # LoadBalancer Service 확인
 kubectl get svc -n ingress-nginx
 # NAME                       TYPE           EXTERNAL-IP     PORT(S)
-# ingress-nginx-controller   LoadBalancer   192.168.1.200   80:31852/TCP,443:30732/TCP
+# ingress-nginx-controller   LoadBalancer   192.168.X.200   80:31852/TCP,443:30732/TCP
 
 # MetalLB Pod 상태
 kubectl get pods -n metallb-system
@@ -606,7 +606,7 @@ kubectl get pods -n metallb-system
 # IP Pool 확인
 kubectl get ipaddresspool -n metallb-system
 # NAME         AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
-# local-pool   true          false             ["192.168.1.200-192.168.1.210"]
+# local-pool   true          false             ["192.168.X.200-192.168.X.210"]
 ```
 
 **MetalLB IP Pool 설정:**
@@ -618,7 +618,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.1.200-192.168.1.210  # DHCP 범위 밖
+  - 192.168.X.200-192.168.X.210  # DHCP 범위 밖
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -893,7 +893,7 @@ spec:
 
 **접속 확인:**
 ```bash
-curl -k -I -H "Host: argocd.jiminhome.shop" https://192.168.1.200/
+curl -k -I -H "Host: argocd.jiminhome.shop" https://192.168.X.200/
 # HTTP/2 200 ✅
 ```
 
@@ -912,16 +912,16 @@ credentials-file: /etc/cloudflared/65759494-dae6-4287-b92d-02a918b34722.json
 
 ingress:
   - hostname: blog.jiminhome.shop
-    service: http://192.168.1.200:80
+    service: http://192.168.X.200:80
   - hostname: argocd.jiminhome.shop
-    service: https://192.168.1.200:443
+    service: https://192.168.X.200:443
     originRequest:
       noTLSVerify: true  # Self-signed 인증서 허용
   - service: http_status:404
 ```
 
 **접속 방법:**
-- **로컬:** `https://192.168.1.200/` (Host: argocd.jiminhome.shop)
+- **로컬:** `https://192.168.X.200/` (Host: argocd.jiminhome.shop)
 - **외부:** `https://argocd.jiminhome.shop/` (Cloudflare Tunnel)
 
 **로그인 정보:**
@@ -1148,18 +1148,18 @@ kubectl describe certificate blog-tls -n blog-system
 
 **현재:**
 ```
-A  blog  192.168.1.187  (로컬 nginx 주소)
+A  blog  192.168.X.187  (로컬 nginx 주소)
 ```
 
 **변경 후:**
 ```
-A  blog  192.168.1.200  (MetalLB LoadBalancer IP)
+A  blog  192.168.X.200  (MetalLB LoadBalancer IP)
 ```
 
 **변경 후 확인:**
 ```bash
 dig +short blog.jiminhome.shop
-# 192.168.1.200 (또는 Cloudflare Proxy IP)
+# 192.168.X.200 (또는 Cloudflare Proxy IP)
 
 curl -I https://blog.jiminhome.shop/
 # HTTP/2 200
@@ -1260,7 +1260,7 @@ sudo systemctl enable nginx
 
 **접속 정보:**
 - **Grafana URL**: http://monitoring.jiminhome.shop
-- **IP 화이트리스트**: 192.168.1.0/24
+- **IP 화이트리스트**: 192.168.X.0/24
 - **Namespace**: monitoring
 
 **대시보드 (4개):**
@@ -1320,7 +1320,7 @@ kubectl logs -n monitoring -l app=grafana
 - ✅ **Argo Rollouts**: web (Canary 배포, Istio 트래픽 분할)
 - ✅ Deployments: was (v1, 2 replicas), mysql (1 replica)
 - ✅ Ingress: nginx-ingress (LoadBalancer via MetalLB)
-- ✅ MetalLB: 192.168.1.200 (LoadBalancer IP)
+- ✅ MetalLB: 192.168.X.200 (LoadBalancer IP)
 - ✅ **TopologySpread**: ScheduleAnyway (2-worker 클러스터 호환)
 - ✅ **HPA**: was-hpa (2-10 replicas, CPU 70%/Memory 80%), web-hpa (2-5 replicas, CPU 60%)
 

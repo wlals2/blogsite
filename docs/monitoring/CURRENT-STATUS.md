@@ -29,13 +29,13 @@
 
 ```bash
 # Windows (PowerShell 관리자 권한)
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.1.200 monitoring.jiminhome.shop"
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "192.168.1.200 prometheus.jiminhome.shop"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.X.200 monitoring.jiminhome.shop"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "192.168.X.200 prometheus.jiminhome.shop"
 
 # Linux/Mac
 sudo bash -c 'cat >> /etc/hosts << EOF
-192.168.1.200 monitoring.jiminhome.shop
-192.168.1.200 prometheus.jiminhome.shop
+192.168.X.200 monitoring.jiminhome.shop
+192.168.X.200 prometheus.jiminhome.shop
 EOF'
 ```
 
@@ -49,7 +49,7 @@ EOF'
 
 ### 3. 접근 제한
 
-**허용 네트워크**: 192.168.1.0/24
+**허용 네트워크**: 192.168.X.0/24
 
 ```bash
 # 접근 테스트
@@ -61,7 +61,7 @@ curl -I http://monitoring.jiminhome.shop
 
 **LoadBalancer 설정**:
 - externalTrafficPolicy: **Local** (원본 IP 보존)
-- loadBalancerIP: 192.168.1.200
+- loadBalancerIP: 192.168.X.200
 
 ---
 
@@ -288,7 +288,7 @@ kube_pod_status_phase{namespace="blog-system"}
 - ✅ Kube-State-Metrics scrape job 추가
 - ✅ Grafana Datasource Provisioning 설정
 - ✅ LoadBalancer externalTrafficPolicy: Local 설정
-- ✅ IP Whitelist 확장 (192.168.1.0/24)
+- ✅ IP Whitelist 확장 (192.168.X.0/24)
 
 ### 운영 이슈
 - Prometheus PVC lock 문제 발생 → 해결 (순차적 재시작)
