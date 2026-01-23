@@ -208,6 +208,7 @@ draft: false
 | **CiliumNetworkPolicy** | L3/L4 Zero Trust | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
 | **SecurityContext** | Non-root, Capabilities Drop | 아키텍처 문서 참조 |
 | **Trivy** | 이미지 취약점 스캔 | GitHub Actions 통합 |
+| **Private GHCR** | 컨테이너 이미지 비공개 | imagePullSecrets 설정 |
 
 ### CI/CD & GitOps (트러블슈팅 모음)
 
@@ -216,6 +217,41 @@ draft: false
 | **GitHub Actions** | Self-hosted Runner CI | [Runner 트러블슈팅](/study/2026-01-23-runner-not-picking-job/) |
 | **ArgoCD** | GitOps CD (Auto-Sync) | [ArgoCD 트러블슈팅](/study/2026-01-23-argocd-troubleshooting/) |
 | **Argo Rollouts** | Canary 배포 | [Canary + TopologySpread](/study/2026-01-23-canary-topology-spread/) |
+| **Private GHCR** | 이미지 비공개 + imagePullSecrets | 아래 상세 설명 |
+
+#### Private Container Registry 보안
+
+**문제 발견**: WEB 이미지(`ghcr.io/wlals2/blog-web`)가 Public으로 노출
+- 누구나 `docker pull`로 블로그 콘텐츠 복제 가능
+- Hugo 빌드 결과물(정적 파일)이 이미지에 포함
+
+**해결: Private GHCR + imagePullSecrets**
+
+```yaml
+# web-rollout.yaml
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret  # Private GHCR 인증
+      containers:
+        - name: nginx
+          image: ghcr.io/wlals2/blog-web:v60
+```
+
+**ghcr-secret 생성**:
+```bash
+kubectl create secret docker-registry ghcr-secret \
+  --namespace blog-system \
+  --docker-server=ghcr.io \
+  --docker-username=wlals2 \
+  --docker-password=ghp_xxxxx  # GitHub PAT (read:packages)
+```
+
+**보안 효과**:
+- ✅ 인증 없이 이미지 pull 불가
+- ✅ 블로그 콘텐츠 무단 복제 방지
+- ✅ K8s Pod만 ghcr-secret으로 인증하여 pull
 
 ### Storage & Database
 

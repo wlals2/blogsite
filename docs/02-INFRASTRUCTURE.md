@@ -1,7 +1,7 @@
 # 인프라 통합 가이드
 
 > Cloudflare, Kubernetes, GitOps, 모니터링
-> 최종 업데이트: 2026-01-20
+> 최종 업데이트: 2026-01-23
 
 ---
 
@@ -278,13 +278,16 @@ spec:
       labels:
         app: web
     spec:
+      # Private GHCR 이미지 pull용 (2026-01-23 추가)
+      imagePullSecrets:
+        - name: ghcr-secret
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: ScheduleAnyway  # 2-worker 클러스터 호환
       containers:
       - name: nginx
-        image: ghcr.io/wlals2/blog-web:latest
+        image: ghcr.io/wlals2/blog-web:v60  # Private Registry
         ports:
         - containerPort: 80
         securityContext:
@@ -1203,7 +1206,70 @@ sudo systemctl enable nginx
 
 ---
 
-## 보안 (Falco IDS/IPS)
+## 보안 (Container Registry + Falco)
+
+### Private Container Registry (GHCR)
+
+> 컨테이너 이미지 무단 접근 방지
+
+**문제 발견 (2026-01-23)**:
+- WEB 이미지 (`ghcr.io/wlals2/blog-web`)가 Public 상태
+- `docker pull` 명령으로 누구나 블로그 콘텐츠 복제 가능
+- Hugo 빌드 결과물(정적 파일)이 이미지에 포함되어 있음
+
+**해결: Private GHCR + imagePullSecrets**
+
+| 변경 전 | 변경 후 |
+|---------|---------|
+| GHCR Public (인증 없이 pull 가능) | GHCR Private (인증 필수) |
+| imagePullSecrets 없음 | `ghcr-secret` 참조 |
+| 콘텐츠 무단 복제 가능 | 인증된 K8s Pod만 pull 가능 |
+
+**1. GHCR 이미지 Private 설정**
+- GitHub → Packages → blog-web → Settings → Change visibility → Private
+
+**2. imagePullSecrets 생성**
+```bash
+# ghcr-secret 생성 (blog-system namespace)
+kubectl create secret docker-registry ghcr-secret \
+  --namespace blog-system \
+  --docker-server=ghcr.io \
+  --docker-username=wlals2 \
+  --docker-password=ghp_xxxxxxxxxxxxx  # GitHub PAT (read:packages 권한)
+```
+
+**3. Rollout에 imagePullSecrets 추가**
+```yaml
+# web-rollout.yaml
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: nginx
+          image: ghcr.io/wlals2/blog-web:v60
+```
+
+**검증**:
+```bash
+# 인증 없이 pull 시도 → 실패해야 정상
+docker pull ghcr.io/wlals2/blog-web:v60
+# Error: unauthorized
+
+# K8s Pod 이미지 pull 성공 확인
+kubectl describe pod -n blog-system -l app=web | grep "Successfully pulled"
+# Successfully pulled image "ghcr.io/wlals2/blog-web:v60" in 3.368s
+```
+
+**보안 효과**:
+- ✅ 블로그 콘텐츠 무단 복제 방지
+- ✅ 인증된 K8s Pod만 이미지 접근 가능
+- ✅ PAT 토큰 만료 시 자동으로 pull 차단 (추가 보안)
+
+---
+
+### Falco IDS/IPS
 
 > eBPF 기반 컨테이너 런타임 보안 모니터링 시스템
 
@@ -1580,6 +1646,7 @@ kubectl logs -n monitoring -l app=grafana
 - ✅ MetalLB: 192.168.X.200 (LoadBalancer IP)
 - ✅ **TopologySpread**: ScheduleAnyway (2-worker 클러스터 호환)
 - ✅ **HPA**: was-hpa (2-10 replicas, CPU 70%/Memory 80%), web-hpa (2-5 replicas, CPU 60%)
+- ✅ **Private GHCR**: imagePullSecrets (ghcr-secret) - 이미지 무단 접근 방지 (2026-01-23)
 
 **GitOps:**
 - ✅ ArgoCD 설치 완료 (Helm Chart, 7 pods)
