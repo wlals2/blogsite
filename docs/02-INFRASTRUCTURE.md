@@ -1089,7 +1089,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: wlals2@naver.com
+    email: your-email@example.com
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
@@ -1297,7 +1297,7 @@ sudo systemctl enable nginx
 | **Falco DaemonSet** | 각 노드에서 syscall 모니터링 | CPU: 50m<br>Memory: 200Mi | ✅ 운영 중 |
 | **Falcosidekick** | Alert 전송 허브 | CPU: 10m<br>Memory: 50Mi | ✅ 운영 중 |
 | **Falcosidekick UI** | 웹 대시보드 | CPU: 10m<br>Memory: 50Mi | ✅ 운영 중 |
-| **Falco Talon** | 자동 대응 엔진 (IPS) | CPU: 50m<br>Memory: 128Mi | ⏳ 계획 중 |
+| **Falco Talon** | 자동 대응 엔진 (IPS) | CPU: 50m<br>Memory: 128Mi | ✅ 구축 완료 (Dry-Run) |
 
 ### 커스텀 보안 룰 (blog-system 특화)
 
@@ -1315,7 +1315,7 @@ sudo systemctl enable nginx
 | 모드 | 역할 | 동작 방식 | 현재 상태 |
 |------|------|----------|----------|
 | **IDS** | 탐지만 (Detection) | CCTV처럼 기록, 알림만 전송 | ✅ 활성화 |
-| **IPS** | 탐지 + 차단 (Prevention) | NetworkPolicy로 자동 격리 | ⏳ 정책 수립 중 |
+| **IPS** | 탐지 + 차단 (Prevention) | NetworkPolicy로 자동 격리 | ✅ Dry-Run (Phase 1) |
 
 **IDS 모드 (현재)**:
 ```
@@ -1331,7 +1331,7 @@ sudo systemctl enable nginx
    - 필요 시 Pod 삭제
 ```
 
-**IPS 모드 (계획 - Pod Isolation 방식)**:
+**IPS 모드 (Dry-Run 운영 중 - Pod Isolation 방식)**:
 ```
 1. Falco가 CRITICAL 이상 행위 탐지
    ↓
