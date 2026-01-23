@@ -743,8 +743,12 @@ kubectl get pods -n blog-system --watch
 
 ### 상태
 
-**구축 완료:** ✅ ArgoCD 설치 완료 (2026-01-20)
-**다음 단계:** ⏳ Application 생성 및 Git Repository 연동
+**구축 완료:** ✅ ArgoCD + Application 운영 중 (2026-01-20~)
+**현재 상태:**
+- ✅ ArgoCD 설치 완료 (Helm Chart, 7 pods)
+- ✅ blog-system Application 생성 완료
+- ✅ Auto-Sync, Prune, SelfHeal 활성화
+- ✅ Git Repository 연동 (github.com/wlals2/k8s-manifests)
 
 ### 왜 ArgoCD인가?
 
@@ -977,15 +981,15 @@ ArgoCD → Git 감지 → Sync → Kubernetes
   - Annotation: `nginx.ingress.kubernetes.io/ssl-passthrough: "true"`
   - Cloudflare: `noTLSVerify: true`
 
-### 다음 단계
+### 구축 완료 현황
 
-**⏳ 30분 내 완료 가능**
+**✅ 모두 완료됨**
 
-**1. Git Repository 준비** (10분)
-- blog-system manifest 정리
-- Git Repository 생성 (GitHub)
+**1. Git Repository** ✅
+- github.com/wlals2/k8s-manifests
+- blog-system/ 디렉토리에 모든 manifest 관리
 
-**2. ArgoCD UI 로그인** (5분)
+**2. ArgoCD UI 접속** ✅
 ```bash
 # 접속
 https://argocd.jiminhome.shop/
@@ -995,16 +999,16 @@ https://argocd.jiminhome.shop/
 비밀번호: saDtmwkg-ZyKLv2T
 ```
 
-**3. 첫 번째 Application 생성** (10분)
-- Application 생성 (blog-system)
-- Git Repository 연동
+**3. blog-system Application** ✅
+- Application 생성 완료
 - Auto-Sync 활성화
+- Prune, SelfHeal 활성화
 
-**4. 실제 배포 테스트** (5분)
-- Git에서 replicas 변경
-- ArgoCD 자동 동기화 확인
+**4. 실제 배포 운영 중** ✅
+- Git Push → 3초 내 ArgoCD 감지 → 자동 배포
+- v60 이미지까지 Canary 배포 완료 (2026-01-23)
 
-### Application 생성 예시 (예정)
+### Application 구성 (운영 중)
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -1062,21 +1066,27 @@ spec:
 
 ## 향후 개선 계획
 
-### 현재 미해결 사항
+### 현재 상태 (2026-01-23)
 
-**SSL 인증서 관리:**
-- ⚠️ 로컬 nginx에서 수동 SSL 관리 (Let's Encrypt 90일 갱신)
-- ⚠️ Kubernetes 외부 의존성
-- ⚠️ GitOps 불가 (nginx는 K8s 외부)
+**SSL 인증서 관리:** ✅ Cloudflare Tunnel로 해결
+- ✅ Cloudflare Tunnel이 HTTPS 종료 처리
+- ✅ 인증서 자동 갱신 (Cloudflare 관리)
+- ✅ 로컬 nginx 불필요 (직접 NodePort 연결)
 
-**개선 목표:**
-- cert-manager 도입하여 SSL 자동 발급 + 갱신
-- 로컬 nginx 제거
-- 완전한 Kubernetes 네이티브 아키텍처
+**현재 아키텍처:**
+```
+사용자 → Cloudflare (HTTPS) → Tunnel → K8s NodePort 30080 → Ingress → Pods
+```
 
-### Phase 1: cert-manager 설치 (예정)
+### 선택적 개선 사항 (필수 아님)
 
-**목적:** Let's Encrypt SSL 인증서 자동 발급 + 갱신
+**cert-manager 도입 (선택):**
+- Cloudflare Tunnel 없이 직접 HTTPS 제공 시 필요
+- 현재 Cloudflare Tunnel 사용 중이므로 선택 사항
+
+### Phase 1: cert-manager 설치 (선택 사항)
+
+**목적:** Cloudflare 없이 직접 Let's Encrypt SSL 사용 시
 
 **설치:**
 ```bash
@@ -1651,37 +1661,44 @@ kubectl logs -n monitoring -l app=grafana
 **GitOps:**
 - ✅ ArgoCD 설치 완료 (Helm Chart, 7 pods)
 - ✅ Ingress 설정 (argocd.jiminhome.shop)
-- ⏳ Application 생성 대기
+- ✅ blog-system Application 운영 중 (Auto-Sync, Prune, SelfHeal)
 
 **모니터링:**
 - ✅ PLG Stack 운영 중 (55일, Grafana 12.3.1, Prometheus 2.x, Loki, AlertManager v0.27.0)
 - ✅ 4개 대시보드, 8개 Alert Rules
 - ✅ 접속: http://monitoring.jiminhome.shop
 
-### 개선 계획 우선순위
+### 구축 완료 현황
 
-**P1 (높음) - cert-manager:**
-- 목표: 로컬 nginx 제거, SSL 자동화
-- 예상 시간: 1.5시간
-- 효과: 완전 Kubernetes 네이티브
-- 현재: MetalLB 이미 구축 완료 ✅
+**✅ 완료된 항목:**
 
-**P2 (중간) - 모니터링 (PLG Stack):**
-- 목표: Prometheus + Loki + Grafana 구축
-- 예상 시간: 3시간
-- 효과: 리소스 가시성 확보
+| 항목 | 상태 | 완료일 |
+|------|------|--------|
+| MetalLB LoadBalancer | ✅ 완료 | 2026-01 |
+| PLG Stack 모니터링 | ✅ 완료 | 58일 운영 중 |
+| HPA Auto Scaling | ✅ 완료 | WAS 2-10, WEB 2-5 |
+| ArgoCD GitOps | ✅ 완료 | Auto-Sync 운영 중 |
+| Argo Rollouts Canary | ✅ 완료 | Istio 트래픽 분할 |
+| Istio Service Mesh | ✅ 완료 | mTLS, AuthZ 운영 중 |
+| Cilium CNI | ✅ 완료 | Hubble Observability |
+| Falco Runtime Security | ✅ 완료 | eBPF IDS 운영 중 |
+| Private GHCR | ✅ 완료 | imagePullSecrets (2026-01-23) |
 
-**P3 (낮음) - Auto Scaling:**
-- 목표: HPA (Horizontal Pod Autoscaler)
-- 예상 시간: 1시간
-- 효과: 트래픽 증가 시 자동 확장
+**⏳ 선택적 개선 사항 (필수 아님):**
+
+| 항목 | 우선순위 | 설명 |
+|------|----------|------|
+| cert-manager | 낮음 | Cloudflare Tunnel이 SSL 처리 중 |
+| Prometheus Alert Slack | 중간 | AlertManager 연동 |
+| MySQL HA | 낮음 | 현재 단일 Pod로 충분 |
 
 ### 다음 단계
 
 1. **블로그 콘텐츠 작성** (현재 우선순위)
-2. ~~MetalLB 구축~~ ✅ (완료)
-3. cert-manager 구축 (SSL 자동화)
-4. PLG Stack 모니터링 구축
+2. ~~MetalLB 구축~~ ✅
+3. ~~PLG Stack 모니터링~~ ✅
+4. ~~HPA Auto Scaling~~ ✅
+5. Prometheus Alert → Slack 연동 (선택)
 
 ---
 

@@ -1,10 +1,13 @@
-# Falco 런타임 보안 (IDS)
+# Falco 런타임 보안 (IDS + IPS)
 
-> eBPF 기반 컨테이너 런타임 보안 모니터링
+> eBPF 기반 컨테이너 런타임 보안 모니터링 + 자동 대응
 
-**설치일**: 2026-01-22
-**버전**: Falco 0.42.1
-**모드**: IDS (Intrusion Detection System)
+**설치일**:
+- IDS (Falco): 2026-01-22
+- IPS (Falco Talon): 2026-01-23
+
+**버전**: Falco 0.42.1 + Falco Talon latest
+**모드**: IDS + IPS (Dry-Run Phase 1)
 
 ---
 
@@ -36,7 +39,7 @@
 | **탐지 방식** | eBPF syscall 모니터링 |
 | **Namespace** | falco |
 | **설치 방식** | Helm Chart |
-| **현재 모드** | IDS (탐지만, 차단 없음) |
+| **현재 모드** | IDS + IPS (Dry-Run Phase 1) |
 
 ### 현재 상태
 
@@ -48,7 +51,8 @@ kubectl get pods -n falco
 | Pod | 역할 | 상태 |
 |-----|------|------|
 | falco-xxxxx (DaemonSet) | 각 노드에서 syscall 모니터링 | Running |
-| falco-falcosidekick-xxx | Alert 전송 (Loki, Slack) | Running |
+| falco-falcosidekick-xxx | Alert 전송 (Loki, Talon) | Running |
+| falco-talon-xxx | 자동 대응 (IPS, Dry-Run) | Running |
 | falco-falcosidekick-ui-xxx | 웹 UI | Running |
 | falco-falcosidekick-ui-redis-0 | UI용 Redis | Running |
 
@@ -732,24 +736,25 @@ Since → 1h 선택
 
 ---
 
-## 향후 IPS 활성화
+## IPS 활성화 완료 (Dry-Run Phase 1) 🆕
 
 > ⭐ **핵심 개념**: Pod 즉시 삭제 대신 **NetworkPolicy 기반 격리** 방식 채택
+> **현재 상태**: Falco Talon 설치 완료, Dry-Run 모드 운영 중 (2026-01-23~)
 
 ### IDS vs IPS
 
 | 모드 | 역할 | 동작 방식 | 현재 상태 |
 |------|------|----------|----------|
 | **IDS** | 탐지만 (Detection) | CCTV처럼 기록, 알림만 | ✅ 활성화 |
-| **IPS** | 탐지 + 차단 (Prevention) | 자동 격리 또는 종료 | ⏳ 정책 수립 중 |
+| **IPS** | 탐지 + 차단 (Prevention) | NetworkPolicy로 자동 격리 | ✅ Dry-Run (Phase 1) |
 
 **현재 시스템 비유**:
-- **IDS 모드 (현재)**: CCTV + 경보기 - 침입자 발견 시 관리자에게 알림만
-- **IPS 모드 (계획)**: 자동 방범 시스템 - 침입자 발견 시 자동으로 방 잠금 (격리)
+- **IDS 모드 (운영 중)**: CCTV + 경보기 - 침입자 발견 시 관리자에게 알림
+- **IPS 모드 (Dry-Run)**: 자동 방범 시스템 - 침입자 발견 시 자동 격리 (학습 단계)
 
 ---
 
-## IPS 구현 전략
+## IPS 구현 완료 (구현 상세)
 
 ### 1. Pod Isolation vs Pod Termination 비교
 
