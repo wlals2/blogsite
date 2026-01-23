@@ -2,6 +2,9 @@
 
 /* 섹션 박스 스타일 */
 .profile-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--entry);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -26,6 +29,9 @@
 
 /* 성과 하이라이트 */
 .highlight-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: linear-gradient(135deg, var(--theme) 0%, var(--entry) 100%);
     border-left: 4px solid var(--primary);
     padding: 15px 20px;
@@ -36,6 +42,9 @@
 
 /* 기술 스택 그리드 */
 .tech-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
@@ -43,6 +52,9 @@
 }
 
 .tech-category {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--code-bg);
     padding: 12px 15px;
     border-radius: 6px;
@@ -57,6 +69,9 @@
 
 /* 프로젝트 카드 */
 .project-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--entry);
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -77,6 +92,9 @@
 
 /* 목표 박스 */
 .goal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--hljs-bg);
     border: 2px dashed var(--primary);
     border-radius: 8px;
@@ -158,6 +176,9 @@
 
 /* Interest Box (관심사) */
 .interest-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--code-bg);
     padding: 1rem;
     border-radius: 8px;
@@ -206,6 +227,9 @@
 
 /* Tech Grid - 추가 스타일 */
 .tech-grid > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--code-bg);
     padding: 1rem;
     border-radius: 8px;
@@ -377,6 +401,9 @@
    ======================================== */
 
 .timeline {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     position: relative;
     padding: 20px 0;
     margin: 20px 0;
@@ -430,6 +457,9 @@
 }
 
 .timeline-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: var(--entry);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -661,8 +691,9 @@
 
 /* 코드 블록 너비 100% 적용 */
 pre {
-    width: 100%;
-    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     overflow-x: auto;
     border-radius: 8px;
     margin: 16px 0;
@@ -672,15 +703,16 @@ pre {
 .post-content pre,
 .entry-content pre,
 article pre {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* highlight (Hugo 코드 하이라이팅) */
 .highlight {
-    width: 100%;
-    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     margin: 16px 0;
     border-radius: 8px;
     overflow: hidden;
@@ -693,8 +725,9 @@ article pre {
 
 /* blockquote 너비 수정 */
 blockquote {
-    width: 100%;
-    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     margin: 16px 0;
     padding: 12px 20px;
     border-left: 4px solid var(--primary);
