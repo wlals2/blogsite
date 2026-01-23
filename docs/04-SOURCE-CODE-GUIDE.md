@@ -1,6 +1,7 @@
 # 블로그 소스코드 구조 및 커스터마이징 가이드
 
 > **작성일**: 2026-01-19
+> **최종 수정**: 2026-01-23
 > **목적**: Hugo 블로그의 전체 소스코드 구조, 커스터마이징 내역, 수정 방법 문서화
 
 ---
@@ -92,7 +93,7 @@
     <h3>🏠 홈서버 인프라</h3>
     <div class="highlight-box">
       이 블로그는 홈서버 Kubernetes Pod에서 운영 중입니다!
-      <span class='metric-badge' data-count='54' data-suffix='일'>0일</span> 무중단 운영 중
+      <span class='metric-badge' data-count='58' data-suffix='일'>0일</span> 무중단 운영 중
       <a href="/architecture/">📐 전체 아키텍처 보기 →</a>
     </div>
   </div>
@@ -593,7 +594,8 @@ tocopen: true
 - 환경: 홈서버 (3노드 클러스터)
 - 애플리케이션: Hugo 블로그 + Spring Boot 게시판
 - 비용: 무료 (전기료만)
-- 운영: 54일+
+- 운영: 58일+
+- 보안: Private GHCR + imagePullSecrets
 
 ### Project 2: AWS EKS + Azure DR (PetClinic)
 - 목적: 프로덕션급 HA + Multi-Cloud DR 구축
@@ -794,7 +796,7 @@ jobs:
   <div class="highlight-box">
     <strong>이 블로그는 홈서버 Kubernetes Pod에서 운영 중입니다!</strong>
     베어메탈 K8s 클러스터 직접 구축 (3노드) · Hugo Blog Pod
-    <span class='metric-badge' data-count='54' data-suffix='일'>0일</span> 무중단 운영 중
+    <span class='metric-badge' data-count='58' data-suffix='일'>0일</span> 무중단 운영 중
     <a href="/architecture/">📐 전체 아키텍처 보기 →</a>
   </div>
 </div>
@@ -912,6 +914,6 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/p
 ---
 
 **작성일**: 2026-01-19
-**최종 업데이트**: 2026-01-19
+**최종 업데이트**: 2026-01-23
 **작성자**: Claude (with Jimin)
-**문서 버전**: 1.0.0
+**문서 버전**: 1.1.0 (운영 일수 및 보안 설정 반영)

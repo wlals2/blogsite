@@ -142,6 +142,11 @@ echo "192.168.X.200 monitoring.jiminhome.shop" | sudo tee -a /etc/hosts
 - MySQL 로그
 - Kubernetes system 로그
 
+**데이터 보관**:
+- Retention Period: 7일 (168h) 🆕
+- 자동 삭제: 매일 UTC 00:00
+- 디스크 고갈 방지 적용 완료 (2026-01-23)
+
 ---
 
 ## 🚨 Alert Rules

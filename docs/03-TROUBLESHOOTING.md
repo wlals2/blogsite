@@ -1,6 +1,7 @@
 # Kubernetes CI/CD 트러블슈팅 가이드
 
 > Jenkins, GitHub Actions, ArgoCD 운영 중 발생한 모든 이슈와 해결 방법
+> 최종 업데이트: 2026-01-23
 
 ---
 

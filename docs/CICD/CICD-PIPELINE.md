@@ -3,9 +3,9 @@
 > GitOps 기반 CI/CD 아키텍처 (구현 완료)
 
 **작성일**: 2026-01-20
-**최종 수정**: 2026-01-20 (GitOps 구현 완료)
-**운영 기간**: 55일
-**상태**: ✅ GitOps 완성 (SSOT 달성)
+**최종 수정**: 2026-01-23 (Private GHCR 적용)
+**운영 기간**: 58일
+**상태**: ✅ GitOps 완성 (SSOT 달성, Private GHCR + imagePullSecrets)
 
 ---
 
@@ -67,7 +67,7 @@
 ┌──────────────────────────────────────────────────────────────┐
 │ Kubernetes Cluster (blog-system namespace)                   │
 │   ├─ WEB: Argo Rollout (Canary 배포)                       │
-│   │    └─ ghcr.io/wlals2/blog-web:v11                      │
+│   │    └─ ghcr.io/wlals2/blog-web:v60 (Private GHCR)       │
 │   ├─ WAS: Deployment                                         │
 │   │    └─ ghcr.io/wlals2/board-was:v1                      │
 │   ├─ MySQL: Deployment                                       │

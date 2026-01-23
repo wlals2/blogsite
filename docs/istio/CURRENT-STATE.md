@@ -48,13 +48,14 @@
 ghcr.io/wlals2/board-was:v1
 ```
 
-### ⚠️ 소스 코드 위치 불명
+### ✅ 소스 코드 위치 확인됨
 
-**`/home/jimin/CICD/` 디렉터리는 현재 사용하지 않음**
+**실제 소스 코드 위치**:
+- `/home/jimin/blogsite/blog-k8s-project/was/` - board-was 소스 코드 (Spring Boot)
+- 패키지: `com.jimin.board`
+- API 경로: `/api/posts`
 
-- `/home/jimin/CICD/sourece-repo/was/` - PetClinic 소스 (실제 이미지와 무관)
-- `/home/jimin/CICD/docker/was/` - Tomcat Dockerfile (실제 이미지와 무관)
-- 실제 board-was 소스 코드: **위치 불명**
+**Note**: `/home/jimin/CICD/` 디렉터리는 현재 archive로 이동됨 (사용하지 않음)
 
 ### 실제 WAS 내부 상태 (조사 완료)
 

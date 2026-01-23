@@ -863,19 +863,25 @@ spec:
 
 ---
 
-### 4. Falco Talon 설치 및 구성
+### 4. Falco Talon 설치 완료 ✅
 
-#### 4-1. Helm 설치
+**설치일**: 2026-01-23
+**상태**: Running (Dry-Run Mode)
+
+#### 4-1. Helm 설치 (완료)
 
 ```bash
 # Helm Repo 추가
 helm repo add falcosecurity https://falcosecurity.github.io/charts
 helm repo update
 
-# Falco Talon 설치
+# Falco Talon 설치 (완료)
 helm install falco-talon falcosecurity/falco-talon \
   -n falco \
   -f /home/jimin/k8s-manifests/docs/helm/falco/talon-values.yaml
+
+# 설치 확인
+kubectl get pods -n falco -l app.kubernetes.io/name=falco-talon
 ```
 
 #### 4-2. Talon Values 파일
@@ -1235,27 +1241,34 @@ rules:
 
 ---
 
-### 9. 구현 단계 (3단계)
+### 9. 3단계 활성화 전략 (현재: Phase 1) 🆕
 
-#### Phase 1: Dry-Run 모드 (1주)
+#### Phase 1: Dry-Run 모드 (1주) ✅ 진행 중
 
+**기간**: 2026-01-23 ~ 2026-01-30 (1주)
 **목표**: False Positive 패턴 학습
+**상태**: ✅ 설치 완료, 운영 중
 
 ```bash
-# Talon 설치 (Dry-Run)
+# Talon 설치 (Dry-Run) - 완료
 helm install falco-talon falcosecurity/falco-talon \
   -n falco \
-  -f talon-values-dryrun.yaml
+  -f /home/jimin/k8s-manifests/docs/helm/falco/talon-values.yaml
+
+# 상태 확인
+kubectl get pods -n falco -l app.kubernetes.io/name=falco-talon
 ```
 
-**관찰 사항**:
+**관찰 사항** (1주간 모니터링 예정):
 - 어떤 Alert가 자주 발생하는가?
 - False Positive는 몇 %인가?
 - 예외 규칙이 필요한가?
 
-#### Phase 2: WARNING 격리 (1주)
+#### Phase 2: WARNING 격리 (1주) ⏳ 1주 후 예정
 
+**기간**: 2026-01-30 ~ 2026-02-06 (예정)
 **목표**: 비교적 안전한 WARNING 레벨부터 격리 시작
+**상태**: ⏳ 대기 중
 
 ```yaml
 config:
@@ -1273,9 +1286,11 @@ config:
 - False Positive 대응 시간은?
 - 격리 해제 프로세스는 원활한가?
 
-#### Phase 3: CRITICAL 격리 (지속 운영)
+#### Phase 3: CRITICAL 격리 (지속 운영) ⏳ 2주 후 예정
 
+**기간**: 2026-02-06 ~ (지속 운영 예정)
 **목표**: 실제 공격 자동 차단
+**상태**: ⏳ 대기 중
 
 ```yaml
 config:

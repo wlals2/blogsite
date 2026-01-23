@@ -1,6 +1,7 @@
 # WAS 아키텍처 & 상태
 
 > Spring Boot + MySQL 게시판 시스템 - 전체 아키텍처 및 현재 상태
+> 최종 업데이트: 2026-01-23
 
 ---
 
@@ -183,6 +184,67 @@
 |--------|------|------|------|--------|
 | **CPU** | 6-7m | 250m | 500m | 3% |
 | **Memory** | 244-255Mi | 512Mi | 1Gi | 48% |
+
+---
+
+## DevSecOps P0 개선 완료 (2026-01-23) 🆕
+
+### 1. SecurityContext 적용 ✅
+
+**목표**: 컨테이너 탈출 공격 방어, 권한 상승 차단
+
+**적용 내용**:
+```yaml
+# was-rollout.yaml
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody user
+        fsGroup: 65534
+      containers:
+      - name: was
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Spring Boot 임시 파일 필요
+          capabilities:
+            drop: ["ALL"]
+```
+
+**확인 방법**:
+```bash
+# WAS Pod가 Non-root로 실행되는지 확인
+kubectl exec -it $(kubectl get pod -l app=was -o name -n blog-system | head -1) -n blog-system -- id
+# 예상: uid=65534(nobody) gid=65534(nogroup)
+```
+
+**효과**:
+- ✅ 컨테이너 탈출 공격 방어 (runAsNonRoot)
+- ✅ 권한 상승 차단 (allowPrivilegeEscalation: false)
+- ✅ 모든 capabilities 제거 (drop: ALL)
+- ✅ Dirty Cow (CVE-2016-5195) 같은 커널 취약점 완화
+
+### 2. MySQL 백업 자동화 ✅
+
+**목표**: 데이터 손실 위험 99% 감소
+
+**구현 내용**:
+- CronJob: 매일 오전 3시 (KST) 자동 백업
+- 백업 방식: mysqldump → gzip → S3 업로드
+- 보관 정책: S3 Lifecycle (7일 후 자동 삭제)
+- RTO: 5분 이내, RPO: 최대 24시간
+
+**파일**: `/home/jimin/k8s-manifests/blog-system/mysql-backup-cronjob.yaml`
+
+### 3. Loki Retention 설정 ✅
+
+**목표**: 디스크 고갈 방지
+
+**설정 내용**:
+- retention_period: 168h (7일)
+- retention_deletes_enabled: true
+- 자동 삭제: 매일 UTC 00:00
 
 ---
 

@@ -3,8 +3,8 @@
 > WEB + WAS 3-TIER 구조 (Hugo 정적 블로그 + Spring Boot API)
 
 **작성일**: 2026-01-21
-**최종 수정**: 2026-01-22
-**상태**: ✅ Production 운영 중 (56일)
+**최종 수정**: 2026-01-23
+**상태**: ✅ Production 운영 중 (58일)
 
 ---
 
@@ -281,11 +281,12 @@ defaultSettings:
 | **Framework** | Hugo (PaperMod 테마) |
 | **Build** | `hugo --minify` |
 | **Server** | nginx:alpine |
-| **Image** | ghcr.io/wlals2/blog-web:v20 |
+| **Image** | ghcr.io/wlals2/blog-web:v60 (Private GHCR) |
 | **Image Size** | 74MB |
 | **Deployment** | Argo Rollout (Canary) |
-| **Replicas** | 2 (고정) |
-| **HPA** | 없음 (정적 파일) |
+| **Replicas** | 2-5 (HPA) |
+| **HPA** | CPU 60% 기준 Auto Scaling |
+| **imagePullSecrets** | ghcr-secret (Private Registry 인증) |
 | **Service** | ClusterIP (web-service:80) |
 
 ### Canary 배포
@@ -469,14 +470,15 @@ SPRING_DATASOURCE_PASSWORD: [encrypted]
 | **Version** | MySQL 8.0 |
 | **Deployment** | Deployment (단일 Pod) |
 | **Service** | ClusterIP (mysql-service:3306) |
-| **Storage** | NFS PVC (10Gi) |
+| **Storage** | Longhorn PVC (5Gi, Replica 2) |
 | **Resources** | CPU: 200m, Memory: 512Mi |
 | **Monitoring** | MySQL Exporter → Prometheus |
+| **Istio Sidecar** | 비활성화 (JDBC 호환성) |
 
 ### 제약사항
 
 - **단일 Pod** (고가용성 없음)
-- **백업 전략 없음** (현재)
+- **자동 백업** ✅ CronJob → S3 업로드 (7일 Lifecycle)
 - **Replication 없음**
 
 ---
@@ -732,9 +734,9 @@ V2__add_comment_table.sql
 
 | 서비스 | 타입 | 역할 | 저장소 | Replicas |
 |--------|------|------|--------|----------|
-| **web** | Argo Rollout | Hugo 정적 블로그 | 없음 | 2 (고정) |
+| **web** | Argo Rollout | Hugo 정적 블로그 (Private GHCR) | 없음 | 2-5 (HPA) |
 | **was** | Argo Rollout | Spring Boot API | 없음 | 2-10 (HPA) |
-| **mysql** | Deployment | 데이터베이스 | Longhorn 5Gi | 1 |
+| **mysql** | Deployment | 데이터베이스 (Istio 제외) | Longhorn 5Gi | 1 |
 | **mysql-exporter** | Deployment | MySQL 메트릭 수집 | 없음 | 1 |
 
 ### monitoring Namespace (모니터링 스택)
@@ -866,5 +868,5 @@ falcosidekick:
 ---
 
 **작성:** Claude Code
-**최종 수정:** 2026-01-22 (HA 구현 반영)
-**상태:** ✅ Production 운영 중 (WEB/WAS/Istio HA 적용 완료)
+**최종 수정:** 2026-01-23 (Private GHCR + HPA 반영)
+**상태:** ✅ Production 운영 중 (WEB/WAS/Istio HA + Private GHCR 적용 완료)
