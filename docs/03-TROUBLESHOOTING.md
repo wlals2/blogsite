@@ -2695,6 +2695,215 @@ falcosidekick:
 
 ---
 
+### 9.6 BuildKit Alert (False Positive)
+
+> ⭐ 이 섹션은 실제 테스트 중 발견된 False Positive 사례입니다 (2026-01-23)
+
+#### 증상
+
+**GitHub Actions에서 WAS 이미지 빌드 시 CRITICAL Alert 발생:**
+
+```bash
+# Grafana Loki 쿼리: {priority="Critical"}
+
+🚨 Alert:
+rule="Drop and execute new binary in container"
+priority=Critical
+k8s_ns_name=default
+container_image=moby/buildkit:buildx-stable-1
+proc_name=/check
+proc_cmdline=/check
+```
+
+**Alert 메시지:**
+```
+Drift Detection: New executable created and immediately executed
+
+File: /check
+Process: /check
+Container: moby/buildkit
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+1. **GitHub Actions 워크플로우**:
+   ```yaml
+   # .github/workflows/deploy-was.yml
+   - name: Build and Push Docker Image
+     uses: docker/build-push-action@v5
+   ```
+
+2. **BuildKit 동작 방식**:
+   ```
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  Docker Build 과정 (BuildKit 사용)                              │
+   ├─────────────────────────────────────────────────────────────────┤
+   │                                                                  │
+   │  1. buildx가 BuildKit 컨테이너 생성                              │
+   │     container_image: moby/buildkit:buildx-stable-1               │
+   │     ↓                                                            │
+   │  2. BuildKit이 Dockerfile 실행                                   │
+   │     - RUN 명령 실행                                              │
+   │     - 레이어 생성                                                │
+   │     ↓                                                            │
+   │  3. 헬스체크용 바이너리 생성 및 실행 ← Falco 탐지!               │
+   │     - /check 바이너리 생성 (컨테이너 내부)                       │
+   │     - /check 즉시 실행 (헬스체크)                                │
+   │     ↓                                                            │
+   │  4. 이미지 완성 및 레지스트리 푸시                                │
+   │                                                                  │
+   └─────────────────────────────────────────────────────────────────┘
+   ```
+
+3. **Falco 룰이 탐지한 이유**:
+   ```yaml
+   # Falco 기본 룰: "Drop and execute new binary in container"
+   - rule: Drop and execute new binary in container
+     desc: Detect new binary created and executed immediately (Drift Detection)
+     condition: >
+       spawned_process and
+       proc.is_exe_from_memfd=true and  # 메모리에서 실행파일 생성
+       container
+     output: >
+       Drift Detection: New executable created and immediately executed
+       (file=%proc.exepath container=%container.name)
+     priority: CRITICAL
+   ```
+
+   **"Drop"의 의미**:
+   - ❌ Falco가 차단했다는 뜻 아님
+   - ✅ 공격자가 악성 바이너리를 "떨어뜨렸다" (Drop = 생성/설치)는 뜻
+   - 보안 용어: "Dropper" = 악성코드 설치 프로그램
+
+4. **왜 문제처럼 보이는가?**:
+   ```
+   정상 시나리오: 컨테이너 이미지는 "불변(Immutable)"
+   → 컨테이너 내부에서 새 바이너리 생성 안 함
+   → 모든 바이너리는 이미지에 미리 포함
+
+   BuildKit 시나리오: 빌드 과정의 특수성
+   → 컨테이너 내부에서 /check 바이너리 동적 생성
+   → 정상 동작이지만 Falco 룰에 걸림
+   ```
+
+#### 판단: False Positive (정상 동작)
+
+**이유:**
+
+| 판단 근거 | 설명 |
+|-----------|------|
+| ✅ **정상 프로세스** | GitHub Actions BuildKit은 공식 Docker 빌드 도구 |
+| ✅ **신뢰할 수 있는 이미지** | `moby/buildkit:buildx-stable-1` (Docker 공식 이미지) |
+| ✅ **헬스체크 용도** | `/check` 바이너리는 BuildKit 헬스체크 전용 |
+| ✅ **격리된 환경** | GitHub Actions Runner는 격리된 빌드 환경 |
+| ✅ **공격 벡터 없음** | 악의적 코드 실행 아님, 정상 빌드 프로세스 |
+
+**실제 공격과 차이점:**
+
+| 항목 | BuildKit (정상) | 실제 공격 |
+|------|----------------|----------|
+| **이미지** | moby/buildkit (공식) | 악의적 이미지 또는 침투된 Pod |
+| **프로세스** | /check (헬스체크) | /tmp/backdoor, /var/tmp/malware |
+| **목적** | 빌드 도구 동작 | 백도어, rootkit, 크립토마이너 |
+| **네트워크** | 레지스트리 푸시만 | C&C 서버 연결 시도 |
+| **지속성** | 빌드 완료 후 삭제 | 영구 설치 시도 |
+
+#### 해결 방법
+
+**옵션 1: 무시 (권장)**
+
+이 Alert는 정상 동작이므로 무시합니다.
+
+```bash
+# Grafana에서 BuildKit Alert 필터링
+{priority="Critical"} | json | container_image !~ "buildkit"
+```
+
+**옵션 2: 예외 규칙 추가**
+
+Falco values.yaml에 예외 추가:
+
+```yaml
+# /home/jimin/k8s-manifests/docs/helm/falco/values.yaml
+customRules:
+  blog-rules.yaml: |-
+    - rule: Drop and execute new binary in container
+      append: true
+      exceptions:
+        - name: buildkit_binaries
+          fields:
+            - container.image.repository
+          comps:
+            - startswith
+          values:
+            - moby/buildkit
+```
+
+**적용:**
+```bash
+helm upgrade falco falcosecurity/falco \
+  -n falco \
+  -f /home/jimin/k8s-manifests/docs/helm/falco/values.yaml
+```
+
+**옵션 3: Priority 변경**
+
+BuildKit Alert를 CRITICAL에서 NOTICE로 낮춤:
+
+```yaml
+- rule: Drop and execute new binary in container for buildkit
+  desc: BuildKit normal operation
+  condition: >
+    spawned_process and
+    proc.is_exe_from_memfd=true and
+    container and
+    container.image.repository startswith "moby/buildkit"
+  output: >
+    BuildKit normal operation (헬스체크)
+    (file=%proc.exepath container=%container.name)
+  priority: NOTICE  # CRITICAL → NOTICE
+```
+
+#### 권장 조치
+
+**현재 상황**:
+- BuildKit은 GitHub Actions에서만 실행
+- 운영 클러스터 내부 Pod가 아님
+- False Positive 빈도: 이미지 빌드 시에만 (하루 1-5회)
+
+**권장**:
+1. ✅ **옵션 1 (무시)** - 가장 간단, 실제 운영에 영향 없음
+2. 향후 IPS 활성화 시 **옵션 2 (예외 추가)** 적용
+3. 실제 공격과 구분 가능:
+   - 실제 공격: blog-system Pod에서 발생
+   - BuildKit: default namespace, moby/buildkit 이미지
+
+#### 핵심 교훈
+
+**Alert 판단 프로세스**:
+
+```
+1. Alert 발생
+   ↓
+2. 컨텍스트 확인
+   - container_image: 신뢰할 수 있는가?
+   - k8s_ns_name: 예상된 namespace인가?
+   - proc_name: 정상 프로세스인가?
+   ↓
+3. 판단
+   - False Positive → 무시 또는 예외 추가
+   - 실제 공격 → 즉시 대응
+```
+
+**False Positive 학습**:
+- IDS/IPS 운영 초기에는 False Positive 많이 발생
+- 패턴 학습을 통해 예외 규칙 추가
+- 1-2주 운영 후 노이즈 감소
+
+---
+
 ### Quick Reference
 
 | 증상 | 원인 | 해결 |
@@ -2704,5 +2913,6 @@ falcosidekick:
 | BPF probe 실패 | 커널 버전 낮음 | ebpf 드라이버로 변경 |
 | Alert 없음 | priority 필터 | minimumpriority 확인 |
 | UI 접속 불가 | UI 비활성화 | webui.enabled: true |
+| BuildKit CRITICAL Alert | False Positive | 무시 또는 예외 추가 |
 
 ---

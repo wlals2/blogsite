@@ -12,7 +12,8 @@
 3. [Kubernetes 현재 구성](#kubernetes-현재-구성)
 4. [GitOps (ArgoCD)](#gitops-argocd)
 5. [향후 개선 계획](#향후-개선-계획)
-6. [모니터링](#모니터링)
+6. [보안 (Falco IDS/IPS)](#보안-falco-idsips)
+7. [모니터링](#모니터링)
 
 ---
 
@@ -1199,6 +1200,262 @@ sudo systemctl enable nginx
 | Phase 3 | DNS 변경 | 15분 |
 | Phase 4 | nginx 중지 | 15분 |
 | **총** |  | **1.5시간** |
+
+---
+
+## 보안 (Falco IDS/IPS)
+
+> eBPF 기반 컨테이너 런타임 보안 모니터링 시스템
+
+### 개요
+
+**Falco**는 CNCF 졸업 프로젝트로, Kubernetes 클러스터 내 컨테이너 런타임에서 이상 행위를 탐지하는 보안 도구입니다.
+
+| 항목 | 값 |
+|------|-----|
+| **역할** | Runtime Security (IDS/IPS) |
+| **탐지 방식** | eBPF syscall 모니터링 |
+| **Namespace** | falco |
+| **설치일** | 2026-01-22 |
+| **현재 모드** | IDS (Intrusion Detection System) |
+| **계획** | IPS (Intrusion Prevention System) |
+
+### 왜 Falco인가?
+
+**다층 보안 전략에서의 위치**:
+
+```
+빌드 타임 보안 (이미지 스캔)
+  ↓
+배포 타임 보안 (GitOps + ArgoCD)
+  ↓
+네트워크 보안 (Cilium NetworkPolicy, Istio mTLS)
+  ↓
+런타임 보안 (Falco) ← 마지막 방어선
+```
+
+**기존 보안 도구와 차별점**:
+
+| 보안 계층 | 도구 | 역할 | Falco 차별점 |
+|-----------|------|------|-------------|
+| **빌드 타임** | Trivy (계획) | 이미지 CVE 스캔 | 런타임 행위 탐지 |
+| **네트워크** | CiliumNetworkPolicy | L3/L4 트래픽 제어 | syscall 레벨 탐지 |
+| **인증/인가** | Istio mTLS | 서비스간 암호화 | 컨테이너 내부 행위 탐지 |
+| **런타임** | **Falco** | 이상 행위 탐지 | ✅ 유일한 런타임 보안 |
+
+**탐지 시나리오**:
+- ✅ 컨테이너 내 Shell 실행 (RCE 공격)
+- ✅ 민감 파일 읽기 (/etc/shadow)
+- ✅ 패키지 관리자 실행 (불변성 위반)
+- ✅ 바이너리 디렉토리 쓰기 (악성코드 설치)
+- ✅ 예상치 못한 외부 연결 (C&C 통신)
+
+### 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Kubernetes Cluster (4 Nodes)                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                각 노드 (DaemonSet)                        │  │
+│  │                                                            │  │
+│  │   ┌──────────┐    eBPF     ┌──────────────────────────┐  │  │
+│  │   │ Kernel   │ ──────────→ │ Falco Pod                │  │  │
+│  │   │ syscalls │  modern_ebpf│  - falco (main)          │  │  │
+│  │   └──────────┘             │  - falcoctl (sidecar)    │  │  │
+│  │                            └───────────┬──────────────┘  │  │
+│  │                                        │                   │  │
+│  └────────────────────────────────────────│───────────────────┘  │
+│                                           │                      │
+│                                           ↓                      │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                    Falcosidekick                            │ │
+│  │                                                              │ │
+│  │   Alert 수신 → 다양한 목적지로 전송                          │ │
+│  │   ├─ Loki (로그 저장, 7일 보관)                             │ │
+│  │   ├─ Slack (실시간 알림)                                    │ │
+│  │   ├─ Falco Talon (IPS 자동 대응)                            │ │
+│  │   └─ Falcosidekick UI (대시보드)                            │ │
+│  │                                                              │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                    ↓                              ↓              │
+│  ┌─────────────────────────┐    ┌──────────────────────────┐   │
+│  │   Falco Talon (IPS)     │    │  Falcosidekick UI        │   │
+│  │   - Pod Isolation       │    │  - Alert 대시보드        │   │
+│  │   - NetworkPolicy 생성  │    │  - 실시간 이벤트         │   │
+│  │   - Slack 알림          │    │  - 통계/필터링           │   │
+│  └─────────────────────────┘    └──────────────────────────┘   │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 주요 구성 요소
+
+| 구성 요소 | 역할 | 리소스 | 상태 |
+|-----------|------|--------|------|
+| **Falco DaemonSet** | 각 노드에서 syscall 모니터링 | CPU: 50m<br>Memory: 200Mi | ✅ 운영 중 |
+| **Falcosidekick** | Alert 전송 허브 | CPU: 10m<br>Memory: 50Mi | ✅ 운영 중 |
+| **Falcosidekick UI** | 웹 대시보드 | CPU: 10m<br>Memory: 50Mi | ✅ 운영 중 |
+| **Falco Talon** | 자동 대응 엔진 (IPS) | CPU: 50m<br>Memory: 128Mi | ⏳ 계획 중 |
+
+### 커스텀 보안 룰 (blog-system 특화)
+
+**설정 파일**: `/home/jimin/k8s-manifests/docs/helm/falco/values.yaml`
+
+| 룰 이름 | 우선순위 | 탐지 대상 | MITRE ATT&CK |
+|---------|----------|-----------|--------------|
+| **Java Process Spawning Shell** | CRITICAL | Java가 /bin/sh 실행 (RCE 공격) | T1059 (Execution) |
+| **Launch Package Management** | WARNING | apt/yum/apk 실행 (불변성 위반) | T1059 (Execution) |
+| **Write to Binary Dir** | ERROR | /bin, /sbin 쓰기 (악성코드) | T1543 (Persistence) |
+| **Unexpected Outbound Connection** | NOTICE | 비정상 포트 외부 연결 (C&C) | T1041 (Exfiltration) |
+
+### IDS vs IPS 모드
+
+| 모드 | 역할 | 동작 방식 | 현재 상태 |
+|------|------|----------|----------|
+| **IDS** | 탐지만 (Detection) | CCTV처럼 기록, 알림만 전송 | ✅ 활성화 |
+| **IPS** | 탐지 + 차단 (Prevention) | NetworkPolicy로 자동 격리 | ⏳ 정책 수립 중 |
+
+**IDS 모드 (현재)**:
+```
+1. Falco가 이상 행위 탐지 (syscall 모니터링)
+   ↓
+2. Falcosidekick이 Loki로 전송
+   ↓
+3. Grafana 대시보드에서 확인
+   ↓
+4. 수동으로 조사 및 대응
+   - kubectl describe pod
+   - kubectl logs
+   - 필요 시 Pod 삭제
+```
+
+**IPS 모드 (계획 - Pod Isolation 방식)**:
+```
+1. Falco가 CRITICAL 이상 행위 탐지
+   ↓
+2. Falco Talon이 자동 대응 (5초 이내)
+   ├─ Pod에 "quarantine=true" 라벨 추가
+   ├─ NetworkPolicy 생성 (모든 트래픽 차단)
+   └─ Slack 알림 전송
+   ↓
+3. 운영자 포렌식 조사 (Pod 유지)
+   - kubectl logs <pod>
+   - kubectl exec -it <pod>
+   - 증거 수집
+   ↓
+4. 판단 및 조치
+   - False Positive → 격리 해제
+   - 실제 공격 → Pod 삭제 및 보고서
+```
+
+**Pod Isolation vs Pod Termination**:
+
+| 방식 | 장점 | 단점 | 선택 |
+|------|------|------|------|
+| **Pod Isolation** | 증거 보존<br>서비스 유지<br>False Positive 대응 가능 | 완전 차단 아님<br>Pod는 계속 실행 | ✅ **채택** |
+| **Pod Termination** | 완전 차단<br>간단함 | 증거 손실<br>서비스 중단<br>복구 어려움 | ❌ 위험 |
+
+**채택 이유**:
+- 운영 환경에서 Pod 즉시 삭제는 서비스 중단 위험
+- False Positive 발생 시 복구 가능 (BuildKit, 정상 패키지 설치 등)
+- 포렌식 조사를 위한 증거 보존 필요
+- NetworkPolicy로 C&C 통신, 데이터 유출 차단 가능
+
+### 실제 탐지 사례
+
+#### 사례 1: 민감 파일 읽기 (테스트)
+
+```bash
+# 테스트 명령
+kubectl exec -n blog-system web-xxxxx -- cat /etc/shadow
+
+# Falco Alert
+⏰ 시간: 15:18:15
+🚨 룰:  Read sensitive file untrusted
+📊 우선순위: Warning
+🔍 파일: /etc/shadow
+📦 Pod: web-db54c48f5-c6qx8
+🏷️ Namespace: blog-system
+```
+
+#### 사례 2: 패키지 관리자 실행 (테스트)
+
+```bash
+# 테스트 명령
+kubectl exec -n blog-system web-xxxxx -- apk update
+
+# Falco Alert
+⏰ 시간: 01:33:17
+⚠️ 룰: Launch Package Management Process in Container
+📊 우선순위: WARNING
+🔍 명령: apk update
+📦 Pod: web-bdcdfd7bd-n6m64
+```
+
+### 접근 방법
+
+#### Falcosidekick UI (웹 대시보드)
+
+**URL**: http://falco.jiminhome.shop
+
+**보안 설정**:
+- IP 화이트리스트: `192.168.X.0/24` (내부 네트워크만)
+- 외부 IP: `403 Forbidden` 차단
+- 인증: admin/admin (기본값)
+
+**기능**:
+- DASHBOARD: Alert 통계, Priority별 분포, Rule별 Top 10
+- EVENTS: 실시간 Alert 목록, 필터링, 검색
+- INFO: Falcosidekick 설정 확인
+
+#### Grafana + Loki (로그 조회)
+
+```
+# Loki 쿼리 예시
+{priority="Warning"}                    # Warning 이상 Alert
+{k8s_ns_name="blog-system"}             # blog-system namespace만
+{rule="Terminal shell in container"}    # 특정 룰만
+```
+
+### 향후 IPS 구현 계획
+
+**3단계 활성화 전략**:
+
+| Phase | 내용 | 기간 | 목적 |
+|-------|------|------|------|
+| **Phase 1** | Falco Talon 설치 + Dry-Run | 1주 | False Positive 학습 |
+| **Phase 2** | WARNING 격리 활성화 | 1주 | 안전한 레벨부터 시작 |
+| **Phase 3** | CRITICAL 격리 활성화 | 지속 | 실제 공격 자동 차단 |
+
+**안전장치**:
+- ✅ Priority 기반 자동 대응 (CRITICAL만 격리, WARNING은 알림만)
+- ✅ 예외 룰 (Whitelist) - CI/CD Pod, 특정 namespace 제외
+- ✅ Dry-Run 모드 - 실제 격리 없이 시뮬레이션
+- ✅ 수동 격리 해제 - False Positive 확인 후 복구 가능
+
+### 리소스 사용량
+
+```bash
+kubectl top pods -n falco
+```
+
+| Pod | CPU | Memory | 노드당 |
+|-----|-----|--------|--------|
+| falco (각 노드) | ~50m | ~200Mi | 4개 |
+| falcosidekick | ~10m | ~50Mi | 1개 |
+| falcosidekick-ui | ~10m | ~50Mi | 1개 |
+| redis | ~5m | ~30Mi | 1개 |
+
+**총 리소스**: CPU ~250m, Memory ~800Mi (클러스터 대비 1% 미만)
+
+### 관련 문서
+
+- **상세 가이드**: [security/security-falco.md](security/security-falco.md)
+- **Helm Values**: `/home/jimin/k8s-manifests/docs/helm/falco/values.yaml`
+- **Ingress**: `/home/jimin/k8s-manifests/falco/falcosidekick-ui-ingress.yaml`
+- **DevSecOps 아키텍처**: (계획 중)
 
 ---
 

