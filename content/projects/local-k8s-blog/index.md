@@ -1,5 +1,5 @@
 ---
-title: "Local K8s Blog - Homeserver Kubernetes 운영 실전"
+title: "Local K8s Blog - Homeserver Kubernetes 운영 실전 🏠"
 date: 2026-01-23
 summary: "베어메탈 Kubernetes에서 Hugo 블로그 58일 운영: Istio + Cilium + Falco + GitOps 완전 자동화"
 tags: ["kubernetes", "bare-metal", "hugo", "istio", "cilium", "falco", "argocd", "gitops", "devsecops", "homelab"]
@@ -21,11 +21,12 @@ draft: false
 > - ✅ GitHub Actions CI/CD (35초 배포)
 > - ✅ ArgoCD GitOps (Auto-Sync, Prune, SelfHeal)
 > - ✅ Argo Rollouts Canary 배포
-> - ✅ **Istio Service Mesh** (mTLS, Traffic Routing)
-> - ✅ **Cilium eBPF** (CNI, kube-proxy 대체)
-> - ✅ **Falco Runtime Security** (eBPF IDS)
+> - ✅ **Istio Service Mesh** (mTLS, Traffic Routing) ← 신규
+> - ✅ **Cilium eBPF** (CNI, kube-proxy 대체) ← 신규
+> - ✅ **Falco Runtime Security** (eBPF IDS) ← 신규
 > - ✅ PLG 모니터링 (4 대시보드, 8 Alert 규칙)
 > - ✅ HPA 자동 스케일링 (WAS 2-10, WEB 2-5)
+> - ✅ 스토리지 최적화 (30Gi 절약, 90Gi 운영)
 
 ---
 
@@ -49,117 +50,39 @@ draft: false
 | **DB** | AWS RDS (Multi-AZ) | MySQL Pod (Longhorn PVC 5Gi) |
 | **CI/CD** | Jenkins + ArgoCD | **GitHub Actions + ArgoCD** |
 | **배포 전략** | Blue-Green | **Argo Rollouts Canary** |
-| **Service Mesh** | 없음 | **Istio (mTLS + Traffic)** |
-| **CNI** | AWS VPC CNI | **Cilium eBPF** |
-| **Runtime Security** | 없음 | **Falco (eBPF IDS)** |
 | **모니터링** | CloudWatch | **PLG Stack (58일 운영)** |
+| **HPA** | 미적용 | **WAS 2-10, WEB 2-5** |
 | **비용** | $258/월 | **무료** ✅ |
+| **실사용** | 샘플 앱 | **매일 사용 (58일)** ✅ |
 
 ---
 
-## 🏗️ 전체 아키텍처
+## 🏗️ 상세 아키텍처
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        External Traffic                          │
-│                  https://blog.jiminhome.shop                     │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌───────────────────────────────────────────────────────────────────┐
-│  Cloudflare (CDN + DDoS + SSL)                                   │
-└───────────────────────────┬───────────────────────────────────────┘
-                            │
-                            ▼
-┌───────────────────────────────────────────────────────────────────┐
-│  Kubernetes Cluster (3 nodes: 1 CP + 2 Workers)                  │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │  Istio Ingress Gateway (External IP: MetalLB)               │ │
-│  │    └─ TLS Termination (Cloudflare Origin Cert)              │ │
-│  └──────────────────────────┬──────────────────────────────────┘ │
-│                             │                                     │
-│  ┌──────────────────────────┴──────────────────────────────────┐ │
-│  │  Istio VirtualService (L7 Routing)                          │ │
-│  │    ├─ /        → web-service (Hugo)                         │ │
-│  │    └─ /api/**  → was-service (Spring Boot)                  │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-│  ┌────────────────┐    ┌────────────────┐    ┌────────────────┐ │
-│  │  WEB (Rollout) │    │  WAS (Rollout) │    │     MySQL      │ │
-│  │  nginx:alpine  │    │  Spring Boot   │ ──▶│    8.0         │ │
-│  │  Replicas: 2   │    │  Replicas: 2   │    │  Longhorn PVC  │ │
-│  │  Canary 배포   │    │  HPA 2-10      │    │    5Gi         │ │
-│  └────────────────┘    └────────────────┘    └────────────────┘ │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │  Security & Observability                                    │ │
-│  │    ├─ Cilium (eBPF CNI + NetworkPolicy)                     │ │
-│  │    ├─ Istio (mTLS + AuthorizationPolicy)                    │ │
-│  │    ├─ Falco (Runtime Security IDS)                          │ │
-│  │    └─ PLG Stack (Prometheus + Loki + Grafana)               │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────┘
-```
+![Homeserver Kubernetes Architecture](/images/architecture/phase4-home-server.webp)
 
----
-
-## 🛡️ 기술 스택 상세 (신규 구축)
-
-### Service Mesh & Networking
-
-| 기술 | 역할 | 상세 글 |
-|------|------|---------|
-| **Istio** | Service Mesh (mTLS, Traffic Routing) | [Istio 아키텍처 구축기](/study/2026-01-22-istio-service-mesh-architecture/) |
-| **Istio Traffic** | VirtualService, DestinationRule | [Traffic Management 가이드](/study/2026-01-22-istio-traffic-management/) |
-| **Istio mTLS** | Zero Trust 보안 | [mTLS + AuthorizationPolicy](/study/2026-01-22-istio-mtls-security/) |
-| **Cilium** | eBPF CNI, kube-proxy 대체 | [Cilium eBPF 가이드](/study/2026-01-22-cilium-ebpf-kube-proxy/) |
-| **Hubble** | 네트워크 Observability | [Hubble 트래픽 관찰](/study/2026-01-22-cilium-hubble-observability/) |
-
-### Security (DevSecOps)
-
-| 기술 | 역할 | 상세 글 |
-|------|------|---------|
-| **Falco** | eBPF 런타임 보안 (IDS) | [Falco 트러블슈팅](/study/2026-01-23-falco-runtime-security-troubleshooting/) |
-| **CiliumNetworkPolicy** | L3/L4 Zero Trust | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
-| **SecurityContext** | Non-root, Capabilities Drop | 아키텍처 문서 참조 |
-| **Trivy** | 이미지 취약점 스캔 | GitHub Actions 통합 |
-
-### CI/CD & GitOps
-
-| 기술 | 역할 | 상세 글 |
-|------|------|---------|
-| **GitHub Actions** | Self-hosted Runner CI | [Runner 트러블슈팅](/study/2026-01-23-runner-not-picking-job/) |
-| **ArgoCD** | GitOps CD (Auto-Sync) | [ArgoCD 트러블슈팅](/study/2026-01-23-argocd-troubleshooting/) |
-| **Argo Rollouts** | Canary 배포 | [Canary + TopologySpread](/study/2026-01-23-canary-topology-spread/) |
-
-### Storage & Database
-
-| 기술 | 역할 | 상세 글 |
-|------|------|---------|
-| **Longhorn** | 분산 블록 스토리지 | [Longhorn CSI 트러블슈팅](/study/2026-01-23-longhorn-csi-crashloopbackoff/) |
-| **MySQL Backup** | S3 자동 백업 (7일 Lifecycle) | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
-
----
-
-## 🏗️ 상세 아키텍처 (기존 구성)
+**아키텍처 구성 요소:**
 
 ### Bare-metal Kubernetes Cluster
 
 **Cluster Setup:**
-- **Control Plane**: kubeadm으로 구축 (v1.32.0)
+- **Control Plane**: kubeadm으로 구축 (v1.31.13)
 - **Container Runtime**: containerd
 - **CNI**: Cilium (고성능 네트워킹, eBPF 기반)
 - **Storage**: Longhorn (15Gi) + Local-path (75Gi)
 - **운영 기간**: **58일** (안정적 운영 중)
 
-### 노드 구성
+### Networking & Ingress Layer
 
-| 노드 | 역할 | IP | 스펙 |
-|------|------|-----|------|
-| k8s-cp | Control Plane | 192.168.0.101 | Master, etcd |
-| k8s-worker1 | Worker | 192.168.0.61 | 대부분의 워크로드 |
-| k8s-worker2 | Worker | 192.168.0.62 | 분산 배치 |
+**Ingress Controller:**
+- **nginx Ingress Controller**: Path-based L7 라우팅
+- **NodePort**: 30080 (외부 접속)
+- **Cloudflare Tunnel**: `http://blog.jiminhome.shop/` → NodePort
+
+**Ingress Rules:**
+- `/` → web-service (Hugo 블로그)
+- `/board` → was-service (Spring Boot 게시판)
+- `/api/*` → was-service (REST API)
 
 ### Application Layer (Namespace: blog-system)
 
@@ -231,6 +154,75 @@ draft: false
 - **Alert 연동**: Prometheus Alert 시각화
 - **Storage**: Local-path PVC 10Gi
 - **운영 기간**: **58일**
+
+**Pushgateway (Namespace: monitoring):**
+- **Batch Job**: 단기 작업 메트릭 수집
+- **Storage**: Local-path PVC 5Gi
+
+---
+
+## 🛠️ 기술 스택
+
+### 기존 인프라 (활용)
+
+| 컴포넌트 | 버전/상태 | 역할 |
+|---------|----------|------|
+| **Kubernetes** | v1.31.13 | 베어메탈 멀티 노드 (51일+ 운영) |
+| **CNI** | Cilium | eBPF 기반 고성능 네트워킹 |
+| **Storage** | Longhorn | 분산 스토리지 (3 replica) |
+| **Monitoring** | Prometheus + Grafana | 기존 모니터링 스택 활용 |
+
+### 신규 구축 (Local K8s Blog)
+
+| 레이어 | 기술 | 선택 이유 |
+|--------|------|----------|
+| **Ingress** | nginx-ingress | Path-based Routing (`/`, `/board`) |
+| **WEB** | Hugo + nginx:alpine | 이 블로그 자체를 Pod로 배포 |
+| **WAS** | Spring Boot 3.2 | 게시판 CRUD 기능 |
+| **DB** | MySQL 8.0 | Longhorn PVC 5Gi (복제 3개) |
+| **CI/CD** | GitHub Actions | Self-hosted Runner (35초 배포) |
+| **GitOps** | ArgoCD | Auto-Sync, Prune, SelfHeal |
+| **Deployment** | Argo Rollouts | Canary 배포 전략 |
+| **HPA** | K8s HPA | WAS 2-10, WEB 2-5 자동 스케일링 |
+| **Monitoring** | PLG Stack | Prometheus + Loki + Grafana (58일) |
+
+---
+
+## 🛡️ 신규 구축 기술 스택 (2026.01)
+
+### Service Mesh & Networking
+
+| 기술 | 역할 | 상세 글 |
+|------|------|---------|
+| **Istio** | Service Mesh (mTLS, Traffic Routing) | [Istio 아키텍처 구축기](/study/2026-01-22-istio-service-mesh-architecture/) |
+| **Istio Traffic** | VirtualService, DestinationRule | [Traffic Management 가이드](/study/2026-01-22-istio-traffic-management/) |
+| **Istio mTLS** | Zero Trust 보안 | [mTLS + AuthorizationPolicy](/study/2026-01-22-istio-mtls-security/) |
+| **Cilium** | eBPF CNI, kube-proxy 대체 | [Cilium eBPF 가이드](/study/2026-01-22-cilium-ebpf-kube-proxy/) |
+| **Hubble** | 네트워크 Observability | [Hubble 트래픽 관찰](/study/2026-01-22-cilium-hubble-observability/) |
+
+### Security (DevSecOps)
+
+| 기술 | 역할 | 상세 글 |
+|------|------|---------|
+| **Falco** | eBPF 런타임 보안 (IDS) | [Falco 트러블슈팅](/study/2026-01-23-falco-runtime-security-troubleshooting/) |
+| **CiliumNetworkPolicy** | L3/L4 Zero Trust | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
+| **SecurityContext** | Non-root, Capabilities Drop | 아키텍처 문서 참조 |
+| **Trivy** | 이미지 취약점 스캔 | GitHub Actions 통합 |
+
+### CI/CD & GitOps (트러블슈팅 모음)
+
+| 기술 | 역할 | 상세 글 |
+|------|------|---------|
+| **GitHub Actions** | Self-hosted Runner CI | [Runner 트러블슈팅](/study/2026-01-23-runner-not-picking-job/) |
+| **ArgoCD** | GitOps CD (Auto-Sync) | [ArgoCD 트러블슈팅](/study/2026-01-23-argocd-troubleshooting/) |
+| **Argo Rollouts** | Canary 배포 | [Canary + TopologySpread](/study/2026-01-23-canary-topology-spread/) |
+
+### Storage & Database
+
+| 기술 | 역할 | 상세 글 |
+|------|------|---------|
+| **Longhorn** | 분산 블록 스토리지 | [Longhorn CSI 트러블슈팅](/study/2026-01-23-longhorn-csi-crashloopbackoff/) |
+| **MySQL Backup** | S3 자동 백업 (7일 Lifecycle) | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
 
 ---
 
@@ -356,22 +348,14 @@ ENTRYPOINT ["java", \
 - Longhorn vs Local-path 스토리지 성능 비교
 - 리소스 사용 패턴 파악
 
-### 8. Service Mesh (Istio)
+### 8. Ingress Path Routing
 
-**Istio 도입으로 얻은 것**:
-- **mTLS**: Pod 간 통신 자동 암호화
-- **Traffic Management**: VirtualService, DestinationRule로 세밀한 라우팅
-- **AuthorizationPolicy**: Zero Trust 보안
+**하나의 IP로 여러 서비스 접근**:
+- `/` → Hugo 블로그
+- `/board` → Spring Boot 게시판
+- `/api/*` → REST API
 
-### 9. eBPF 기반 보안 (Cilium + Falco)
-
-**Cilium**:
-- kube-proxy 대체 (eBPF 기반)
-- CiliumNetworkPolicy로 L3/L4 보안
-
-**Falco**:
-- 런타임 보안 모니터링
-- 컨테이너 이상 행동 탐지
+**배운 것**: L7 라우팅, rewrite 규칙, CORS 설정
 
 ---
 
@@ -383,14 +367,16 @@ ENTRYPOINT ["java", \
 2. ✅ **Hugo 블로그 Pod 배포** (nginx:alpine, Multi-stage Build)
 3. ✅ **Spring Boot WAS 배포** (board-was:v16, MySQL 연동, JVM 튜닝)
 4. ✅ **MySQL StatefulSet 배포** (Longhorn PVC 5Gi, 3 replica)
-5. ✅ **Istio Service Mesh** (mTLS, VirtualService, AuthorizationPolicy)
+5. ✅ **nginx Ingress 설정** (Path-based Routing: `/`, `/board`, `/api`)
 6. ✅ **GitHub Actions CI/CD** (Self-hosted Runner, 35초 배포)
 7. ✅ **ArgoCD GitOps 완성** (Auto-Sync, Prune, SelfHeal)
 8. ✅ **Argo Rollouts 배포** (Canary 전략)
 9. ✅ **HPA 자동 스케일링** (WAS 2-10, WEB 2-5)
 10. ✅ **PLG Stack 모니터링** (Prometheus + Loki + Grafana, 4 Dashboard, 8 Alert)
-11. ✅ **Falco Runtime Security** (eBPF IDS, Loki 연동)
-12. ✅ **MySQL S3 백업** (CronJob, 7일 Lifecycle)
+11. ✅ **스토리지 최적화** (Nextcloud 삭제, 30Gi 절약)
+12. ✅ **WAS v1.4.0 기능** (viewCount 조회수 + 원자적 UPDATE 최적화)
+13. ✅ **JVM 튜닝** (G1GC, Heap 256-512MB, 컨테이너 최적화)
+14. ✅ **HA 설정** (topologySpreadConstraints DoNotSchedule + dynamicStableScale)
 
 ### 📈 운영 성과 (2025.11.27 ~ 현재)
 
@@ -398,20 +384,14 @@ ENTRYPOINT ["java", \
 |------|------|------|
 | **운영 기간** | **58일** | 2025.11.27 시작 (중단 없음) |
 | **배포 속도** | **35초** | GitHub Actions GitOps 자동화 |
-| **Pod 수** | **~100개** | blog-system + monitoring + argocd + istio + falco |
-| **PVC 용량** | **90Gi** | Longhorn 15Gi + Local-path 75Gi |
+| **Pod 수** | **98개** | blog-system (8) + monitoring (15) + argocd (7) + 시스템 |
+| **PVC 수** | **5개** | MySQL (5Gi) + PLG Stack (75Gi) |
+| **스토리지** | **90Gi** | Longhorn 15Gi + Local-path 75Gi |
+| **HPA 동작** | **정상** | WAS 2-10, WEB 2-5 자동 스케일링 |
+| **Alert 규칙** | **8개** | PodCrashLooping, HighMemoryUsage 등 |
+| **Dashboard** | **4개** | Cluster, Node, Storage, Application |
 | **Uptime** | **99%+** | 단 1회 재부팅 (커널 업데이트) |
-
-### Namespace별 서비스
-
-| Namespace | 주요 서비스 |
-|-----------|------------|
-| blog-system | web, was, mysql |
-| istio-system | istiod, ingress, egress, kiali, jaeger |
-| monitoring | prometheus, grafana, loki, alertmanager |
-| argocd | argocd-server, repo-server |
-| falco | falco, falcosidekick |
-| longhorn-system | longhorn-manager, csi-plugin |
+| **WAS 버전** | **v16** | JVM 튜닝, viewCount, HA 설정 적용 |
 
 ---
 
@@ -424,8 +404,7 @@ ENTRYPOINT ["java", \
 | **배포 시간** | 1-2분 | **35초** ✅ | **200%** (목표 대비 3배 빠름) |
 | **자동화** | GitOps | **GitHub Actions + ArgoCD** ✅ | **100%** (완전 자동화) |
 | **환경** | Kubernetes | **Bare-metal K8s (58일 운영)** ✅ | **100%** |
-| **Service Mesh** | 없음 | **Istio mTLS + Traffic** ✅ | **추가 달성** |
-| **Runtime Security** | 없음 | **Falco eBPF IDS** ✅ | **추가 달성** |
+| **제어** | 완전 제어 | **GitOps SelfHeal + Rollback** ✅ | **100%** |
 | **비용** | 무료 | **$0/월** ✅ | **100%** |
 | **가용성** | 95%+ | **99%+ (1회 재부팅)** ✅ | **100%** |
 
@@ -436,17 +415,40 @@ ENTRYPOINT ["java", \
 3. ✅ **GitOps 완성**: ArgoCD Auto-Sync + SelfHeal + Prune 3대 원칙 체득
 4. ✅ **베어메탈 운영**: kubeadm 클러스터 직접 구축 및 58일 관리
 5. ✅ **모니터링 구축**: PLG Stack으로 58일간 메트릭/로그 수집 및 분석
-6. ✅ **Service Mesh 도입**: Istio로 mTLS, Traffic Management 구현
-7. ✅ **DevSecOps 구축**: Falco + Cilium으로 런타임/네트워크 보안
+6. ✅ **스토리지 최적화**: Longhorn/Local-path 비교 분석, 30Gi 절약
+7. ✅ **Canary 배포**: Argo Rollouts으로 무중단 배포 경험
+8. ✅ **자동 스케일링**: HPA로 트래픽 대응 자동화
 
 ---
 
-## 🔮 다음 단계
+## 🔮 다음 단계: Phase 4 운영 고도화
 
-- [ ] Prometheus Alert → Slack 연동
-- [ ] MySQL HA (Primary-Replica)
-- [ ] SealedSecrets (GitOps Secret 관리)
-- [ ] SLO/SLI 대시보드
+Local K8s Blog 완성 후 운영 개선 예정 (2026.02~):
+
+### 1. Monitoring 강화 🔍
+- **Prometheus Alert 실전 활용**: Slack 연동 (현재: 8개 규칙, 미연동)
+- **Distributed Tracing**: Jaeger로 요청 추적 (WEB → WAS → MySQL)
+- **SLO/SLI 설정**: 가용성 99.9%, 응답 시간 <200ms 목표
+
+### 2. Security 강화 🔐
+- **Network Policy**: WEB ↔ WAS만 허용 (현재: 전체 허용)
+- **Pod Security Standards**: Restricted 모드 적용
+- **External Secrets Operator**: Git에 Secret 저장 금지
+
+### 3. Cost 최적화 💰
+- **리소스 Request 튜닝**: 58일 메트릭 기반 최적화
+- **Longhorn 복제 수 조정**: 3 → 2 (30% 스토리지 절약)
+- **이미지 최적화**: Alpine 기반 경량화
+
+### 4. Observability 개선 📊
+- **Custom Metrics**: 게시판 조회수, 댓글 수 등 비즈니스 메트릭
+- **Log 분석 자동화**: Loki Query로 에러 패턴 분석
+
+### 5. (장기) MSA 전환 준비 🚧
+**조건**: 트래픽 증가 + 기능 복잡도 증가 시 (2026.06~)
+- Istio Service Mesh 도입
+- Kafka Event-driven Architecture
+- Auth Service 분리
 
 ---
 
@@ -481,9 +483,10 @@ ENTRYPOINT ["java", \
 
 ## 🔗 관련 문서
 
-- [전체 아키텍처 문서](/docs/05-ARCHITECTURE.md)
-- [DevSecOps 아키텍처](/k8s-manifests/docs/DEVSECOPS-ARCHITECTURE.md)
-- [트러블슈팅 모음](/docs/03-TROUBLESHOOTING.md)
+- **[GitOps 구현 문서](../../docs/CICD/GITOPS-IMPLEMENTATION.md)** - GitHub Actions + ArgoCD 구성
+- **[스토리지 분석](../../docs/storage/STORAGE-ANALYSIS.md)** - Longhorn + Nextcloud 최적화
+- **[스토리지 현황](../../docs/storage/README.md)** - PVC 5개, 90Gi 운영
+- **[k8s-manifests repo](https://github.com/wlals2/k8s-manifests)** - ArgoCD GitOps 저장소
 
 ---
 
@@ -495,14 +498,20 @@ ENTRYPOINT ["java", \
 - **2026-01-XX**: Argo Rollouts Canary 배포 + HPA 적용
 - **2026-01-15**: PLG Stack 모니터링 완성 (4 Dashboard, 8 Alert)
 - **2026-01-20**: Nextcloud 삭제 (30Gi 절약), 스토리지 최적화 완료
+- **2026-01-20**: 프로젝트 페이지 업데이트 (58일 운영 성과 반영)
 - **2026-01-22**: WAS v1.4.0 기능 추가 (viewCount 조회수, 원자적 UPDATE)
 - **2026-01-22**: JVM 튜닝 적용 (G1GC, Heap 256-512MB)
-- **2026-01-22**: Istio Service Mesh 구축 (mTLS, VirtualService)
-- **2026-01-22**: Cilium eBPF CNI 구축 (kube-proxy 대체)
-- **2026-01-23**: Falco Runtime Security 구축 (eBPF IDS)
-- **2026-01-23**: 트러블슈팅 글 작성 (10개)
+- **2026-01-22**: HA 설정 완료 (topologySpreadConstraints, dynamicStableScale)
+- **2026-01-22**: Istio Service Mesh 구축 (mTLS, VirtualService, AuthorizationPolicy)
+- **2026-01-22**: Cilium eBPF CNI 구축 (kube-proxy 대체, Hubble Observability)
+- **2026-01-23**: Falco Runtime Security 구축 (eBPF IDS, Loki 연동)
+- **2026-01-23**: MySQL S3 백업 CronJob 구축 (7일 Lifecycle)
+- **2026-01-23**: 트러블슈팅 글 10개 작성 및 링크 추가
 
 ---
 
-**최종 업데이트**: 2026-01-23
-**상태**: ✅ Production 운영 중
+**작성일**: 2026-01-23 (최종 업데이트)
+**프로젝트 상태**: ✅ **Production 운영 중** (58일, 2025.11.27 시작)
+**난이도**: ⭐⭐⭐⭐⭐ (Expert - Service Mesh + eBPF Security + GitOps)
+**실제 소요 시간**: 58일 (지속적 개선)
+**다음 단계**: Prometheus Alert Slack 연동, MySQL HA
