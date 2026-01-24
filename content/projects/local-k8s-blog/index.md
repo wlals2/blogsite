@@ -215,13 +215,15 @@ Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualServ
 | **Trivy** | 이미지 취약점 스캔 | GitHub Actions 통합 |
 | **Private GHCR** | 컨테이너 이미지 비공개 | imagePullSecrets 설정 |
 
-### CI/CD & GitOps (트러블슈팅 모음)
+### CI/CD & GitOps
 
 | 기술 | 역할 | 상세 글 |
 |------|------|---------|
+| **GitOps Pipeline** | GitHub Actions + ArgoCD (SSOT) | [GitOps CI/CD 파이프라인 구축](/study/2026-01-20-gitops-cicd-pipeline/) |
+| **Canary Deployment** | WEB vs WAS 전략 비교 | [Canary 배포 전략 비교](/study/2026-01-21-canary-deployment-web-was-comparison/) |
 | **GitHub Actions** | Self-hosted Runner CI | [Runner 트러블슈팅](/study/2026-01-23-runner-not-picking-job/) |
 | **ArgoCD** | GitOps CD (Auto-Sync) | [ArgoCD 트러블슈팅](/study/2026-01-23-argocd-troubleshooting/) |
-| **Argo Rollouts** | Canary 배포 | [Canary + TopologySpread](/study/2026-01-23-canary-topology-spread/) |
+| **Argo Rollouts** | Canary + TopologySpread | [Canary + TopologySpread](/study/2026-01-23-canary-topology-spread/) |
 | **Private GHCR** | 이미지 비공개 + imagePullSecrets | 아래 상세 설명 |
 
 #### Private Container Registry 보안
