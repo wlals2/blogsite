@@ -1,7 +1,7 @@
 # 인프라 통합 가이드
 
-> Cloudflare, Kubernetes, GitOps, 모니터링
-> 최종 업데이트: 2026-01-23
+> Cloudflare, Kubernetes, GitOps, 모니터링, 보안
+> 최종 업데이트: 2026-01-24
 
 ---
 
@@ -10,6 +10,9 @@
 1. [Cloudflare CDN](#cloudflare-cdn)
 2. [Kubernetes 아키텍처](#kubernetes-아키텍처)
 3. [Kubernetes 현재 구성](#kubernetes-현재-구성)
+   - [MetalLB LoadBalancer + Istio Gateway](#metallb-loadbalancer--istio-gateway-구현-완료)
+   - [Istio Gateway (Nginx Ingress 대체)](#istio-gateway-nginx-ingress-대체-마이그레이션)
+   - [HPA Auto Scaling](#hpa-horizontal-pod-autoscaler-구현-완료)
 4. [GitOps (ArgoCD)](#gitops-argocd)
 5. [향후 개선 계획](#향후-개선-계획)
 6. [보안 (Falco IDS/IPS)](#보안-falco-idsips)
@@ -34,9 +37,9 @@
 
 **DNS 레코드:**
 ```
-A     blog      192.168.X.187    (Proxied - 주황색 구름)
-                                  ⚠️ 현재 로컬 nginx 주소
-                                  향후 192.168.X.200 (MetalLB)로 변경 예정
+A     blog      192.168.X.200    (Proxied - 주황색 구름)
+                                  ✅ MetalLB LoadBalancer IP
+                                  ✅ Cloudflare Tunnel 연결
 CNAME www       blog.jiminhome.shop (Proxied)
 ```
 
@@ -180,53 +183,40 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/7895fe2aef761351db71892
 - ❌ 단일 위치 (레이턴시)
 - ❌ DDoS 취약
 
-### 개선 옵션
+### 현재 아키텍처 (Cloudflare + Istio Gateway)
 
-**현재 (Cloudflare + nginx):**
+**구현 완료 (2026-01-24):**
 ```
 사용자
+  ↓ HTTPS
+Cloudflare CDN (캐시, DDoS 방어, SSL/TLS 종료)
+  ↓ Origin: 192.168.1.200
+MetalLB LoadBalancer (192.168.1.200)
   ↓
-Cloudflare CDN (캐시)
-  ↓
-로컬 nginx (SSL + Proxy)
-  ↓
-Kubernetes Ingress
-  ↓
-web Pods
+Istio Gateway (L7 Routing)
+  ├─ blog.jiminhome.shop → web-service
+  ├─ monitoring.jiminhome.shop → grafana
+  ├─ argocd.jiminhome.shop → argocd-server
+  └─ kiali.jiminhome.shop → kiali
+  ↓ mTLS (DISABLE for Gateway → Service)
+web/was/grafana/argocd/kiali Pods
 ```
 
-**대안 1: Cloudflare만 사용 (nginx 제거)**
-```
-사용자
-  ↓
-Cloudflare CDN (SSL + Proxy)
-  ↓
-Kubernetes LoadBalancer (MetalLB)
-  ↓
-web Pods
-```
-- ✅ 아키텍처 단순화
-- ✅ SSL 관리 자동화 (cert-manager)
-- ❌ Cloudflare 의존성 증가
+**주요 특징:**
+- ✅ **Cloudflare CDN**: DDoS 방어, SSL/TLS 종료, 캐시
+- ✅ **MetalLB**: Kubernetes 네이티브 LoadBalancer (192.168.1.200)
+- ✅ **Istio Gateway**: Nginx Ingress 대체, 단일 L7 라우팅 진입점
+- ✅ **Istio Service Mesh**: mTLS 암호화 (service ↔ service), Canary 배포
+- ✅ **자동 캐시 퍼지**: GitHub Actions 통합
+- ✅ **멀티 서비스 라우팅**: VirtualService 기반
 
-**대안 2: nginx만 사용 (Cloudflare 제거)**
+**아키텍처 진화:**
 ```
-사용자
-  ↓
-로컬 nginx (SSL + Cache + Proxy)
-  ↓
-Kubernetes Ingress
-  ↓
-web Pods
+Phase 1 (2024-11): Cloudflare → 로컬 nginx → Kubernetes
+Phase 2 (2026-01-20): Cloudflare → MetalLB → Nginx Ingress → Istio Mesh
+Phase 3 (2026-01-24): Cloudflare → MetalLB → Istio Gateway → Istio Mesh (현재)
+                      └─ Nginx Ingress 제거, Istio 일원화
 ```
-- ✅ 완전한 제어
-- ❌ 글로벌 성능 저하
-- ❌ DDoS 방어 없음
-
-**선택: 현재 유지 (Cloudflare + nginx)**
-- Cloudflare: 글로벌 CDN + DDoS
-- nginx: SSL 종료 + 로컬 프록시
-- 추후 MetalLB + cert-manager로 nginx 제거 고려
 
 ---
 
@@ -239,15 +229,31 @@ web Pods
 k8s-cp (Control Plane)
   - IP: 192.168.X.187
   - 역할: API Server, Scheduler, etcd
+  - 버전: v1.31.13
 
 k8s-worker1 (Worker)
   - IP: 192.168.X.61
   - 상태: Ready
+  - 스펙: 2 CPU, 4GB RAM
+  - Container Runtime: containerd://2.1.5
 
 k8s-worker2 (Worker)
   - IP: 192.168.X.62
   - 상태: Ready
+  - 스펙: 2 CPU, 4GB RAM
+  - Container Runtime: containerd://2.1.5
+
+k8s-worker3 (Worker) ✨ 2026-01-22 추가
+  - IP: 192.168.X.60
+  - 상태: Ready
+  - 스펙: 2 CPU, 4GB RAM
+  - Container Runtime: containerd://1.7.28
 ```
+
+**클러스터 규모:**
+- **노드**: 4개 (1 CP + 3 Workers)
+- **CNI**: Cilium v1.18.4 (eBPF)
+- **스토리지**: Longhorn (Replica 3)
 
 **Namespace:**
 ```bash
@@ -320,9 +326,9 @@ spec:
         - pause: {duration: 30s}
 
 ---
-# WAS (Spring Boot)
-apiVersion: apps/v1
-kind: Deployment
+# WAS (Spring Boot) - Argo Rollout (Canary 배포)
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: was
   namespace: blog-system
@@ -336,11 +342,28 @@ spec:
       labels:
         app: was
     spec:
+      # Private GHCR 이미지 pull용
+      imagePullSecrets:
+        - name: ghcr-secret
+      # SecurityContext (DevSecOps P0, 2026-01-23)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody
+        fsGroup: 65534
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway  # 3-worker 클러스터 호환
       containers:
       - name: spring-boot
-        image: ghcr.io/wlals2/board-was:v3
+        image: ghcr.io/wlals2/board-was:v3  # Private GHCR
         ports:
         - containerPort: 8080
+        # Container SecurityContext
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         env:
         - name: SPRING_DATASOURCE_URL
           value: jdbc:mysql://mysql-service:3306/board
@@ -361,14 +384,32 @@ spec:
           limits:
             cpu: 500m
             memory: 1Gi
+  strategy:
+    canary:
+      trafficRouting:
+        istio:
+          virtualService:
+            name: was-vs
+            routes: ["primary"]
+          destinationRule:
+            name: was-dest-rule
+      steps:
+        - setWeight: 10
+        - pause: {duration: 30s}
+        - setWeight: 50
+        - pause: {duration: 30s}
+        - setWeight: 90
+        - pause: {duration: 30s}
 
 ---
-# MySQL
+# MySQL (Istio Mesh 제외, Longhorn 스토리지)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql
   namespace: blog-system
+  annotations:
+    sidecar.istio.io/inject: "false"  # Istio Mesh 제외 (JDBC 호환성)
 spec:
   replicas: 1
   selector:
@@ -378,6 +419,8 @@ spec:
     metadata:
       labels:
         app: mysql
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       containers:
       - name: mysql
@@ -389,16 +432,23 @@ spec:
           valueFrom:
             secretKeyRef:
               name: mysql-secret
-              key: root-password
+              key: mysql-root-password
         - name: MYSQL_DATABASE
           value: board
         volumeMounts:
         - name: mysql-storage
           mountPath: /var/lib/mysql
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 400m
+            memory: 1Gi
       volumes:
       - name: mysql-storage
         persistentVolumeClaim:
-          claimName: mysql-pvc
+          claimName: mysql-pvc  # Longhorn, Replica 3, S3 Backup (daily 3AM)
 ```
 
 **Services:**
@@ -448,7 +498,42 @@ spec:
     targetPort: 3306
 ```
 
-**Ingress:**
+**Istio VirtualService (L7 Routing):**
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: blog-virtualservice
+  namespace: blog-system
+spec:
+  hosts:
+  - blog.jiminhome.shop
+  gateways:
+  - blog-gateway  # Istio Gateway (Nginx Ingress 통과 후)
+  http:
+  # Route 1: API 경로 → WAS
+  - match:
+    - uri:
+        prefix: /api/
+    route:
+    - destination:
+        host: was-service
+        port:
+          number: 8080
+      weight: 100  # Argo Rollouts가 Canary 시 자동 조정
+  # Route 2: 나머지 → WEB
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: web-service
+        port:
+          number: 80
+      weight: 100  # Argo Rollouts가 Canary 시 자동 조정
+```
+
+**Nginx Ingress (L4 LoadBalancer):**
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -456,7 +541,7 @@ metadata:
   name: blog-ingress
   namespace: blog-system
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   rules:
@@ -467,66 +552,85 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: web-service
+            name: istio-ingressgateway  # Istio Gateway로 전달
             port:
               number: 80
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: was-service
-            port:
-              number: 8080
-      - path: /board
-        pathType: Prefix
-        backend:
-          service:
-            name: was-service
-            port:
-              number: 8080
 ```
 
-### 네트워크 플로우
+### 네트워크 플로우 (Cloudflare + Istio Service Mesh)
 
 ```
 외부 사용자
     ↓
-https://blog.jiminhome.shop (Cloudflare)
+https://blog.jiminhome.shop (Cloudflare CDN)
+    ↓ SSL/TLS 종료, DDoS 방어
+Cloudflare Tunnel (보안 터널)
     ↓
 192.168.X.200:80/443 (MetalLB LoadBalancer)
     ↓
-Ingress Controller (nginx-ingress)
+Nginx Ingress Controller (L4)
+    ↓
+Istio Ingress Gateway
+    ↓
+Istio VirtualService (L7 Routing)
     │
     ├─ / → web-service:80
-    │   ↓
-    │   web Pods (ghcr.io/wlals2/blog-web:v10)
+    │   ↓ mTLS 암호화 🔒
+    │   web Pods (ghcr.io/wlals2/blog-web:v60, Private GHCR)
+    │   │ - Argo Rollout (Canary 배포)
+    │   │ - HPA: 2-5 replicas
+    │   │ - SecurityContext: runAsNonRoot
     │
-    ├─ /api → was-service:8080
-    │   ↓
-    │   was Pods (ghcr.io/wlals2/board-was:v3)
-    │
-    └─ /board → was-service:8080
+    └─ /api/** → was-service:8080
+        ↓ mTLS 암호화 🔒
+        was Pods (ghcr.io/wlals2/board-was:v3, Private GHCR)
+        │ - Argo Rollout (Canary 배포)
+        │ - HPA: 2-10 replicas
+        │ - SecurityContext: runAsNonRoot
+        │
+        ↓ 평문 TCP (Istio Mesh 제외)
+        mysql-service:3306
         ↓
-        was Pods → mysql-service:3306
-            ↓
-            mysql Pod
+        mysql Pod
+        │ - Longhorn PVC 5Gi (Replica 3)
+        │ - S3 Backup (daily 03:00 KST)
+        │ - RTO: 5분, RPO: 24시간
 ```
+
+**보안 계층:**
+- **Cloudflare**: DDoS 방어, WAF
+- **Istio mTLS**: web ↔ was 자동 암호화 (PERMISSIVE 모드)
+- **SecurityContext**: runAsNonRoot, capabilities drop
+- **Private GHCR**: imagePullSecrets (콘텐츠 무단 복제 방지)
+- **Falco IDS/IPS**: 런타임 syscall 모니터링, NetworkPolicy 자동 격리
 
 ### 리소스 할당
 
-**WEB (nginx):**
-- Replicas: 2
+**WEB (nginx, Argo Rollout):**
+- Replicas: 2-5 (HPA, CPU 60% 기준)
 - CPU: 100m (request), 200m (limit)
 - Memory: 128Mi (request), 256Mi (limit)
+- SecurityContext: runAsNonRoot, drop ALL capabilities
+- Image: ghcr.io/wlals2/blog-web:v60 (Private GHCR)
+- Canary: 10% → 50% → 90% → 100%
 
-**WAS (Spring Boot):**
-- Replicas: 2
+**WAS (Spring Boot, Argo Rollout):**
+- Replicas: 2-10 (HPA, CPU 70%/Memory 80% 기준)
 - CPU: 250m (request), 500m (limit)
 - Memory: 512Mi (request), 1Gi (limit)
+- SecurityContext: runAsNonRoot (uid:65534), drop ALL capabilities
+- Image: ghcr.io/wlals2/board-was:v3 (Private GHCR)
+- Canary: 10% → 50% → 90% → 100%
 
 **MySQL:**
-- Replicas: 1
-- PVC: 10Gi (Local Path Provisioner)
+- Replicas: 1 (StatefulSet 아님, Deployment)
+- CPU: 200m (request), 400m (limit)
+- Memory: 512Mi (request), 1Gi (limit)
+- PVC: 5Gi (Longhorn)
+  - Replica: 3 (worker1, worker2, worker3)
+  - Backup: S3 (daily 03:00 KST, CronJob)
+  - RTO: 5분, RPO: 24시간
+- Istio Mesh: 제외 (JDBC 호환성)
 
 ### 확인 명령어
 
@@ -570,47 +674,52 @@ kubectl top pods -n blog-system
 
 ## Kubernetes 현재 구성
 
-### MetalLB LoadBalancer (구현 완료)
+### MetalLB LoadBalancer + Istio Gateway (구현 완료)
 
-**상태:** ✅ 구현 완료
+**상태:** ✅ 구현 완료 (2026-01-24: Istio Gateway 마이그레이션)
 
 **구성:**
-- **LoadBalancer IP:** 192.168.X.200
+- **LoadBalancer IP:** 192.168.1.200
 - **서비스 타입:** LoadBalancer
-- **네임스페이스:** ingress-nginx
-- **포트:** 80 (HTTP), 443 (HTTPS)
+- **네임스페이스:** istio-system (Nginx Ingress 제거됨)
+- **포트:** 80 (HTTP), 443 (HTTPS), 15021 (Status)
 
-**현재 아키텍처:**
+**현재 아키텍처 (2026-01-24):**
 ```
-CloudFlare → MetalLB LoadBalancer (192.168.X.200) → Ingress Controller → Services
-                      ↓
-                 표준 80/443 포트 사용
-                 완전 K8s 네이티브
+Cloudflare → MetalLB (192.168.1.200) → Istio Gateway → VirtualServices → Services
+                      ↓                       ↓
+                 표준 80/443 포트        단일 L7 진입점
+                 완전 K8s 네이티브        Nginx Ingress 대체
 ```
 
 **달성된 효과:**
 - ✅ LoadBalancer Service 사용 (표준 K8s API)
-- ✅ NodePort 제거 (고정 포트 관리 불필요)
+- ✅ Nginx Ingress 제거 (중복 Hop 제거, 아키텍처 단순화)
+- ✅ Istio Gateway 일원화 (L7 라우팅 통합)
 - ✅ 표준 포트 (80, 443) 사용 가능
 - ✅ Kubernetes 네이티브 아키텍처
 
-**MetalLB 설정 확인:**
+**Istio Gateway Service 확인:**
 ```bash
-# LoadBalancer Service 확인
-kubectl get svc -n ingress-nginx
-# NAME                       TYPE           EXTERNAL-IP     PORT(S)
-# ingress-nginx-controller   LoadBalancer   192.168.X.200   80:31852/TCP,443:30732/TCP
+# Istio Gateway LoadBalancer 확인
+kubectl get svc -n istio-system istio-ingressgateway
+# NAME                   TYPE           EXTERNAL-IP     PORT(S)
+# istio-ingressgateway   LoadBalancer   192.168.1.200   15021:XXX/TCP,80:XXX/TCP,443:XXX/TCP
 
 # MetalLB Pod 상태
 kubectl get pods -n metallb-system
 # NAME                          READY   STATUS    RESTARTS   AGE
 # controller-xxx                1/1     Running   0          Xd
-# speaker-xxx                   1/1     Running   0          Xd
+# speaker-xxx (DaemonSet)       1/1     Running   0          Xd
 
 # IP Pool 확인
 kubectl get ipaddresspool -n metallb-system
 # NAME         AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
-# local-pool   true          false             ["192.168.X.200-192.168.X.210"]
+# local-pool   true          false             ["192.168.1.200-192.168.1.210"]
+
+# Nginx Ingress 제거 확인
+kubectl get namespace ingress-nginx
+# Error from server (NotFound): namespaces "ingress-nginx" not found ✅
 ```
 
 **MetalLB IP Pool 설정:**
@@ -636,6 +745,285 @@ spec:
 
 ---
 
+### Istio Gateway (Nginx Ingress 대체 마이그레이션)
+
+**상태:** ✅ 마이그레이션 완료 (2026-01-24)
+
+**목적**: Nginx Ingress 제거, Istio Gateway로 모든 외부 트래픽 통합
+
+#### 왜 Istio Gateway로 마이그레이션했는가?
+
+**기존 아키텍처 문제 (2026-01-23까지)**:
+```
+Cloudflare → MetalLB (192.168.1.200) → Nginx Ingress → Istio Gateway → Services
+                                          ↓ 중복된 Hop  ↓
+                                       L7 라우팅    L7 라우팅
+                                       복잡한 설정  VirtualService
+```
+
+**문제점**:
+- ❌ 두 개의 L7 라우팅 레이어 중복 (불필요한 Hop)
+- ❌ Nginx Ingress 설정과 Istio VirtualService 동기화 필요
+- ❌ Istio 고급 기능 활용 제한 (Retry, Timeout, Circuit Breaker)
+
+**개선 후 (2026-01-24)**:
+```
+Cloudflare → MetalLB (192.168.1.200) → Istio Gateway → VirtualServices → Services
+                                          ↓
+                                     단일 L7 진입점
+                                     Istio 기능 완전 활용
+```
+
+**개선 효과**:
+- ✅ 아키텍처 단순화 (L7 레이어 1개)
+- ✅ 레이턴시 감소 (Hop 1개 제거)
+- ✅ 설정 일원화 (VirtualService만 관리)
+- ✅ Istio 기능 완전 활용 (Retry, Timeout, Traffic Splitting)
+
+#### 마이그레이션 과정
+
+**1. Istio Gateway Service (MetalLB 192.168.1.200 할당)**
+
+파일: `/home/jimin/k8s-manifests/istio-system/istio-ingressgateway-svc.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  annotations:
+    metallb.universe.tf/ip-allocated-from-pool: local-pool
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.200  # Nginx Ingress IP 재사용
+spec:
+  type: LoadBalancer
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  ports:
+  - name: status-port
+    port: 15021
+    targetPort: 15021
+  - name: http2
+    port: 80
+    targetPort: 8080
+  - name: https
+    port: 443
+    targetPort: 8443
+```
+
+**중요 설정**:
+- ✅ `metallb.universe.tf/loadBalancerIPs` annotation 사용 (MetalLB v0.13+ 권장 방식)
+- ❌ `spec.loadBalancerIP` 제거 (deprecated, MetalLB 에러 발생)
+
+**2. Gateway 리소스 (모든 서브도메인 지원)**
+
+파일: `/home/jimin/k8s-manifests/blog-system/istio-gateway.yaml`
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: blog-gateway
+  namespace: blog-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*.jiminhome.shop"  # 모든 서브도메인 허용
+```
+
+**3. VirtualService 생성 (서비스별 라우팅)**
+
+**blog.jiminhome.shop** (WEB/WAS):
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: blog-routes
+  namespace: blog-system
+spec:
+  hosts:
+  - "blog.jiminhome.shop"
+  gateways:
+  - blog-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/api"  # WAS API
+    route:
+    - destination:
+        host: web-service  # WEB nginx → WAS 프록시
+        subset: stable
+        port:
+          number: 80
+    retries:
+      attempts: 3
+      perTryTimeout: 3s
+    timeout: 15s
+  - match:
+    - uri:
+        prefix: "/"  # 정적 파일
+    route:
+    - destination:
+        host: web-service
+        subset: stable
+        port:
+          number: 80
+```
+
+**monitoring.jiminhome.shop** (Grafana):
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: monitoring-routes
+  namespace: monitoring
+spec:
+  hosts:
+  - "monitoring.jiminhome.shop"
+  gateways:
+  - blog-system/blog-gateway  # Cross-namespace 참조
+  http:
+  - route:
+    - destination:
+        host: grafana  # Same namespace, short name
+        port:
+          number: 3000
+```
+
+**argocd.jiminhome.shop**, **kiali.jiminhome.shop** 동일 방식
+
+**4. DestinationRule mTLS 설정 변경**
+
+파일: `/home/jimin/k8s-manifests/blog-system/web-destinationrule.yaml`
+
+```yaml
+spec:
+  trafficPolicy:
+    tls:
+      mode: DISABLE  # Gateway → Service는 평문 HTTP
+```
+
+**변경 이유**: Istio Gateway는 평문 HTTP로 Service에 연결하므로 mTLS DISABLE 필수
+
+#### 트러블슈팅
+
+**1. MetalLB IP 할당 실패**
+
+**에러**:
+```
+service can not have both metallb.universe.tf/loadBalancerIPs and svc.Spec.LoadBalancerIP
+```
+
+**원인**: MetalLB v0.13부터 `spec.loadBalancerIP` deprecated
+
+**해결**:
+```yaml
+# ❌ 잘못된 방법 (두 가지 동시 사용)
+spec:
+  loadBalancerIP: 192.168.1.200
+metadata:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.200
+
+# ✅ 올바른 방법 (annotation만 사용)
+metadata:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.200
+spec:
+  type: LoadBalancer
+```
+
+**2. VirtualService 503 Error (no healthy upstream)**
+
+**원인**: Destination subset 미지정
+
+**해결**: DestinationRule과 일치하는 subset 추가
+```yaml
+route:
+- destination:
+    host: web-service
+    subset: stable  # ✅ 필수
+```
+
+**3. TLS_error WRONG_VERSION_NUMBER**
+
+**에러 로그**:
+```
+TLS_error:|268435703:SSL_routines:OPENSSL_internal:WRONG_VERSION_NUMBER
+```
+
+**원인**: Gateway → Service 트래픽에 mTLS 강제 적용
+
+**해결**: DestinationRule `tls.mode: DISABLE`
+
+#### 검증 결과
+
+```bash
+# 모든 서비스 접근 테스트 (2026-01-24)
+curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+# HTTP/1.1 200 OK ✅
+
+curl -I http://192.168.1.200/ -H "Host: monitoring.jiminhome.shop"
+# HTTP/1.1 302 Found (Grafana login) ✅
+
+curl -I http://192.168.1.200/ -H "Host: argocd.jiminhome.shop"
+# HTTP/1.1 200 OK ✅
+
+curl -I http://192.168.1.200/ -H "Host: kiali.jiminhome.shop"
+# HTTP/1.1 302 Found (Kiali login) ✅
+```
+
+**리소스 정리**:
+```bash
+# Nginx Ingress 완전 제거
+kubectl delete namespace ingress-nginx
+# namespace "ingress-nginx" deleted ✅
+```
+
+#### 현재 트래픽 플로우 (최종)
+
+```
+[사용자]
+  ↓ HTTPS
+[Cloudflare CDN]
+  ├─ SSL/TLS 종료
+  ├─ DDoS 방어
+  ├─ 캐시
+  └─ Origin: 192.168.1.200
+  ↓ HTTP (평문)
+[MetalLB LoadBalancer: 192.168.1.200]
+  ↓
+[Istio Gateway (istio-ingressgateway Pod)]
+  ├─ blog.jiminhome.shop → blog-system/web-service:80
+  ├─ monitoring.jiminhome.shop → monitoring/grafana:3000
+  ├─ argocd.jiminhome.shop → argocd/argocd-server:80
+  └─ kiali.jiminhome.shop → istio-system/kiali:20001
+  ↓ mTLS DISABLE (Gateway → Service는 평문)
+[Kubernetes Services]
+  └─ Pods (Canary Deployment via Argo Rollouts)
+```
+
+#### 관련 파일
+
+| 파일 | 설명 |
+|------|------|
+| `istio-system/istio-ingressgateway-svc.yaml` | Istio Gateway LoadBalancer Service |
+| `blog-system/istio-gateway.yaml` | Gateway 리소스 (*.jiminhome.shop) |
+| `blog-system/blog-routes.yaml` | VirtualService (blog) |
+| `monitoring/monitoring-routes.yaml` | VirtualService (monitoring) |
+| `argocd/argocd-routes.yaml` | VirtualService (argocd) |
+| `istio-system/kiali-routes.yaml` | VirtualService (kiali) |
+| `blog-system/web-destinationrule.yaml` | DestinationRule (mTLS DISABLE) |
+
+---
+
 ### HPA (Horizontal Pod Autoscaler) (구현 완료)
 
 **상태:** ✅ 구현 완료
@@ -648,7 +1036,7 @@ spec:
 
 **현재 구성:**
 
-**1. WAS HPA**
+**1. WAS HPA (Argo Rollout 대상)**
 ```yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -657,8 +1045,8 @@ metadata:
   namespace: blog-system
 spec:
   scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
+    apiVersion: argoproj.io/v1alpha1  # Argo Rollout
+    kind: Rollout
     name: was
   minReplicas: 2
   maxReplicas: 10
@@ -677,7 +1065,7 @@ spec:
         averageUtilization: 80  # Memory 80% 초과 시 스케일 아웃
 ```
 
-**2. WEB HPA**
+**2. WEB HPA (Argo Rollout 대상)**
 ```yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -686,8 +1074,8 @@ metadata:
   namespace: blog-system
 spec:
   scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
+    apiVersion: argoproj.io/v1alpha1  # Argo Rollout
+    kind: Rollout
     name: web
   minReplicas: 2
   maxReplicas: 5
@@ -712,11 +1100,15 @@ spec:
 # HPA 상태
 kubectl get hpa -n blog-system
 # NAME       REFERENCE        TARGETS                       MINPODS   MAXPODS   REPLICAS   AGE
-# was-hpa    Deployment/was   cpu: 0%/70%, memory: 40%/80%  2         10        2          31h
-# web-hpa    Deployment/web   cpu: 1%/60%                   2         5         2          31h
+# was-hpa    Rollout/was      cpu: 0%/70%, memory: 40%/80%  2         10        2          58d
+# web-hpa    Rollout/web      cpu: 1%/60%                   2         5         2          58d
 
 # HPA 상세 정보
 kubectl describe hpa was-hpa -n blog-system
+
+# Argo Rollout 상태 확인
+kubectl argo rollouts get rollout was -n blog-system
+kubectl argo rollouts get rollout web -n blog-system
 
 # 실시간 Pod 수 변화 확인
 kubectl get pods -n blog-system --watch
@@ -1582,14 +1974,18 @@ kubectl top pods -n falco
 - Node NotReady
 - Deployment Rollout 실패
 
-### 현재 구축 상태 ✅ (2024-11-26 ~ 현재 55일 운영)
+### 현재 구축 상태 ✅ (2024-11-27 ~ 현재 58일 운영)
 
 **구축 완료:**
 - ✅ **Prometheus 2.x**: Running (메트릭 수집, 8개 Alert Rules)
 - ✅ **Grafana 12.3.1**: Running (4개 Custom Dashboards)
-- ✅ **Loki**: Running (로그 수집 및 저장)
+- ✅ **Loki**: Running (로그 수집, **7일 retention** ✨ 2026-01-23 적용)
+  - `retention_period: 168h` (디스크 고갈 방지)
+  - `retention_deletes_enabled: true` (자동 삭제)
+  - Falco Alert 장기 보관 (보안 이벤트)
 - ✅ **AlertManager v0.27.0**: Running (Slack 알림 템플릿)
 - ✅ **Exporters**: nginx-exporter, mysql-exporter v0.16.0, node-exporter, cadvisor, kube-state-metrics
+- ✅ **Falco Security**: Running (IDS + IPS Dry-Run, DaemonSet on 4 nodes)
 
 **접속 정보:**
 - **Grafana URL**: http://monitoring.jiminhome.shop
@@ -1648,38 +2044,55 @@ kubectl logs -n monitoring -l app=grafana
 - ✅ Cloudflare Tunnel: blog.jiminhome.shop, argocd.jiminhome.shop
 
 **Kubernetes:**
-- ✅ 4-node 클러스터 (k8s-cp, k8s-worker1, k8s-worker2, k8s-worker3)
-- ✅ Namespace: blog-system, argocd, monitoring
-- ✅ **Argo Rollouts**: web (Canary 배포, Istio 트래픽 분할)
-- ✅ Deployments: was (v1, 2 replicas), mysql (1 replica)
-- ✅ Ingress: nginx-ingress (LoadBalancer via MetalLB)
+- ✅ 4-node 클러스터 (k8s-cp, k8s-worker1, k8s-worker2, k8s-worker3 ✨ 2026-01-22 추가)
+- ✅ CNI: Cilium v1.18.4 (eBPF), 스토리지: Longhorn (Replica 3)
+- ✅ Namespace: blog-system, argocd, monitoring, falco
+- ✅ **Argo Rollouts**:
+  - WEB (Canary 배포, Istio 트래픽 분할, HPA 2-5)
+  - WAS (Canary 배포, Istio 트래픽 분할, HPA 2-10)
+- ✅ Deployments: mysql (1 replica, Longhorn 5Gi, S3 backup daily 03:00)
+- ✅ Ingress: Nginx Ingress (LoadBalancer via MetalLB) → Istio VirtualService
 - ✅ MetalLB: 192.168.X.200 (LoadBalancer IP)
 - ✅ **TopologySpread**: ScheduleAnyway (3-worker 클러스터 호환)
 - ✅ **HPA**: was-hpa (2-10 replicas, CPU 70%/Memory 80%), web-hpa (2-5 replicas, CPU 60%)
-- ✅ **Private GHCR**: imagePullSecrets (ghcr-secret) - 이미지 무단 접근 방지 (2026-01-23)
+- ✅ **DevSecOps P0 완료** (2026-01-23):
+  - SecurityContext (runAsNonRoot, drop ALL capabilities)
+  - Private GHCR (imagePullSecrets, ghcr-secret)
+  - MySQL 자동 백업 (CronJob → S3, RTO 5분, RPO 24시간)
+  - Loki Retention 7일 (디스크 고갈 방지)
+  - Falco Talon IPS Dry-Run Phase 1 (NetworkPolicy 기반 격리)
 
 **GitOps:**
 - ✅ ArgoCD 설치 완료 (Helm Chart, 7 pods)
 - ✅ Ingress 설정 (argocd.jiminhome.shop)
 - ✅ blog-system Application 운영 중 (Auto-Sync, Prune, SelfHeal)
 
-**모니터링:**
-- ✅ PLG Stack 운영 중 (55일, Grafana 12.3.1, Prometheus 2.x, Loki, AlertManager v0.27.0)
+**모니터링 & 보안:**
+- ✅ PLG Stack 운영 중 (58일, Grafana 12.3.1, Prometheus 2.x, Loki 7일 retention, AlertManager v0.27.0)
 - ✅ 4개 대시보드, 8개 Alert Rules
+- ✅ Falco IDS + IPS (DaemonSet on 4 nodes, Dry-Run Phase 1)
 - ✅ 접속: http://monitoring.jiminhome.shop
 
 ### 구축 완료 현황
 
 **✅ 완료된 항목:**
 
-| 항목 | 상태 | 완료일 |
-|------|------|--------|
-| MetalLB LoadBalancer | ✅ 완료 | 2026-01 |
-| PLG Stack 모니터링 | ✅ 완료 | 58일 운영 중 |
+| 항목 | 상태 | 완료일 / 세부사항 |
+|------|------|-------------------|
+| MetalLB LoadBalancer | ✅ 완료 | 2026-01-20 (192.168.X.200) |
+| PLG Stack 모니터링 | ✅ 완료 | 58일 운영 중 (Loki 7일 retention) |
 | HPA Auto Scaling | ✅ 완료 | WAS 2-10, WEB 2-5 |
-| ArgoCD GitOps | ✅ 완료 | Auto-Sync 운영 중 |
-| Argo Rollouts Canary | ✅ 완료 | Istio 트래픽 분할 |
-| Istio Service Mesh | ✅ 완료 | mTLS, AuthZ 운영 중 |
+| ArgoCD GitOps | ✅ 완료 | Auto-Sync, Prune, SelfHeal |
+| Argo Rollouts Canary | ✅ 완료 | WEB/WAS 모두 Rollout 전환 |
+| Istio Service Mesh | ✅ 완료 | mTLS PERMISSIVE, Retry/Timeout |
+| Cloudflare Tunnel | ✅ 완료 | 2026-01-20 (방화벽 포트 개방 불필요) |
+| Longhorn 스토리지 | ✅ 완료 | Replica 3 (worker3 추가 후) |
+| **DevSecOps P0** | ✅ 완료 | 2026-01-23 (아래 세부사항) |
+| ├─ SecurityContext | ✅ 완료 | runAsNonRoot, drop ALL caps |
+| ├─ MySQL 자동 백업 | ✅ 완료 | S3 daily 03:00, RTO 5분, RPO 24h |
+| ├─ Loki Retention | ✅ 완료 | 168h (7일) 자동 삭제 |
+| ├─ Private GHCR | ✅ 완료 | imagePullSecrets (콘텐츠 보호) |
+| └─ Falco Talon IPS | ✅ 완료 | Dry-Run Phase 1 (Pod 격리) |
 | Cilium CNI | ✅ 완료 | Hubble Observability |
 | Falco Runtime Security | ✅ 완료 | eBPF IDS 운영 중 |
 | Private GHCR | ✅ 완료 | imagePullSecrets (2026-01-23) |

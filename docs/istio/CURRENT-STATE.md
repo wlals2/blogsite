@@ -1,275 +1,333 @@
-# 현재 시스템 상태 및 문제 분석
+# Istio Service Mesh 현재 상태
 
-**작성일**: 2026-01-20
-**목적**: Istio Mesh 완전 활용을 위한 WAS API 경로 파악 및 nginx 프록시 설정
-
----
-
-## 1. 현재 구조
-
-### 기존 구조 (작동함)
-```
-[외부] → [Nginx Ingress 192.168.X.61]
-           ├─ / → web-service:80 (Hugo)
-           ├─ /board → web-service:80 (Hugo)
-           └─ /api → was-service:8080 (Spring Boot) ⚠️ Istio mesh 우회
-```
-
-### 목표 구조 (Istio mesh 활용)
-```
-[외부] → [Nginx Ingress]
-           └─ / (all paths) → web-service:80
-                                ↓
-                           [web pod nginx]
-                                ├─ / → 정적 파일
-                                └─ /api → was-service:8080 (Istio mesh 통과 🔒)
-                                           ↓ mTLS
-                                      [was pod]
-                                           ↓
-                                      [mysql]
-```
-
-**장점**:
-- ✅ web → was 트래픽이 Istio mesh 통과
-- ✅ mTLS 암호화 적용
-- ✅ Circuit Breaking, Retry, Timeout 정책 적용
-- ✅ Kiali에서 전체 서비스 메시 시각화 가능
-
-**문제점**:
-- ❌ WAS의 실제 API 경로를 정확히 파악하지 못함
-- ❌ nginx 프록시 설정이 404 에러 발생
+**최종 업데이트**: 2026-01-24
+**상태**: ✅ Nginx Ingress 제거, Istio Gateway 일원화 완료
 
 ---
 
-## 2. WAS 정보
+## 현재 아키텍처 (2026-01-24)
 
-### 이미지
+### 전체 트래픽 플로우
+
 ```
-ghcr.io/wlals2/board-was:v1
-```
-
-### ✅ 소스 코드 위치 확인됨
-
-**실제 소스 코드 위치**:
-- `/home/jimin/blogsite/blog-k8s-project/was/` - board-was 소스 코드 (Spring Boot)
-- 패키지: `com.jimin.board`
-- API 경로: `/api/posts`
-
-**Note**: `/home/jimin/CICD/` 디렉터리는 현재 archive로 이동됨 (사용하지 않음)
-
-### 실제 WAS 내부 상태 (조사 완료)
-
-**프로세스**:
-```
-java -jar app.jar  # Spring Boot JAR
-```
-
-**파일 구조**:
-```
-/app/
-└── app.jar  # Spring Boot JAR (내용 불명)
-```
-
-### 테스트 완료한 엔드포인트 (2026-01-20)
-
-| 경로 | 내부 테스트 | 외부 테스트 | 상태 |
-|------|------------|------------|------|
-| `/actuator/health` | ✅ 200 OK | ✅ 200 OK | 작동 |
-| `/actuator/info` | ✅ 200 OK | - | 작동 |
-| `/actuator/mappings` | ❌ 404 | - | 비활성화 |
-| `/boards` | ❌ 404 | ❌ 404 | 없음 |
-| `/api/boards` | ❌ 404 | ❌ 404 | 없음 |
-| `/owners` | ❌ 404 | - | 없음 (PetClinic 아님) |
-| `/vets` | ❌ 404 | - | 없음 (PetClinic 아님) |
-| `/pets` | ❌ 404 | - | 없음 (PetClinic 아님) |
-| `/petclinic/` | ❌ 404 | - | 없음 (Tomcat 아님) |
-| `/` | ❌ 404 | - | 없음 |
-
-**결론**: WAS는 **Actuator만 활성화된 빈 Spring Boot 애플리케이션**일 가능성 높음
-
----
-
-## 3. 시도한 nginx 프록시 설정
-
-### 설정 1 (실패)
-```nginx
-location /api/ {
-    proxy_pass http://was-service:8080/api/;
-}
-```
-**결과**: 426 Upgrade Required
-
-### 설정 2 (실패)
-```nginx
-location /api {
-    proxy_pass http://was-service:8080;
-}
-```
-**결과**: 426 Upgrade Required
-
-### 설정 3 (실패)
-```nginx
-location /api {
-    proxy_pass http://was-service:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Connection "";
-}
-```
-**결과**: 404 Not Found
-
----
-
-## 4. 필요한 조사
-
-### ✅ 완료
-1. WAS 이미지 확인: `ghcr.io/wlals2/board-was:v1`
-2. WAS ConfigMap 확인: MySQL 연결 정보만 있음
-3. WAS pod 상태: 정상 실행 중 (`actuator/health` 응답 확인)
-
-### ⏳ 진행 필요
-1. **WAS의 실제 API 경로 확인**
-   ```bash
-   # WAS pod에서 직접 테스트 필요
-   kubectl exec -n blog-system deploy/was -c spring-boot -- sh
-   # 내부에서: wget http://localhost:8080/... 테스트
-   ```
-
-2. **WAS 애플리케이션 코드 분석**
-   ```bash
-   # Controller 파일 확인
-   find /home/jimin/CICD/sourece-repo -name "*Controller*.java"
-   # @RequestMapping 어노테이션 확인
-   ```
-
-3. **WAS 시작 로그에서 매핑된 경로 확인**
-   ```bash
-   kubectl logs -n blog-system -l app=was -c spring-boot --tail=500 | grep "Mapped"
-   ```
-
----
-
-## 5. 다음 단계
-
-### Step 1: WAS API 경로 파악
-```bash
-# 1. WAS pod 내부에서 직접 HTTP 요청
-kubectl exec -n blog-system deploy/was -c spring-boot -- sh
-
-# 2. 가능한 경로 테스트
-wget -O- http://localhost:8080/actuator/health
-wget -O- http://localhost:8080/boards
-wget -O- http://localhost:8080/api/boards
-wget -O- http://localhost:8080/api/actuator/health
-
-# 3. 응답하는 경로 기록
+[사용자]
+  ↓ HTTPS
+[Cloudflare CDN]
+  ├─ SSL/TLS 종료
+  ├─ DDoS 방어
+  └─ Origin: 192.168.1.200
+  ↓ HTTP (평문)
+[MetalLB LoadBalancer: 192.168.1.200]
+  ↓
+[Istio Gateway] (istio-ingressgateway Pod)
+  ├─ blog.jiminhome.shop → blog-system/web-service:80
+  ├─ monitoring.jiminhome.shop → monitoring/grafana:3000
+  ├─ argocd.jiminhome.shop → argocd/argocd-server:80
+  └─ kiali.jiminhome.shop → istio-system/kiali:20001
+  ↓ mTLS DISABLE (Gateway → Service는 평문)
+[Kubernetes Services]
+  ├─ web-service → web Pods (nginx)
+  ├─ grafana → Grafana Pods
+  ├─ argocd-server → ArgoCD Pods
+  └─ kiali → Kiali Pods
+  ↓
+[web Pod 내부 nginx proxy]
+  ├─ / → 정적 파일 (Hugo 빌드 결과)
+  └─ /api → was-service:8080
+      ↓ mTLS ISTIO_MUTUAL (선택 가능, 현재 DISABLE)
+      [was Pod] (Spring Boot)
+      ↓ 평문 TCP (Istio mesh 제외)
+      [mysql Pod]
 ```
 
-### Step 2: nginx 프록시 설정 수정
+## 주요 변경 사항 (2026-01-24)
+
+### Before (2026-01-23까지)
+
+```
+Cloudflare → MetalLB (192.168.1.200) → Nginx Ingress → Istio Gateway → Services
+                                          ↓ 중복 Hop  ↓
+                                       L7 라우팅    L7 라우팅
+```
+
+### After (2026-01-24)
+
+```
+Cloudflare → MetalLB (192.168.1.200) → Istio Gateway → Services
+                                          ↓
+                                     단일 L7 진입점
+```
+
+**개선 효과**:
+- ✅ Nginx Ingress 제거 (중복 레이어 제거)
+- ✅ 아키텍처 단순화
+- ✅ 레이턴시 감소 (Hop 1개 제거)
+- ✅ Istio 기능 완전 활용 (Retry, Timeout, Circuit Breaker)
+
+## 서비스별 라우팅
+
+### 1. blog.jiminhome.shop (블로그)
+
+**VirtualService**: `blog-system/blog-routes.yaml`
+
 ```yaml
-# WAS 실제 경로가 /boards라면:
+spec:
+  hosts:
+  - "blog.jiminhome.shop"
+  gateways:
+  - blog-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/api"  # WAS API
+    route:
+    - destination:
+        host: web-service  # WEB nginx → WAS proxy
+        subset: stable
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: "/"  # 정적 파일
+    route:
+    - destination:
+        host: web-service
+        subset: stable
+```
+
+**내부 nginx proxy** (`web Pod` 내부):
+```nginx
 location /api {
-    proxy_pass http://was-service:8080;  # /api/boards → /boards
-    proxy_http_version 1.1;
-    proxy_set_header Connection "";
-}
-
-# WAS 실제 경로가 /api/boards라면:
-location /api/ {
-    proxy_pass http://was-service:8080/api/;  # /api/boards → /api/boards
-    proxy_http_version 1.1;
-    proxy_set_header Connection "";
+    proxy_pass http://was-service:8080;  # Istio mesh 통과
 }
 ```
 
-### Step 3: 테스트 및 검증
+### 2. monitoring.jiminhome.shop (Grafana)
+
+**VirtualService**: `monitoring/monitoring-routes.yaml`
+
+```yaml
+spec:
+  hosts:
+  - "monitoring.jiminhome.shop"
+  gateways:
+  - blog-system/blog-gateway  # Cross-namespace 참조
+  http:
+  - route:
+    - destination:
+        host: grafana  # Same namespace
+        port:
+          number: 3000
+```
+
+### 3. argocd.jiminhome.shop (ArgoCD)
+
+**VirtualService**: `argocd/argocd-routes.yaml`
+
+```yaml
+spec:
+  hosts:
+  - "argocd.jiminhome.shop"
+  gateways:
+  - blog-system/blog-gateway
+  http:
+  - route:
+    - destination:
+        host: argocd-server
+        port:
+          number: 80
+```
+
+### 4. kiali.jiminhome.shop (Kiali)
+
+**VirtualService**: `istio-system/kiali-routes.yaml`
+
+```yaml
+spec:
+  hosts:
+  - "kiali.jiminhome.shop"
+  gateways:
+  - blog-system/blog-gateway
+  http:
+  - route:
+    - destination:
+        host: kiali
+        port:
+          number: 20001
+```
+
+## Istio 리소스 현황
+
+### Gateway
+
+**파일**: `blog-system/istio-gateway.yaml`
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: blog-gateway
+  namespace: blog-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*.jiminhome.shop"  # 모든 서브도메인
+```
+
+### DestinationRule (web-service)
+
+**파일**: `blog-system/web-destinationrule.yaml`
+
+```yaml
+spec:
+  host: web-service
+  trafficPolicy:
+    tls:
+      mode: DISABLE  # Gateway → Service는 평문
+  subsets:
+  - name: stable  # Argo Rollouts stable
+  - name: canary  # Argo Rollouts canary
+```
+
+### LoadBalancer Service (Istio Gateway)
+
+**파일**: `istio-system/istio-ingressgateway-svc.yaml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  annotations:
+    metallb.universe.tf/ip-allocated-from-pool: local-pool
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.200
+spec:
+  type: LoadBalancer
+  selector:
+    istio: ingressgateway
+  ports:
+  - name: http2
+    port: 80
+    targetPort: 8080
+  - name: https
+    port: 443
+    targetPort: 8443
+```
+
+## Istio Mesh 설정
+
+### mTLS 모드
+
+**PeerAuthentication**: PERMISSIVE (기본값)
+
+```yaml
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: blog-system
+spec:
+  mtls:
+    mode: PERMISSIVE  # 평문과 mTLS 모두 허용
+```
+
+**DestinationRule mTLS**:
+- Gateway → Service: `DISABLE` (평문 HTTP)
+- Service ↔ Service: `DISABLE` 또는 `ISTIO_MUTUAL` (선택 가능)
+- MySQL: Istio mesh 제외 (`sidecar.istio.io/inject: "false"`)
+
+### Istio Sidecar 주입 현황
+
+| Namespace | Injection | 이유 |
+|-----------|-----------|------|
+| **blog-system** | ✅ Enabled | web, was Pods에 Envoy proxy 주입 |
+| **monitoring** | ✅ Enabled | Grafana, Prometheus |
+| **argocd** | ✅ Enabled | ArgoCD server |
+| **istio-system** | ✅ Enabled | Kiali |
+| **metallb-system** | ❌ Disabled | 네트워크 충돌 방지 |
+
+**MySQL Pod**: `sidecar.istio.io/inject: "false"` (JDBC 호환성)
+
+## 확인 명령어
+
+### Istio Gateway 상태
+
 ```bash
-# 1. nginx 프록시 설정 적용
-git add blog-system/web-nginx-config.yaml
-git commit -m "fix: Correct WAS API proxy path"
-git push
+# LoadBalancer 확인
+kubectl get svc -n istio-system istio-ingressgateway
+# EXTERNAL-IP: 192.168.1.200 ✅
 
-# 2. Rollout 재시작
-kubectl argo rollouts restart web -n blog-system
+# Gateway 리소스
+kubectl get gateway -n blog-system
+# NAME           AGE
+# blog-gateway   1d
 
-# 3. 테스트
-curl -sL http://blog.jiminhome.shop/api/boards
+# VirtualService 전체 조회
+kubectl get virtualservice -A
 ```
 
-### Step 4: Kiali 확인
+### 서비스 테스트
+
+```bash
+# Blog
+curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+# HTTP/1.1 200 OK ✅
+
+# Monitoring (Grafana)
+curl -I http://192.168.1.200/ -H "Host: monitoring.jiminhome.shop"
+# HTTP/1.1 302 Found ✅
+
+# ArgoCD
+curl -I http://192.168.1.200/ -H "Host: argocd.jiminhome.shop"
+# HTTP/1.1 200 OK ✅
+
+# Kiali
+curl -I http://192.168.1.200/ -H "Host: kiali.jiminhome.shop"
+# HTTP/1.1 302 Found ✅
+```
+
+### Kiali 트래픽 시각화
+
 ```bash
 # 트래픽 생성
 for i in {1..50}; do
   curl -s http://blog.jiminhome.shop/ > /dev/null
-  curl -sL http://blog.jiminhome.shop/api/boards > /dev/null
+  curl -s http://blog.jiminhome.shop/api/posts > /dev/null
   sleep 1
 done
 
-# Kiali에서 확인
-# http://kiali.jiminhome.shop
-# web → was → mysql 연결 확인
+# Kiali 접속
+open http://kiali.jiminhome.shop
+# Graph → Namespace: blog-system
+# 예상: web → was → mysql 연결 시각화
 ```
 
----
+## 관련 문서
 
-## 6. 임시 복구 방법 (현재 상태)
+- **전체 아키텍처**: [COMPLETE-ISTIO-ARCHITECTURE.md](./COMPLETE-ISTIO-ARCHITECTURE.md)
+- **인프라 가이드**: [../02-INFRASTRUCTURE.md](../02-INFRASTRUCTURE.md)
+- **트러블슈팅**: [../03-TROUBLESHOOTING.md](../03-TROUBLESHOOTING.md)
 
-Istio mesh 우회하는 기존 방식으로 복구:
+## 다음 단계
 
-```yaml
-# blog-ingress.yaml
-spec:
-  rules:
-  - host: blog.jiminhome.shop
-    http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: was-service  # 직접 호출
-            port:
-              number: 8080
-```
+### 선택 사항
 
-**적용**:
-```bash
-kubectl apply -f blog-system/blog-ingress.yaml
-```
+1. **HTTPS 443 포트 추가** (현재 Cloudflare에서 SSL 종료)
+2. **Service ↔ Service mTLS 활성화** (`tls.mode: ISTIO_MUTUAL`)
+3. **추가 서비스 VirtualService 생성** (prometheus, jaeger)
+4. **Istio AuthorizationPolicy** 적용 (IP 기반 접근 제어)
 
-**장점**: 즉시 작동
-**단점**: Istio mesh 시각화 불가 (web → was 연결 없음)
+### 완료 사항
 
----
-
-## 7. 파일 위치
-
-| 파일 | 경로 |
-|------|------|
-| **Ingress** | /home/jimin/k8s-manifests/blog-system/blog-ingress.yaml |
-| **Nginx Config** | /home/jimin/k8s-manifests/blog-system/web-nginx-config.yaml |
-| **Web Rollout** | /home/jimin/k8s-manifests/blog-system/web-rollout.yaml |
-| **WAS 소스** | /home/jimin/CICD/sourece-repo/was/ |
-| **README** | /home/jimin/k8s-manifests/README.md |
-
----
-
-## 8. 핵심 교훈
-
-**문제**:
-- WAS API 경로를 정확히 파악하지 않고 nginx 프록시 설정을 시도
-- 결과: 404 에러 발생, 시간 낭비
-
-**올바른 순서**:
-1. ✅ **먼저 조사**: WAS의 실제 API 경로 파악
-2. ✅ **설정 작성**: 파악한 경로 기반으로 nginx 프록시 설정
-3. ✅ **테스트**: 소규모 테스트 후 전체 적용
-4. ✅ **문서화**: 경로 정보를 문서화하여 이후 문제 방지
-
-**다음에는**:
-- 시스템 변경 전에 현재 상태를 먼저 문서화
-- 변경할 대상의 정확한 스펙을 먼저 파악
-- 단계별로 검증하며 진행
-
----
-
-**다음 작업**: WAS pod에 접속하여 실제 API 경로 확인
+- [x] Nginx Ingress 제거
+- [x] Istio Gateway 192.168.1.200 할당
+- [x] 모든 서비스 VirtualService 생성
+- [x] Gateway → Service mTLS DISABLE
+- [x] 전체 서비스 접근 테스트

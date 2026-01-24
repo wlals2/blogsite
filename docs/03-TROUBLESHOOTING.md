@@ -2917,3 +2917,344 @@ BuildKit Alert를 CRITICAL에서 NOTICE로 낮춤:
 | BuildKit CRITICAL Alert | False Positive | 무시 또는 예외 추가 |
 
 ---
+
+---
+
+## 10. Istio Gateway 마이그레이션 트러블슈팅
+
+### 배경
+
+**작업**: Nginx Ingress 제거, Istio Gateway로 모든 외부 트래픽 통합 (2026-01-24)
+
+**목표**: MetalLB LoadBalancer IP (192.168.1.200)를 Nginx Ingress에서 Istio Gateway로 이전
+
+---
+
+### 이슈 1: MetalLB IP 할당 실패 (loadBalancerIP vs annotation 충돌)
+
+#### 증상
+
+```bash
+kubectl get svc -n istio-system istio-ingressgateway
+# NAME                   TYPE           EXTERNAL-IP   PORT(S)
+# istio-ingressgateway   LoadBalancer   <pending>     ...
+```
+
+**MetalLB Controller 로그**:
+```
+service can not have both metallb.universe.tf/loadBalancerIPs and svc.Spec.LoadBalancerIP
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+MetalLB v0.13부터 IP 지정 방식이 변경되었습니다:
+
+| MetalLB 버전 | IP 지정 방식 | 상태 |
+|--------------|--------------|------|
+| **< v0.13** | `spec.loadBalancerIP` | Deprecated |
+| **≥ v0.13** | `metallb.universe.tf/loadBalancerIPs` annotation | 권장 |
+
+**잘못된 manifest (두 가지 동시 사용)**:
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.200  # 신규 방식
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.200  # 구 방식 (deprecated)
+```
+
+**MetalLB 에러**: 두 가지 방식을 동시에 사용할 수 없음
+
+#### 해결 방법
+
+**방법 1: annotation만 사용 (권장)**
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-ingressgateway
+  namespace: istio-system
+  annotations:
+    metallb.universe.tf/ip-allocated-from-pool: local-pool
+    metallb.universe.tf/loadBalancerIPs: 192.168.1.200  # ✅
+spec:
+  type: LoadBalancer
+  # loadBalancerIP 제거 ✅
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  ports:
+  - name: http2
+    port: 80
+    targetPort: 8080
+```
+
+**적용**:
+```bash
+kubectl apply -f istio-ingressgateway-svc.yaml
+```
+
+**검증**:
+```bash
+kubectl get svc -n istio-system istio-ingressgateway
+# NAME                   TYPE           EXTERNAL-IP     PORT(S)
+# istio-ingressgateway   LoadBalancer   192.168.1.200   80:XXX/TCP,443:XXX/TCP ✅
+```
+
+#### 배운 점
+
+1. **MetalLB 버전 확인 필수**: v0.13 이상이면 annotation 방식 사용
+2. **Deprecated 필드 제거**: `spec.loadBalancerIP` 사용 금지
+3. **IP Pool 설정 확인**: `metallb.universe.tf/ip-allocated-from-pool` annotation으로 Pool 지정 가능
+
+---
+
+### 이슈 2: VirtualService 503 Error (no healthy upstream)
+
+#### 증상
+
+```bash
+curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+# HTTP/1.1 503 Service Unavailable
+```
+
+**Istio Gateway 로그**:
+```
+no healthy upstream
+```
+
+#### 원인 분석
+
+**VirtualService destination에 subset 누락**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: blog-routes
+spec:
+  http:
+  - route:
+    - destination:
+        host: web-service
+        # subset: stable  # ❌ 누락
+        port:
+          number: 80
+```
+
+**DestinationRule**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: web-dest-rule
+spec:
+  host: web-service
+  subsets:
+  - name: stable  # subset 정의됨
+  - name: canary
+```
+
+**문제**: VirtualService가 subset을 지정하지 않아 라우팅 실패
+
+#### 해결 방법
+
+**VirtualService에 subset 추가**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: blog-routes
+spec:
+  http:
+  - route:
+    - destination:
+        host: web-service
+        subset: stable  # ✅ 추가
+        port:
+          number: 80
+```
+
+**검증**:
+```bash
+curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+# HTTP/1.1 200 OK ✅
+```
+
+---
+
+### 이슈 3: TLS_error WRONG_VERSION_NUMBER (mTLS 강제 적용)
+
+#### 증상
+
+```bash
+curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+# curl: (52) Empty reply from server
+```
+
+**Istio Gateway 로그**:
+```
+TLS_error:|268435703:SSL_routines:OPENSSL_internal:WRONG_VERSION_NUMBER:TLS_error_end
+upstream_reset_before_response_started{remote_connection_failure}
+```
+
+#### 원인 분석
+
+**DestinationRule에서 mTLS 강제 적용**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: web-dest-rule
+spec:
+  host: web-service
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL  # ❌ mTLS 강제
+```
+
+**문제**:
+1. Istio Gateway → Service 트래픽은 **평문 HTTP**
+2. DestinationRule이 **모든 트래픽에 mTLS 강제**
+3. Gateway가 TLS 핸드셰이크 시도 → Service는 평문만 지원 → 연결 실패
+
+#### 해결 방법
+
+**DestinationRule mTLS 비활성화**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: web-dest-rule
+spec:
+  host: web-service
+  trafficPolicy:
+    tls:
+      mode: DISABLE  # ✅ Gateway → Service는 평문
+```
+
+**검증**:
+```bash
+curl -I http://192.168.1.200/ -H "Host: blog.jiminhome.shop"
+# HTTP/1.1 200 OK ✅
+```
+
+#### 배운 점
+
+**Istio Gateway 트래픽 플로우**:
+```
+[External] → [Gateway (평문 HTTP)] → [Service (평문)] → [Pod]
+              ↑ mTLS DISABLE 필요
+```
+
+**Service ↔ Service 트래픽**:
+```
+[web Pod] → [was Pod]
+    ↑ mTLS ISTIO_MUTUAL 가능 (Istio sidecar 존재)
+```
+
+**중요**: Gateway → Service는 항상 평문, Service ↔ Service는 mTLS 가능
+
+---
+
+### 이슈 4: Cross-Namespace VirtualService 404 Error
+
+#### 증상
+
+```bash
+curl -I http://192.168.1.200/ -H "Host: monitoring.jiminhome.shop"
+# HTTP/1.1 404 Not Found
+```
+
+**Istio Gateway 로그**:
+```
+route_not_found
+```
+
+#### 원인 분석
+
+**잘못된 VirtualService (FQDN 사용)**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: monitoring-routes
+  namespace: monitoring
+spec:
+  gateways:
+  - blog-system/blog-gateway  # Cross-namespace Gateway 참조
+  http:
+  - route:
+    - destination:
+        host: grafana.monitoring.svc.cluster.local  # ❌ FQDN
+        port:
+          number: 3000
+```
+
+**문제**: Istio가 FQDN을 해석하지 못함
+
+#### 해결 방법
+
+**Short name 사용 (Same namespace)**:
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: monitoring-routes
+  namespace: monitoring
+spec:
+  gateways:
+  - blog-system/blog-gateway  # ✅ Cross-namespace Gateway
+  http:
+  - route:
+    - destination:
+        host: grafana  # ✅ Short name (same namespace)
+        port:
+          number: 3000
+```
+
+**검증**:
+```bash
+curl -I http://192.168.1.200/ -H "Host: monitoring.jiminhome.shop"
+# HTTP/1.1 302 Found (Grafana login) ✅
+```
+
+#### 배운 점
+
+**VirtualService host 규칙**:
+- ✅ Same namespace: Short name (`grafana`)
+- ✅ Cross-namespace: FQDN (`grafana.monitoring.svc.cluster.local`)
+- ⚠️  **주의**: Gateway는 Cross-namespace 참조 가능 (`blog-system/blog-gateway`)
+
+---
+
+### 요약: Istio Gateway 마이그레이션 체크리스트
+
+**1. MetalLB Service**
+- [x] `spec.loadBalancerIP` 제거
+- [x] `metallb.universe.tf/loadBalancerIPs` annotation 사용
+- [x] IP 192.168.1.200 할당 확인
+
+**2. Gateway 리소스**
+- [x] `*.jiminhome.shop` wildcard host 설정
+- [x] `istio: ingressgateway` selector 확인
+
+**3. VirtualService**
+- [x] Destination subset 지정 (DestinationRule과 일치)
+- [x] Cross-namespace Gateway 참조 (`blog-system/blog-gateway`)
+- [x] Short name 사용 (same namespace)
+
+**4. DestinationRule**
+- [x] Gateway → Service: `tls.mode: DISABLE`
+- [x] Service ↔ Service: `tls.mode: ISTIO_MUTUAL` (선택)
+
+**5. 검증**
+- [x] 모든 서비스 HTTP 200/302 응답 확인
+- [x] Nginx Ingress namespace 삭제 확인
+
