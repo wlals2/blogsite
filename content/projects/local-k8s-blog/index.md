@@ -123,37 +123,16 @@ Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualServ
 | **Service** | ClusterIP (WAS에서만 접근) |
 | **Istio Sidecar** | Disabled (JDBC 호환성) |
 
-### CI/CD Pipeline (GitHub Actions + ArgoCD)
+### CI/CD Pipeline (GitOps)
 
-#### GitHub Actions (Self-hosted Runner)
+**배포 흐름**: Git Push → GitHub Actions (CI) → GitOps Manifest 업데이트 → ArgoCD (CD) → Canary 배포
 
-| 단계 | 설명 | 시간 |
-|------|------|------|
-| 1. Checkout | PaperMod 테마 포함 | 5초 |
-| 2. Docker Build | Multi-stage (Hugo → nginx) | 15초 |
-| 3. GHCR Push | ghcr.io/wlals2/blog-web:vX | 5초 |
-| 4. GitOps Update | web-rollout.yaml 이미지 태그 변경 | 2초 |
-| 5. ArgoCD Sync | Auto-Sync (Git 감지 3초 이내) | 3초 |
-| 6. Cache Purge | Cloudflare 전체 캐시 삭제 | 5초 |
-| **총 배포 시간** | **약 35초** ✅ | - |
+- **총 배포 시간**: 약 35초 (Hugo 빌드 → Docker 이미지 → GHCR Push → GitOps Update → ArgoCD Sync → Cloudflare 캐시 퍼지)
+- **GitOps 원칙**: Git = Single Source of Truth (SSOT), kubectl 직접 배포 금지
+- **Canary 배포**: WEB (10%→50%→90%, 30초 간격), WAS (20%→50%→80%, 1분 간격)
+- **ArgoCD 기능**: Auto-Sync, Prune, SelfHeal (Git ↔ K8s 상태 동기화)
 
-#### ArgoCD GitOps
-
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| **Auto-Sync** | ✅ 활성화 | Git 변경 시 3초 내 자동 배포 |
-| **Prune** | ✅ 활성화 | Git 삭제 시 K8s 리소스도 삭제 |
-| **SelfHeal** | ✅ 활성화 | K8s 변경 시 Git으로 되돌림 |
-| **Sync Status** | - | Git ↔ K8s 상태 비교 (OutOfSync 감지) |
-
-#### Argo Rollouts (Canary Deployment)
-
-| 항목 | 상세 |
-|------|------|
-| **전략** | Canary (단계별 트래픽 증가) |
-| **자동 승격** | Health Check 통과 시 |
-| **Rollback** | 실패 시 이전 버전으로 즉시 복구 |
-| **적용 대상** | WEB, WAS |
+> 📖 **상세 가이드**: [GitOps CI/CD 파이프라인 구축](/study/2026-01-20-gitops-cicd-pipeline/), [Canary 배포 전략 비교](/study/2026-01-21-canary-deployment-web-was-comparison/)
 
 ### Monitoring & Observability (PLG Stack)
 
@@ -202,8 +181,8 @@ Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualServ
 | **Istio Service Mesh** | mTLS, Circuit Breaker, Retry, Timeout | [Istio 아키텍처 완전 가이드](/study/2026-01-22-istio-service-mesh-architecture/) |
 | **Istio Gateway** | Nginx Ingress → Istio Gateway 마이그레이션 | [Gateway 일원화 (레이턴시 21% 감소)](/study/2026-01-24-nginx-ingress-to-istio-gateway/) |
 | **PassthroughCluster** | Host 헤더 문제 해결 | [Istio mesh 통합 트러블슈팅](/study/2026-01-20-nginx-proxy-istio-mesh-passthrough/) |
-| **Cilium** | eBPF CNI, NetworkPolicy | 문서화 예정 |
-| **Hubble** | 네트워크 Observability | 문서화 예정 |
+| **Cilium** | eBPF CNI, NetworkPolicy | [Cilium eBPF 네트워킹 & Hubble 관측성](/study/2026-01-14-cilium-ebpf-networking/) |
+| **Hubble** | 네트워크 Observability | [Cilium eBPF 네트워킹 & Hubble 관측성](/study/2026-01-14-cilium-ebpf-networking/) |
 
 ### Security (DevSecOps)
 
