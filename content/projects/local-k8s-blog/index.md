@@ -243,8 +243,9 @@ kubectl create secret docker-registry ghcr-secret \
 
 | 기술 | 역할 | 상세 글 |
 |------|------|---------|
-| **Longhorn** | 분산 블록 스토리지 | [Longhorn CSI 트러블슈팅](/study/2026-01-23-longhorn-csi-crashloopbackoff/) |
-| **MySQL Backup** | S3 자동 백업 (7일 Lifecycle) | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
+| **Longhorn** | 분산 블록 스토리지 (3 replicas) | [Longhorn & MySQL HA 전략](/study/2026-01-25-longhorn-mysql-ha-strategy/) |
+| **MySQL HA 전략** | 단일 Pod + Longhorn + 백업 | [Longhorn & MySQL HA 전략](/study/2026-01-25-longhorn-mysql-ha-strategy/) |
+| **MySQL Backup** | 일일 CronJob (NFS 백업) | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
 
 ---
 

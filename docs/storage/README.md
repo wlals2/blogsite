@@ -9,6 +9,7 @@
 | 문서 | 설명 | 작성일 |
 |------|------|--------|
 | **[STORAGE-ANALYSIS.md](./STORAGE-ANALYSIS.md)** | Longhorn & Nextcloud 분석 및 최적화 | 2026-01-20 |
+| **[MYSQL-HA-STRATEGY.md](./MYSQL-HA-STRATEGY.md)** | MySQL HA vs 백업 전략, RTO/RPO 분석 | 2026-01-25 |
 
 ---
 
