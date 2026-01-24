@@ -65,99 +65,104 @@ draft: false
 
 ### Bare-metal Kubernetes Cluster
 
-**Cluster Setup:**
-- **Control Plane**: kubeadm으로 구축 (v1.31.13)
-- **Container Runtime**: containerd
-- **CNI**: Cilium (고성능 네트워킹, eBPF 기반)
-- **Storage**: Longhorn (15Gi) + Local-path (75Gi)
-- **운영 기간**: **58일** (안정적 운영 중)
+| 구성 요소 | 상세 |
+|----------|------|
+| **Control Plane** | kubeadm 기반 (v1.31.13) |
+| **Container Runtime** | containerd |
+| **CNI** | Cilium (eBPF 기반 고성능 네트워킹) |
+| **Storage** | Longhorn (15Gi) + Local-path (75Gi) |
+| **운영 기간** | **58일** (안정적 운영 중) |
 
-### Networking & Ingress Layer
+### Networking & Service Mesh
 
-**Ingress Controller:**
-- **nginx Ingress Controller**: Path-based L7 라우팅
-- **NodePort**: 30080 (외부 접속)
-- **Cloudflare Tunnel**: `http://blog.jiminhome.shop/` → NodePort
+| 구성 요소 | 상세 |
+|----------|------|
+| **Istio Gateway** | blog-gateway (단일 L7 진입점) |
+| **LoadBalancer** | MetalLB (192.168.1.200) |
+| **Cloudflare** | CDN + SSL/TLS 종료 + DDoS 방어 |
+| **VirtualService** | Path-based 라우팅 (`/` → web, `/api` → was) |
+| **mTLS** | PERMISSIVE (평문 + mTLS 모두 허용) |
+| **개선 효과** | Nginx Ingress 제거로 레이턴시 21% 감소 |
 
-**Ingress Rules:**
-- `/` → web-service (Hugo 블로그)
-- `/board` → was-service (Spring Boot 게시판)
-- `/api/*` → was-service (REST API)
+**트래픽 플로우:**
+```
+Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualService → Services
+```
 
 ### Application Layer (Namespace: blog-system)
 
-**WEB Rollout (Hugo Blog):**
-- **Image**: ghcr.io/wlals2/blog-web (nginx:alpine + Hugo)
-- **Multi-stage Build**: Hugo 빌드 → nginx로 정적 파일 서빙
-- **Deployment**: Argo Rollouts (Canary 전략)
-- **HPA**: 2-5 replicas (CPU 70% 기준)
-- **Service**: ClusterIP (Ingress를 통한 접근)
-- **Health Check**: `/` 엔드포인트
+#### WEB (Hugo Blog)
 
-**WAS Rollout (Spring Boot Board):**
-- **Image**: ghcr.io/wlals2/board-was:v16 (Spring Boot 3.2)
-- **Deployment**: Argo Rollouts (Canary 전략 + Istio Traffic Routing)
-- **HPA**: 2-10 replicas (CPU 70% 기준)
-- **ConfigMap**: 환경 변수 주입 (DB 연결 정보)
-- **Service**: ClusterIP
-- **DB 연결**: MySQL Service → MySQL Pod
-- **JVM 튜닝**: -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100
-- **HA 설정**: topologySpreadConstraints (DoNotSchedule) + dynamicStableScale
+| 항목 | 상세 |
+|------|------|
+| **Image** | ghcr.io/wlals2/blog-web (nginx:alpine + Hugo) |
+| **빌드** | Multi-stage (Hugo 빌드 → nginx 서빙) |
+| **배포** | Argo Rollouts (Canary 전략) |
+| **Auto Scaling** | HPA 2-5 replicas (CPU 70%) |
+| **Service** | ClusterIP (Istio Gateway 경유) |
+| **Health Check** | `/` 엔드포인트 |
 
-**MySQL StatefulSet:**
-- **Image**: mysql:8.0
-- **Persistent Volume**: Longhorn PVC 5Gi (데이터 영구 보관)
-- **Secret**: DB 자격증명 관리 (board-was-secret)
-- **Service**: ClusterIP (WAS에서만 접근)
-- **Istio Sidecar**: Disabled (JDBC 호환성)
+#### WAS (Spring Boot Board)
 
-### CI/CD Pipeline (GitHub Actions + ArgoCD GitOps)
+| 항목 | 상세 |
+|------|------|
+| **Image** | ghcr.io/wlals2/board-was:v16 (Spring Boot 3.2) |
+| **배포** | Argo Rollouts (Canary + Istio Traffic Routing) |
+| **Auto Scaling** | HPA 2-10 replicas (CPU 70%) |
+| **JVM 튜닝** | -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 |
+| **HA 설정** | topologySpreadConstraints + dynamicStableScale |
+| **DB 연결** | MySQL Service → MySQL Pod |
 
-**GitHub Actions (Self-hosted Runner):**
-- **Workflow**: deploy-web.yml (WEB 자동 배포)
-  1. **Checkout**: PaperMod 테마 포함
-  2. **Docker Build**: Multi-stage (Hugo → nginx)
-  3. **GHCR Push**: ghcr.io/wlals2/blog-web:vX
-  4. **GitOps Update**: k8s-manifests repo의 web-rollout.yaml 이미지 태그 업데이트
-  5. **Git Push**: ArgoCD가 자동 감지 (3초 이내)
-  6. **ArgoCD Sync**: Auto-Sync로 자동 배포
-  7. **Cloudflare Cache**: 전체 캐시 삭제 (purge_everything)
-  8. **배포 시간**: **약 35초** ✅
+#### MySQL Database
 
-**ArgoCD GitOps:**
-- **Application**: blog-system
-- **Auto-Sync**: ✅ 활성화 (Git 변경 시 3초 내 배포)
-- **Prune**: ✅ 활성화 (Git 삭제 시 K8s 리소스도 삭제)
-- **SelfHeal**: ✅ 활성화 (K8s 변경 시 Git으로 되돌림)
-- **Sync Status**: Git과 K8s 상태 비교 (OutOfSync 감지)
+| 항목 | 상세 |
+|------|------|
+| **Image** | mysql:8.0 |
+| **Storage** | Longhorn PVC 5Gi (영구 보관) |
+| **Secret** | board-was-secret (자격증명 관리) |
+| **Service** | ClusterIP (WAS에서만 접근) |
+| **Istio Sidecar** | Disabled (JDBC 호환성) |
 
-**Argo Rollouts (Canary Deployment):**
-- **WEB/WAS**: Canary 전략 (단계별 트래픽 증가)
-- **Automatic Promotion**: Health Check 통과 시 자동 승격
-- **Rollback**: 실패 시 이전 버전으로 즉시 롤백
+### CI/CD Pipeline (GitHub Actions + ArgoCD)
+
+#### GitHub Actions (Self-hosted Runner)
+
+| 단계 | 설명 | 시간 |
+|------|------|------|
+| 1. Checkout | PaperMod 테마 포함 | 5초 |
+| 2. Docker Build | Multi-stage (Hugo → nginx) | 15초 |
+| 3. GHCR Push | ghcr.io/wlals2/blog-web:vX | 5초 |
+| 4. GitOps Update | web-rollout.yaml 이미지 태그 변경 | 2초 |
+| 5. ArgoCD Sync | Auto-Sync (Git 감지 3초 이내) | 3초 |
+| 6. Cache Purge | Cloudflare 전체 캐시 삭제 | 5초 |
+| **총 배포 시간** | **약 35초** ✅ | - |
+
+#### ArgoCD GitOps
+
+| 기능 | 상태 | 설명 |
+|------|------|------|
+| **Auto-Sync** | ✅ 활성화 | Git 변경 시 3초 내 자동 배포 |
+| **Prune** | ✅ 활성화 | Git 삭제 시 K8s 리소스도 삭제 |
+| **SelfHeal** | ✅ 활성화 | K8s 변경 시 Git으로 되돌림 |
+| **Sync Status** | - | Git ↔ K8s 상태 비교 (OutOfSync 감지) |
+
+#### Argo Rollouts (Canary Deployment)
+
+| 항목 | 상세 |
+|------|------|
+| **전략** | Canary (단계별 트래픽 증가) |
+| **자동 승격** | Health Check 통과 시 |
+| **Rollback** | 실패 시 이전 버전으로 즉시 복구 |
+| **적용 대상** | WEB, WAS |
 
 ### Monitoring & Observability (PLG Stack)
 
-**Prometheus (Namespace: monitoring):**
-- **메트릭 수집**: K8s 클러스터, Pod, Node, Storage
-- **Alert Rules**: 8개 (PodCrashLooping, HighMemoryUsage 등)
-- **Storage**: Local-path PVC 50Gi
-- **Retention**: 15일
-
-**Loki (Namespace: monitoring):**
-- **로그 수집**: 모든 Pod 로그 중앙화
-- **Storage**: Longhorn PVC 10Gi (복제 3개)
-- **Retention**: 7일
-
-**Grafana (Namespace: monitoring):**
-- **Dashboard**: 4개 (Cluster, Node, Storage, Application)
-- **Alert 연동**: Prometheus Alert 시각화
-- **Storage**: Local-path PVC 10Gi
-- **운영 기간**: **58일**
-
-**Pushgateway (Namespace: monitoring):**
-- **Batch Job**: 단기 작업 메트릭 수집
-- **Storage**: Local-path PVC 5Gi
+| 구성 요소 | 메트릭/로그 수집 | Storage | Retention | 비고 |
+|----------|-----------------|---------|-----------|------|
+| **Prometheus** | K8s 클러스터, Pod, Node, Storage | Local-path 50Gi | 15일 | Alert Rules 8개 |
+| **Loki** | 모든 Pod 로그 중앙화 | Longhorn 10Gi | 7일 | 복제 3개 |
+| **Grafana** | 시각화 (4개 Dashboard) | Local-path 10Gi | - | 운영 58일 |
+| **Pushgateway** | Batch Job 메트릭 | Local-path 5Gi | - | 단기 작업용 |
 
 ---
 
@@ -194,11 +199,11 @@ draft: false
 
 | 기술 | 역할 | 상세 글 |
 |------|------|---------|
-| **Istio** | Service Mesh (mTLS, Traffic Routing) | [Istio 아키텍처 구축기](/study/2026-01-22-istio-service-mesh-architecture/) |
-| **Istio Traffic** | VirtualService, DestinationRule | [Traffic Management 가이드](/study/2026-01-22-istio-traffic-management/) |
-| **Istio mTLS** | Zero Trust 보안 | [mTLS + AuthorizationPolicy](/study/2026-01-22-istio-mtls-security/) |
-| **Cilium** | eBPF CNI, kube-proxy 대체 | [Cilium eBPF 가이드](/study/2026-01-22-cilium-ebpf-kube-proxy/) |
-| **Hubble** | 네트워크 Observability | [Hubble 트래픽 관찰](/study/2026-01-22-cilium-hubble-observability/) |
+| **Istio Service Mesh** | mTLS, Circuit Breaker, Retry, Timeout | [Istio 아키텍처 완전 가이드](/study/2026-01-22-istio-service-mesh-architecture/) |
+| **Istio Gateway** | Nginx Ingress → Istio Gateway 마이그레이션 | [Gateway 일원화 (레이턴시 21% 감소)](/study/2026-01-24-nginx-ingress-to-istio-gateway/) |
+| **PassthroughCluster** | Host 헤더 문제 해결 | [Istio mesh 통합 트러블슈팅](/study/2026-01-20-nginx-proxy-istio-mesh-passthrough/) |
+| **Cilium** | eBPF CNI, NetworkPolicy | 문서화 예정 |
+| **Hubble** | 네트워크 Observability | 문서화 예정 |
 
 ### Security (DevSecOps)
 
