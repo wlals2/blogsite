@@ -1,7 +1,7 @@
 # Study 포스트 인덱스
 
 > **목적**: 중복 작성 방지 및 빠른 검색
-> **총 포스트 수**: 59개
+> **총 포스트 수**: 77개
 > **최종 업데이트**: 2026-01-26
 
 ---
@@ -18,20 +18,29 @@
 | 2026-01-22 | Istio Traffic Management | [보기](/study/2026-01-22-istio-traffic-management/) |
 | 2025-10-12 | 인프라 Helm 아키텍처 완성 | [보기](/study/2025-10-12-infra-helm-fin-arch2/) |
 
-### 🔄 CI/CD & GitOps (4개)
+### 🔄 CI/CD & GitOps (11개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
 | 2026-01-20 | GitOps CI/CD 파이프라인 구축 | [보기](/study/2026-01-20-gitops-cicd-pipeline/) |
 | 2026-01-21 | Canary 배포 전략 비교 (WEB vs WAS) | [보기](/study/2026-01-21-canary-deployment-web-was-comparison/) |
+| 2025-12-29 | Argo Rollouts로 Canary 배포 마스터하기 | [보기](/study/2025-12-29-argo-rollouts-canary-architecture/) |
+| 2025-12-29 | ALB Traffic Routing으로 정확한 Canary 배포 구현하기 | [보기](/study/2025-12-29-alb-traffic-routing-implementation/) |
+| 2025-12-29 | Canary 전략 비교: Replica Shifting vs ALB Traffic Routing | [보기](/study/2025-12-29-canary-strategy-comparison-alb-traffic-routing/) |
+| 2025-12-27 | Canary 배포 운영 체크리스트 완벽 가이드 | [보기](/study/2025-12-27-canary-deployment-operational-checklist/) |
+| 2025-12-23 | Jenkins GitOps CI/CD 파이프라인 완벽 가이드 | [보기](/study/2025-12-23-jenkins-gitops-cicd-pipeline/) |
+| 2025-12-15 | Argo Rollouts로 Canary 배포 완벽 구현하기 | [보기](/study/2025-12-15-argo-rollouts-canary-deployment/) |
 | 2025-11-17 | Tekton 기본 가이드 | [보기](/study/2025-11-17-tekton-basic/) |
 | 2025-10-12 | 인프라 Helm ArgoCD + Jenkins | [보기](/study/2025-10-12-infra-helm-6-ArgoCD-jenkins/) |
 
-### 🔥 DR & High Availability (1개)
+### 🔥 DR & High Availability (4개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
+| 2026-01-06 | CloudFront Origin Group으로 3단계 DR 구축하기 | [보기](/study/2026-01-06-cloudfront-origin-group-dr-architecture/) |
 | 2026-01-04 | AWS와 Azure를 연결한 하이브리드 클라우드 DR 구축기 | [보기](/study/2026-01-04-aws-azure-hybrid-dr/) |
+| 2026-01-04 | AWS-Azure DR 실전 Failover 테스트 가이드 | [보기](/study/2026-01-04-aws-azure-dr-failover-testing/) |
+| 2026-01-04 | AWS EKS Multi-AZ 고가용성 아키텍처 완벽 가이드 | [보기](/study/2026-01-04-eks-multi-az-high-availability/) |
 
 ### 🌐 Networking (8개)
 
@@ -45,6 +54,17 @@
 | 2025-11-17 | Nginx와 친해지기 | [보기](/study/2025-11-17T09:09:15+09:00-ginx와-친해지기/) |
 | 2025-11-06 | MetalLB + SSH Port Forwarding | [보기](/study/2025-11-06T18:37:51+09:00-metallb와-ssh-port-forwarding을-활용한-kubernetes-클러스터-외부-접근-구성/) |
 | 2025-11-06 | Cilium으로 본 Kubernetes 네트워킹 진화 | [보기](/study/2025-11-06T19:21:34+09:00-🚀-cilium으로-본-kubernetes-네트워킹-진화-—-kube-proxy를-넘어-ebpf로/) |
+
+### 🛠️ Infrastructure & IaC (6개)
+
+| 날짜 | 제목 | 링크 |
+|------|------|------|
+| 2026-01-07 | Bespin 프로젝트 완전한 아키텍처 가이드 | [보기](/study/2026-01-07-bespin-project-complete-architecture/) |
+| 2026-01-01 | Terraform Backend: S3와 DynamoDB의 완벽한 조합 | [보기](/study/2026-01-01-s3-dynamodb-backend-architecture/) |
+| 2025-12-31 | Terraform State S3 마이그레이션 실전 가이드 | [보기](/study/2025-12-31-terraform-state-s3-migration/) |
+| 2025-12-30 | Terraform State Lock 완벽 이해하기 | [보기](/study/2025-12-30-terraform-state-lock-complete-workflow/) |
+| 2025-12-26 | Kubernetes Probe 완벽 이해하기 | [보기](/study/2025-12-26-kubernetes-probe-complete-guide/) |
+| 2025-12-25 | Kubernetes 운영 도구 완벽 설치 가이드 | [보기](/study/2025-12-25-kubernetes-addons-operational-guide/) |
 
 ### 🔐 Security (3개)
 
@@ -64,10 +84,11 @@
 | 2025-11-18 | Longhorn 트러블슈팅 정리 가이드 | [보기](/study/2025-11-18T19:54:54+09:00-longhorn-트러블-슈팅-정리-가이드/) |
 | 2025-11-18 | Kubernetes + Longhorn + VMware Worker 환경 PVC 문제 해결 | [보기](/study/2025-11-18T19:30:30+09:00-kubernetes-+-longhorn-+-vmware-worker-환경에서-pvc가-계속-망가지는-문제-해결/) |
 
-### 📊 Monitoring & Observability (2개)
+### 📊 Monitoring & Observability (3개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
+| 2025-12-29 | Redis Session 모니터링 완벽 가이드 | [보기](/study/2025-12-29-redis-session-monitoring-complete-guide/) |
 | 2025-11-26 | Grafana Dashboard 뿌시기 | [보기](/study/2025-11-26T19:43:33+09:00-grafana-dashboard-뿌시기/) |
 | 2025-11-05 | Prometheus에서 Kubernetes Node 메트릭 수집 에러 해결 | [보기](/study/2025-11-05T19:54:41+09:00-prometheus에서-kubernetesnode-메트릭-수집시-에러-해/) |
 
@@ -103,16 +124,23 @@
 | 2025-11-23 | Kubernetes PVC 삭제 뿌시기 | [보기](/study/2025-11-23T16:04:52+09:00-kubernetes-pvc-삭제뿌시기/) |
 | 2025-11-19 | Pod 트러블슈팅 feat. PVC | [보기](/study/2025-11-19T15:10:12+09:00-pod-트러블-슈팅-뿌시기-feat.pvc/) |
 
+#### Database
+| 날짜 | 제목 | 링크 |
+|------|------|------|
+| 2025-12-21 | MySQL Connection Broken Pipe 완벽 해결하기 | [보기](/study/2025-12-21-mysql-connection-broken-pipe-fix/) |
+
 #### 기타
 | 날짜 | 제목 | 링크 |
 |------|------|------|
+| 2025-12-28 | 세션 쿠키 수명 불일치 완벽 해결하기 | [보기](/study/2025-12-28-session-cookie-lifecycle-mismatch/) |
 | 2025-11-26 | K8s 삽질 containerd | [보기](/study/2025-11-26T00:26:39+09:00-k8s-삽질-containerd/) |
 | 2025-11-19 | 블로그 Docker 구축 환경 트러블슈팅 feat 글자이슈 | [보기](/study/2025-11-19T15:50:53+09:00-블로그-docker-구축-환경으로-부터온-트러블-슈팅-feat-글자이슈/) |
 
-### 📘 Kubernetes Basic (8개)
+### 📘 Kubernetes Basic (9개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
+| 2025-12-26 | Kubernetes Probe 완벽 이해하기 | [보기](/study/2025-12-26-kubernetes-probe-complete-guide/) |
 | 2025-11-06 | Kubernetes DaemonSet 구조와 YAML 필드 위치 이해 | [보기](/study/2025-11-06T13:44:12+09:00-kubernetes-daemonset-구조와-yaml-필드의-위치-이해하기/) |
 | 2025-11-05 | Kubernetes Probe 완벽 가이드: LivenessProbe와 ReadinessProbe | [보기](/study/2025-11-05T10:03:08+09:00-kubernetes-probe-완벽-가이드:-livenessprobe와-readinessprobe/) |
 | 2025-11-05 | SELE의 본질 뿌시기 | [보기](/study/2025-11-05T18:50:01+09:00-sele의-본질-뿌시기/) |
@@ -175,5 +203,5 @@ git push
 ---
 
 **작성일**: 2026-01-25
-**총 포스트**: 59개
+**총 포스트**: 77개
 **최종 업데이트**: 2026-01-26
