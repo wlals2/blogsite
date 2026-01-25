@@ -31,7 +31,7 @@ bare metal Kubernetes 클러스터에 Istio Service Mesh를 구축하여 프로�
 
 ### 네트워크 플로우
 
-\`\`\`
+```
 [사용자]
   ↓ HTTPS
 [Cloudflare CDN]
@@ -54,7 +54,7 @@ bare metal Kubernetes 클러스터에 Istio Service Mesh를 구축하여 프로�
       └─ was-canary-xxx (20%)
       ↓ Plain TCP (Istio mesh 제외)
       [mysql-service]
-\`\`\`
+```
 
 ---
 
@@ -72,7 +72,7 @@ bare metal Kubernetes 클러스터에 Istio Service Mesh를 구축하여 프로�
 
 ### Istio 리소스 맵
 
-\`\`\`
+```
 Gateway (istio-gateway.yaml)
   ↓ 연결
 VirtualService (blog-routes.yaml)
@@ -86,7 +86,7 @@ DestinationRule (web-dest-rule, was-dest-rule)
   ├─ Connection Pool: 100 max
   ├─ Circuit Breaker: 5 errors → 30s eject
   └─ Subsets: stable, canary (Argo Rollouts)
-\`\`\`
+```
 
 ---
 
@@ -102,9 +102,9 @@ DestinationRule (web-dest-rule, was-dest-rule)
 
 **Step 1**: Nginx config 수정
 
-\`blog-k8s-project/web/nginx.conf\`:
+`blog-k8s-project/web/nginx.conf`:
 
-\`\`\`nginx
+```nginx
 server {
     listen 80;
 
@@ -120,13 +120,13 @@ server {
         proxy_set_header Host was-service;  # ✅ Istio mesh 인식
     }
 }
-\`\`\`
+```
 
 **Step 2**: Ingress 라우팅 수정
 
-\`k8s-manifests/ingress-nginx/blog-ingress.yaml\`:
+`k8s-manifests/ingress-nginx/blog-ingress.yaml`:
 
-\`\`\`yaml
+```yaml
 spec:
   rules:
   - host: blog.jiminhome.shop
@@ -138,11 +138,11 @@ spec:
             name: web-service  # ✅ 모든 트래픽 → web
             port:
               number: 80
-\`\`\`
+```
 
 **검증**:
 
-\`\`\`bash
+```bash
 # Kiali에서 트래픽 생성
 for i in {1..50}; do
   curl -s http://blog.jiminhome.shop/api/posts > /dev/null
@@ -153,7 +153,7 @@ done
 open http://kiali.jiminhome.shop
 # Namespace: blog-system
 # 예상: web → was 녹색 연결선
-\`\`\`
+```
 
 ---
 
@@ -161,9 +161,9 @@ open http://kiali.jiminhome.shop
 
 ### 3-1. DestinationRule (Circuit Breaker)
 
-**파일**: \`k8s-manifests/blog-system/web-destinationrule.yaml\`
+**파일**: `k8s-manifests/blog-system/web-destinationrule.yaml`
 
-\`\`\`yaml
+```yaml
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
@@ -202,11 +202,11 @@ spec:
   subsets:
   - name: stable
   - name: canary
-\`\`\`
+```
 
 **검증**:
 
-\`\`\`bash
+```bash
 # WAS Pod 1개 강제 500 에러 발생
 kubectl exec -n blog-system <was-pod> -- killall -9 java
 
@@ -217,7 +217,7 @@ done
 
 # Kiali에서 확인
 # 예상: 장애 Pod는 빨간색, Circuit Breaker로 격리됨
-\`\`\`
+```
 
 ---
 

@@ -462,7 +462,7 @@ ALB_ARN=$(aws elbv2 describe-load-balancers \
 # Listener 조회 (HTTPS:443)
 LISTENER_ARN=$(aws elbv2 describe-listeners \
   --load-balancer-arn $ALB_ARN \
-  --query "Listeners[?Port==\`443\`].ListenerArn" \
+  --query "Listeners[?Port==`443`].ListenerArn" \
   --output text)
 
 # Rules 조회

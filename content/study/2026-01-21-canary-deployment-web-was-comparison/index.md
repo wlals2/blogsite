@@ -28,7 +28,7 @@ categories: ["study"]
 ### WEB (Hugo Static Site)
 
 **Rollout 설정**:
-\`\`\`yaml
+```yaml
 # web-rollout.yaml
 strategy:
   canary:
@@ -40,7 +40,7 @@ strategy:
     - setWeight: 90   # 3단계: 90% 카나리
     - pause: {duration: 30s}
     - setWeight: 100  # 4단계: 100% 완료
-\`\`\`
+```
 
 **배포 시간**: 총 1.5분
 - 10% → 30초 대기
@@ -56,7 +56,7 @@ strategy:
 ### WAS (Spring Boot API)
 
 **Rollout 설정**:
-\`\`\`yaml
+```yaml
 # was-rollout.yaml
 strategy:
   canary:
@@ -68,7 +68,7 @@ strategy:
     - setWeight: 80   # 3단계: 80% 카나리
     - pause: {duration: 1m}
     # 4단계: 100% 자동 전환
-\`\`\`
+```
 
 **배포 시간**: 총 3분
 - 20% → 1분 대기
@@ -88,7 +88,7 @@ strategy:
 ### WEB VirtualService (헤더 기반 라우팅 + Traffic Mirroring)
 
 **설정**:
-\`\`\`yaml
+```yaml
 # web-virtualservice.yaml
 http:
 # Route 1: 관리자 테스트 (헤더 기반)
@@ -126,30 +126,30 @@ http:
     attempts: 3
     perTryTimeout: 2s
   timeout: 10s
-\`\`\`
+```
 
 **주요 기능**:
 
 | 기능 | 목적 | 사용 방법 |
 |------|------|----------|
-| **헤더 기반 라우팅** | 관리자 먼저 테스트 | \`curl -H "x-canary-test: true"\` |
+| **헤더 기반 라우팅** | 관리자 먼저 테스트 | `curl -H "x-canary-test: true"` |
 | **Traffic Mirroring** | 무위험 검증 | stable 응답만 클라이언트 전달 |
 | **Retry 3회** | 일시적 오류 복구 | nginx 재시작 대응 |
 | **Timeout 10s** | 무한 대기 방지 | nginx 응답 5s + 여유 5s |
 
 **Traffic Mirroring 동작**:
-\`\`\`
+```
 사용자 요청
   ↓
 stable Pod → 응답 (클라이언트에 전달) ✅
   │
   └─ (복사) → canary Pod → 응답 (로그만, 버림)
-\`\`\`
+```
 
 ### WAS VirtualService (단순 라우팅)
 
 **설정**:
-\`\`\`yaml
+```yaml
 # was-retry-timeout.yaml
 http:
 - name: primary
@@ -168,7 +168,7 @@ http:
     perTryTimeout: 2s
     retryOn: 5xx,reset,connect-failure,refused-stream
   timeout: 5s
-\`\`\`
+```
 
 **주요 차이**:
 
@@ -189,7 +189,7 @@ http:
 
 ### WEB DestinationRule (Circuit Breaking 포함)
 
-\`\`\`yaml
+```yaml
 # web-destinationrule.yaml
 spec:
   host: web-service
@@ -214,7 +214,7 @@ spec:
   subsets:
   - name: stable
   - name: canary
-\`\`\`
+```
 
 **Circuit Breaking 효과**:
 - 장애 Pod 5회 5xx 에러 → 30초간 격리
@@ -223,7 +223,7 @@ spec:
 
 ### WAS DestinationRule (Circuit Breaking 없음)
 
-\`\`\`yaml
+```yaml
 # was-destinationrule.yaml
 spec:
   host: was-service
@@ -239,7 +239,7 @@ spec:
   subsets:
   - name: stable
   - name: canary
-\`\`\`
+```
 
 **WAS에서 Circuit Breaking 제거한 이유**:
 1. **HPA 자동 스케일**: CPU 70% 기준 2-10 replicas 자동 조정
@@ -252,7 +252,7 @@ spec:
 
 ### WEB (정적 파일 서빙)
 
-\`\`\`yaml
+```yaml
 resources:
   requests:
     cpu: 100m      # 0.1 CPU
@@ -260,14 +260,14 @@ resources:
   limits:
     cpu: 200m      # 0.2 CPU
     memory: 256Mi
-\`\`\`
+```
 
 - CPU/Memory 사용량 낮음
 - HPA 없음 (고정 2 replicas)
 
 ### WAS (Spring Boot API)
 
-\`\`\`yaml
+```yaml
 resources:
   requests:
     cpu: 250m      # 0.25 CPU
@@ -275,7 +275,7 @@ resources:
   limits:
     cpu: 500m      # 0.5 CPU
     memory: 1Gi
-\`\`\`
+```
 
 - CPU/Memory 사용량 높음
 - HPA 연동 (2-10 replicas)
@@ -286,7 +286,7 @@ resources:
 
 ### WEB Probes (빠른 시작)
 
-\`\`\`yaml
+```yaml
 livenessProbe:
   httpGet:
     path: /health
@@ -300,14 +300,14 @@ readinessProbe:
     port: 80
   initialDelaySeconds: 5    # 5초 대기
   periodSeconds: 5
-\`\`\`
+```
 
 - nginx는 즉시 준비됨
 - 짧은 주기로 빠른 장애 감지
 
 ### WAS Probes (느린 시작)
 
-\`\`\`yaml
+```yaml
 livenessProbe:
   httpGet:
     path: /actuator/health
@@ -321,10 +321,10 @@ readinessProbe:
     port: 8080
   initialDelaySeconds: 50   # 50초 대기
   periodSeconds: 5
-\`\`\`
+```
 
 - Spring Boot + DB 초기화 시간 필요
-- \`/actuator/health\`로 DB 연결 상태 확인
+- `/actuator/health`로 DB 연결 상태 확인
 
 ---
 
@@ -332,7 +332,7 @@ readinessProbe:
 
 ### WEB 배포
 
-\`\`\`
+```
 1. Git Push (main)
   ↓
 2. GitHub Actions
@@ -354,11 +354,11 @@ readinessProbe:
 6. Cloudflare 캐시 퍼지
   ↓
 총 배포 시간: 5-7분
-\`\`\`
+```
 
 ### WAS 배포
 
-\`\`\`
+```
 1. 수동 트리거 (workflow_dispatch)
   ↓
 2. GitHub Actions
@@ -378,7 +378,7 @@ readinessProbe:
   └─ 100% 완료
   ↓
 총 배포 시간: 7-10분
-\`\`\`
+```
 
 **주요 차이**:
 - WEB: 자동 트리거 + 빠른 배포
@@ -417,7 +417,7 @@ readinessProbe:
 ## 8. ArgoCD ignoreDifferences
 
 **공통 설정** (Rollouts 동적 레이블 무시):
-\`\`\`yaml
+```yaml
 ignoreDifferences:
 # WEB
 - group: networking.istio.io
@@ -434,10 +434,10 @@ ignoreDifferences:
   jsonPointers:
   - /spec/subsets/0/labels
   - /spec/subsets/1/labels
-\`\`\`
+```
 
 **왜 필요한가?**
-1. Argo Rollouts가 \`rollouts-pod-template-hash\` 레이블 자동 추가
+1. Argo Rollouts가 `rollouts-pod-template-hash` 레이블 자동 추가
 2. Git Manifest에는 이 레이블 없음
 3. ArgoCD가 OutOfSync로 인식하는 것 방지
 

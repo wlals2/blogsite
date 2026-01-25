@@ -150,7 +150,7 @@ Pod A (10.0.0.10)              Pod B (10.0.2.20)
 - ✅ REST API 엔드포인트별 접근 제어
 
 **예시: GET만 허용, POST 차단**:
-\`\`\`yaml
+```yaml
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -172,10 +172,10 @@ spec:
             http:
               - method: GET
                 path: "/api/.*"  # GET /api/* 허용
-\`\`\`
+```
 
 **검증**:
-\`\`\`bash
+```bash
 # GET 허용 ✅
 curl -X GET http://was-service:8080/api/posts
 # HTTP 200 OK
@@ -183,7 +183,7 @@ curl -X GET http://was-service:8080/api/posts
 # POST 차단 ❌
 curl -X POST http://was-service:8080/api/posts -d '{...}'
 # HTTP 403 Forbidden (Cilium이 차단)
-\`\`\`
+```
 
 ---
 
@@ -235,7 +235,7 @@ curl -X POST http://was-service:8080/api/posts -d '{...}'
 ### Hubble CLI
 
 **기본 조회**:
-\`\`\`bash
+```bash
 # 실시간 네트워크 플로우 모니터링
 hubble observe
 
@@ -247,20 +247,20 @@ hubble observe --namespace blog-system
 
 # 특정 Pod만
 hubble observe --pod web-stable-xxx
-\`\`\`
+```
 
 **보안 이벤트 조회**:
-\`\`\`bash
+```bash
 # 거부된 트래픽만 (보안 중요!)
 hubble observe --verdict DROPPED
 
 # 출력 예시:
 # Jan 25 10:35:12 unknown-pod -> was (DROPPED)
 # Reason: NetworkPolicy denied
-\`\`\`
+```
 
 **L7 트래픽 분석**:
-\`\`\`bash
+```bash
 # HTTP 트래픽만
 hubble observe --protocol http
 
@@ -273,7 +273,7 @@ hubble observe --protocol dns
 
 # 출력 예시:
 # Jan 25 10:42:10 coredns -> kube-apiserver (DNS A blog.jiminhome.shop)
-\`\`\`
+```
 
 ---
 
@@ -355,7 +355,7 @@ hubble observe --protocol dns
 
 ### 예시 1: MySQL 접근 제한
 
-\`\`\`yaml
+```yaml
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -373,7 +373,7 @@ spec:
         - ports:
             - port: "3306"
               protocol: TCP
-\`\`\`
+```
 
 **효과**:
 - ✅ WAS → MySQL: 허용
@@ -382,14 +382,14 @@ spec:
 
 ### 예시 2: DNS 쿼리 모니터링
 
-\`\`\`bash
+```bash
 # DNS 쿼리 실시간 모니터링
 hubble observe --protocol dns
 
 # 출력 예시:
 # Jan 25 11:00:10 web-xxx -> coredns (DNS A was-service.blog-system.svc.cluster.local)
 # Jan 25 11:00:11 was-xxx -> coredns (DNS A mysql-service.blog-system.svc.cluster.local)
-\`\`\`
+```
 
 ---
 
@@ -400,7 +400,7 @@ hubble observe --protocol dns
 **문제**: WAS API 응답 없음
 
 **Hubble 조회**:
-\`\`\`bash
+```bash
 # WAS 관련 플로우 확인
 hubble observe --pod was-stable-xxx --last 100
 
@@ -411,13 +411,13 @@ hubble observe --pod was-stable-xxx --last 100
 # 원인: MySQL Pod 다운
 kubectl get pod -n blog-system | grep mysql
 # mysql-xxx  0/1  CrashLoopBackOff
-\`\`\`
+```
 
 ### 시나리오 2: 보안 이벤트 감사
 
 **목적**: 금융감독원 감사 대응 (네트워크 접근 기록)
 
-\`\`\`bash
+```bash
 # 1월 전체 보안 이벤트 내보내기
 hubble observe --verdict DROPPED \
   --since 2026-01-01T00:00:00Z \
@@ -428,7 +428,7 @@ hubble observe --verdict DROPPED \
 jq -r '.flow | "\(.time) \(.source.pod_name) -> \(.destination.pod_name) (DROPPED)"' \
   security-events-jan.json | wc -l
 # 출력: 245 (1월 차단된 트래픽 245건)
-\`\`\`
+```
 
 ---
 
@@ -461,13 +461,13 @@ jq -r '.flow | "\(.time) \(.source.pod_name) -> \(.destination.pod_name) (DROPPE
 ### 문제 1: Hubble Relay 연결 실패
 
 **증상**:
-\`\`\`
+```
 hubble observe
 Error: Failed to connect to Hubble Relay
-\`\`\`
+```
 
 **해결**:
-\`\`\`bash
+```bash
 # Hubble Relay Pod 확인
 kubectl get pod -n kube-system | grep hubble-relay
 # hubble-relay-xxx  1/1  Running
@@ -477,14 +477,14 @@ kubectl port-forward -n kube-system svc/hubble-relay 4245:80
 
 # 다시 시도
 hubble observe --server localhost:4245
-\`\`\`
+```
 
 ### 문제 2: VXLAN 터널 문제
 
 **증상**: Pod 간 통신 안 됨
 
 **진단**:
-\`\`\`bash
+```bash
 # Cilium Agent 상태
 cilium status
 
@@ -493,7 +493,7 @@ ip -d link show cilium_vxlan
 
 # Hubble로 DROP 확인
 hubble observe --verdict DROPPED
-\`\`\`
+```
 
 ---
 

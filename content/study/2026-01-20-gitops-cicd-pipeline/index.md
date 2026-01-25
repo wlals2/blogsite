@@ -30,7 +30,7 @@ kubectl 직접 배포에서 완전한 GitOps 파이프라인으로 전환하여 
 ### 기존 아키텍처의 문제점
 
 **트래픽 플로우 (구현 전)**:
-\`\`\`
+```
 Developer
   ↓ git push
 GitHub Actions (CI + CD)
@@ -43,7 +43,7 @@ Kubernetes Cluster
   └─ Git Manifest: v11 (오래됨) ❌
       ↓
 ArgoCD: OutOfSync ❌
-\`\`\`
+```
 
 ### 핵심 문제점
 
@@ -55,7 +55,7 @@ ArgoCD: OutOfSync ❌
 | **수동 롤백** | 5분 소요, 휴먼 에러 | ⚠️ |
 
 **실제 상황**:
-\`\`\`bash
+```bash
 # Git Manifest
 cat k8s-manifests/blog-system/web-rollout.yaml | grep image
 # image: ghcr.io/wlals2/blog-web:v11
@@ -65,7 +65,7 @@ kubectl get rollout web -n blog-system -o jsonpath='{.spec.template.spec.contain
 # ghcr.io/wlals2/blog-web:v12
 
 # ❌ Git ≠ Cluster (OutOfSync)
-\`\`\`
+```
 
 ---
 
@@ -74,7 +74,7 @@ kubectl get rollout web -n blog-system -o jsonpath='{.spec.template.spec.contain
 ### 개선된 아키텍처
 
 **트래픽 플로우 (구현 후)**:
-\`\`\`
+```
 Developer
   ↓ git push
 GitHub Actions (CI only)
@@ -97,7 +97,7 @@ Kubernetes Cluster
   └─ Image: v12 ✅
       ↓
 ✅ Git = Cluster (Synced)
-\`\`\`
+```
 
 ### 역할 분리
 
@@ -114,16 +114,16 @@ Kubernetes Cluster
 ### Step 1: GitHub Actions 워크플로우 수정
 
 **변경 전** (kubectl 직접 배포):
-\`\`\`yaml
+```yaml
 # .github/workflows/deploy-web.yml
 - name: Deploy to Kubernetes
   run: |
     kubectl argo rollouts set image web \
       nginx=ghcr.io/wlals2/blog-web:v${{ github.run_number }}
-\`\`\`
+```
 
 **변경 후** (Manifest 업데이트):
-\`\`\`yaml
+```yaml
 # .github/workflows/deploy-web.yml
 - name: Update Kubernetes Manifest (GitOps)
   env:
@@ -143,7 +143,7 @@ Kubernetes Cluster
     git add web-rollout.yaml
     git commit -m "chore: Update WEB image to v${{ github.run_number }}"
     git push
-\`\`\`
+```
 
 ### Step 2: GitHub Token 설정
 
@@ -155,7 +155,7 @@ Kubernetes Cluster
 | `GITOPS_TOKEN` | k8s-manifests Push | `repo` (Full control) |
 
 **GITOPS_TOKEN 생성**:
-\`\`\`bash
+```bash
 # GitHub → Settings → Developer settings → Personal Access Tokens
 # - Note: "GITOPS_TOKEN (k8s-manifests push)"
 # - Expiration: 90 days
@@ -165,12 +165,12 @@ Kubernetes Cluster
 # Settings → Secrets → Actions → New repository secret
 # Name: GITOPS_TOKEN
 # Value: ghp_xxxxxxxxxxxxx
-\`\`\`
+```
 
 ### Step 3: ArgoCD Application 설정
 
 **ignoreDifferences 추가** (Argo Rollouts 호환):
-\`\`\`yaml
+```yaml
 # argocd/blog-system-application.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -191,10 +191,10 @@ spec:
     jsonPointers:
     - /spec/subsets/0/labels  # stable
     - /spec/subsets/1/labels  # canary
-\`\`\`
+```
 
 **왜 필요한가?**
-- Argo Rollouts가 \`rollouts-pod-template-hash\` 레이블 동적 추가
+- Argo Rollouts가 `rollouts-pod-template-hash` 레이블 동적 추가
 - Git Manifest에는 이 레이블 없음
 - ArgoCD가 OutOfSync로 인식하는 것 방지
 
@@ -204,7 +204,7 @@ spec:
 
 ### 테스트 시나리오
 
-\`\`\`bash
+```bash
 # 1. 파일 수정
 cd ~/blogsite
 echo "# GitOps Test" >> README.md
@@ -215,11 +215,11 @@ git commit -m "test: GitOps verification"
 git push origin main
 
 # 3. 자동 실행 대기 (~2분 30초)
-\`\`\`
+```
 
 ### 자동화 흐름
 
-\`\`\`
+```
 20:20:22 - Git Push
   ↓
 20:21:05 - GitHub Actions: Docker Build ✅
@@ -232,11 +232,11 @@ git push origin main
 20:22:45 - Pod Rolling Update 완료 ✅
   ↓
 총 소요 시간: ~2분 30초
-\`\`\`
+```
 
 ### SSOT 달성 검증
 
-\`\`\`bash
+```bash
 # Git Manifest 확인
 cat ~/k8s-manifests/blog-system/web-rollout.yaml | grep image
 # image: ghcr.io/wlals2/blog-web:v14 ✅
@@ -251,11 +251,11 @@ kubectl get application blog-system -n argocd
 # blog-system   Synced        Healthy  ✅
 
 # ✅ Git = Cluster (SSOT 달성)
-\`\`\`
+```
 
 ### 배포 이력 추적
 
-\`\`\`bash
+```bash
 cd ~/k8s-manifests
 git log --oneline blog-system/web-rollout.yaml | head -3
 
@@ -267,7 +267,7 @@ git log --oneline blog-system/web-rollout.yaml | head -3
 git log --pretty=format:"%h %an %ad %s" --date=short blog-system/web-rollout.yaml | head -1
 # f87d821 github-actions[bot] 2026-01-20 chore: Update WEB image to v14
 #         ↑ 자동화된 Bot ✅
-\`\`\`
+```
 
 ---
 
@@ -275,7 +275,7 @@ git log --pretty=format:"%h %an %ad %s" --date=short blog-system/web-rollout.yam
 
 ### Git Revert로 자동 롤백
 
-\`\`\`bash
+```bash
 # 1. 최근 배포 확인
 cd ~/k8s-manifests
 git log --oneline blog-system/web-rollout.yaml | head -3
@@ -294,7 +294,7 @@ git push
 # 4. 검증
 kubectl get rollout web -n blog-system -o jsonpath='{.spec.template.spec.containers[0].image}'
 # ghcr.io/wlals2/blog-web:v13 ✅
-\`\`\`
+```
 
 **소요 시간**: ~1분
 - Git Revert: 10초
@@ -320,7 +320,7 @@ kubectl get rollout web -n blog-system -o jsonpath='{.spec.template.spec.contain
 ### ArgoCD 동작 방식
 
 **Polling 주기**: 3초
-\`\`\`
+```
 ArgoCD (3초마다)
   ↓
 Git Poll: k8s-manifests/blog-system/
@@ -330,7 +330,7 @@ Diff 계산: Git vs Cluster
 kubectl apply
   ↓
 Cluster 업데이트 ✅
-\`\`\`
+```
 
 ---
 
@@ -368,30 +368,30 @@ Cluster 업데이트 ✅
 ### 문제 1: Git Push 실패
 
 **증상**:
-\`\`\`
+```
 error: failed to push some refs to 'https://github.com/wlals2/k8s-manifests.git'
 fatal: Authentication failed
-\`\`\`
+```
 
 **원인**: GITOPS_TOKEN 권한 부족
 
 **해결**:
-\`\`\`bash
+```bash
 # GitHub PAT 재생성
 # Scope: ✅ repo (Full control)
 
 # Repository Secrets 업데이트
 # Settings → Secrets → GITOPS_TOKEN 수정
-\`\`\`
+```
 
 ### 문제 2: ArgoCD OutOfSync (Rollouts 레이블)
 
 **증상**:
-\`\`\`bash
+```bash
 kubectl get application blog-system -n argocd
 # NAME          SYNC STATUS   HEALTH STATUS
 # blog-system   OutOfSync     Healthy
-\`\`\`
+```
 
 **원인**: Argo Rollouts 동적 레이블
 
@@ -403,7 +403,7 @@ kubectl get application blog-system -n argocd
 
 ### 배포 이력 분석
 
-\`\`\`bash
+```bash
 # 특정 기간 배포 이력
 cd ~/k8s-manifests
 git log --since="2026-01-01" --until="2026-01-31" \
@@ -423,7 +423,7 @@ git log --pretty=format:"%h %an %s" blog-system/web-rollout.yaml | grep "github-
 git show f87d821
 # -        image: ghcr.io/wlals2/blog-web:v13
 # +        image: ghcr.io/wlals2/blog-web:v14
-\`\`\`
+```
 
 **효과**:
 - ✅ 보안 감사 (Security Audit)
