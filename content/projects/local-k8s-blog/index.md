@@ -59,7 +59,19 @@ draft: false
 
 ## 🏗️ 상세 아키텍처
 
-![Homeserver Kubernetes Architecture](/images/architecture/phase4-home-server.webp)
+![Local K8s Architecture](../image/localk8s%20아키텍처.png)
+
+**핵심 아키텍처:**
+- **Service Mesh**: Istio (mTLS PERMISSIVE) - WEB/WAS Pod 간 암호화 통신
+- **CNI**: Cilium eBPF + Hubble - NetworkPolicy 지원, 네트워크 플로우 시각화
+- **GitOps**: ArgoCD Auto-Sync - Git Push 후 3초 내 자동 배포
+- **Monitoring**: PLG Stack (Prometheus + Loki + Grafana) - 15일 메트릭, 7일 로그
+- **Security**: Falco IDS + IPS - eBPF syscall 탐지, NetworkPolicy 자동 격리
+- **Storage**: Longhorn (15Gi, 3 replicas) + Local-path (75Gi)
+
+> 📖 **[상세 아키텍처 가이드 보기](/study/2026-01-25-local-k8s-architecture/)** - 각 계층별 설계 결정, 트레이드오프, 성능 지표 상세 설명
+
+---
 
 **아키텍처 구성 요소:**
 
