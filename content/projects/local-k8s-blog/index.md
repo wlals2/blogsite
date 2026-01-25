@@ -188,7 +188,7 @@ Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualServ
 
 | 기술 | 역할 | 상세 글 |
 |------|------|---------|
-| **Falco** | eBPF 런타임 보안 (IDS) | [Falco 트러블슈팅](/study/2026-01-23-falco-runtime-security-troubleshooting/) |
+| **Falco** | eBPF 런타임 보안 (IDS + IPS) | [Falco eBPF 아키텍처](/study/2026-01-25-falco-ebpf-runtime-security-architecture/) |
 | **CiliumNetworkPolicy** | L3/L4 Zero Trust | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
 | **SecurityContext** | Non-root, Capabilities Drop | 아키텍처 문서 참조 |
 | **Trivy** | 이미지 취약점 스캔 | GitHub Actions 통합 |
