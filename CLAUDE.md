@@ -192,7 +192,148 @@ curl -s https://blog.jiminhome.shop/ | grep -o 'class="profile-section"'
 
 ---
 
-## 5. CSS 스타일 클래스
+## 5. study 포스트 카테고리 관리 (필수!)
+
+### 개요
+
+**왜?** 카테고리가 매번 달라지면 블로그 탐색이 어려워지고, 일관성이 깨집니다.
+
+**해결책**: 10개 고정 카테고리만 사용하고, Python 스크립트로 자동 제안받습니다.
+
+### 10개 고정 카테고리 (절대 변경 금지!)
+
+**정의 파일**: [`.blog-categories.yaml`](.blog-categories.yaml)
+
+| 카테고리 | 설명 | 주요 키워드 |
+|----------|------|-------------|
+| **Kubernetes** | 클러스터, GitOps, Helm, 배포 전략 | kubernetes, k8s, helm, argocd, deployment |
+| **Service Mesh** | Istio, mTLS, Traffic Management | istio, mtls, gateway, kiali, jaeger |
+| **Networking** | Cilium, eBPF, CNI, 네트워크 정책 | cilium, ebpf, cni, hubble, ingress |
+| **Security** | Falco, IDS/IPS, Zero Trust, 보안 | falco, security, zero-trust, authorization |
+| **Storage** | Longhorn, MySQL, PVC, 백업, HA | longhorn, mysql, pvc, backup, ha |
+| **Observability** | Prometheus, Grafana, Loki, 모니터링 | prometheus, grafana, loki, monitoring |
+| **Cloud & Terraform** | AWS, Azure, EKS, Terraform, IaC, DR | aws, azure, terraform, eks, iac, dr |
+| **Elasticsearch** | ELK, EFK, 검색 엔진, 로그 분석 | elasticsearch, elk, kibana, inverted-index |
+| **Troubleshooting** | 문제 해결, 디버깅, 트러블슈팅 | troubleshooting, 트러블슈팅, fix, debug |
+| **Development** | Spring Boot, Redis, Docker, CI/CD | spring-boot, redis, docker, cicd |
+
+### 새 study 포스트 작성 시 절차 (필수!)
+
+**Step 1: 카테고리 제안 받기**
+
+```bash
+# 작성 전에 반드시 실행
+python3 scripts/suggest-category.py \
+  "포스트 제목" \
+  "tag1,tag2,tag3"
+
+# 예시
+python3 scripts/suggest-category.py \
+  "Istio Gateway 설정 가이드" \
+  "istio,gateway,kubernetes,service-mesh"
+```
+
+**출력 예시**:
+```
+🎯 추천 카테고리 (점수순):
+
+✅ 1. Service Mesh         (점수: 9)
+      Istio, mTLS, Traffic Management
+      키워드: istio, service-mesh, mtls, gateway...
+
+   2. Kubernetes           (점수: 2)
+      클러스터, GitOps, Helm, 배포 전략
+      키워드: kubernetes, k8s, helm, argocd...
+
+📄 Front Matter 예시
+---
+title: "Istio Gateway 설정 가이드"
+date: 2026-01-26
+categories: ["study", "Service Mesh", "Kubernetes"]
+tags: ["istio", "gateway", "kubernetes", "service-mesh"]
+---
+```
+
+**Step 2: Front Matter 작성**
+
+```markdown
+---
+title: "포스트 제목"
+date: 2026-01-26
+description: "한 줄 설명"
+categories: ["study", "Service Mesh"]  # ✅ 제안받은 카테고리 사용
+tags: ["istio", "gateway", "kubernetes"]
+---
+```
+
+**Step 3: 포스트 작성 후 검증**
+
+```bash
+# 작성 후 확인
+python3 scripts/update-categories.py  # 드라이런 (변경 없음)
+
+# 예상 출력: 이미 올바른 카테고리가 설정되어 있음
+```
+
+### 카테고리 자동 분류 알고리즘
+
+**점수 계산 방식**:
+- 제목 키워드 매칭: **+2점**
+- 태그 키워드 매칭: **+1점**
+- "트러블슈팅" 제목 포함: **+10점** (특별 규칙)
+
+**선택 기준**:
+- 1위 카테고리: 무조건 선택
+- 2위 카테고리: 1위의 50% 이상 점수면 추가 선택
+
+### 금지 사항 (필수!)
+
+- ❌ **임의로 새 카테고리 생성 절대 금지**
+- ❌ suggest-category.py 없이 카테고리 작성 금지
+- ❌ 10개 고정 카테고리 외 사용 금지
+- ❌ 카테고리 오타 (예: "Kubenetes", "Service-Mesh")
+
+**올바른 예시**:
+```yaml
+categories: ["study", "Kubernetes"]           # ✅ 정확한 대소문자
+categories: ["study", "Service Mesh"]         # ✅ 공백 포함
+categories: ["study", "Cloud & Terraform"]    # ✅ & 기호 포함
+```
+
+**잘못된 예시**:
+```yaml
+categories: ["study", "kubernetes"]           # ❌ 소문자
+categories: ["study", "Service-Mesh"]         # ❌ 하이픈 사용
+categories: ["study", "Container"]            # ❌ 존재하지 않는 카테고리
+categories: ["study", "Kubernetes", "Istio"]  # ❌ 3개 이상 (최대 2개)
+```
+
+### 기존 포스트 카테고리 일괄 업데이트
+
+```bash
+# 드라이런 (변경 없음)
+python3 scripts/update-categories.py
+
+# 실제 적용
+python3 scripts/update-categories.py --apply
+
+# 결과 확인
+git diff content/study/
+```
+
+### 참고 문서
+
+**스크립트**:
+- [`scripts/suggest-category.py`](scripts/suggest-category.py) - 신규 포스트 카테고리 제안
+- [`scripts/update-categories.py`](scripts/update-categories.py) - 기존 포스트 일괄 업데이트
+- [`scripts/README.md`](scripts/README.md) - 사용 가이드
+
+**설정 파일**:
+- [`.blog-categories.yaml`](.blog-categories.yaml) - 10개 고정 카테고리 정의
+
+---
+
+## 6. CSS 스타일 클래스
 
 | 클래스 | 용도 |
 |--------|------|
@@ -206,16 +347,17 @@ curl -s https://blog.jiminhome.shop/ | grep -o 'class="profile-section"'
 
 ---
 
-## 6. 금지 사항
+## 7. 금지 사항
 
 - ❌ `deploy.yml` 재생성 금지 (deploy-improved.yml만 사용)
 - ❌ config.toml에 Markdown만 사용 (HTML + CSS 클래스 사용)
 - ❌ custom.css 없이 인라인 스타일 사용
 - ❌ 테스트 없이 바로 main 브랜치 push
+- ❌ **study 포스트에 임의 카테고리 생성 금지** (10개 고정 카테고리만 사용)
 
 ---
 
-## 7. 문제 해결
+## 8. 문제 해결
 
 ### Cloudflare 캐시 안 지워질 때
 ```bash
@@ -241,7 +383,7 @@ ls -lt /home/jimin/actions-runner/_diag/*.log | head -1
 
 ---
 
-## 8. 문서화 정책 (필수!)
+## 9. 문서화 정책 (필수!)
 
 ### ⛔ 금지 사항
 - ❌ **작업 중 자동으로 MD 파일 생성 절대 금지**
