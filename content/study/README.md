@@ -1,27 +1,29 @@
 # Study 포스트 인덱스
 
 > **목적**: 중복 작성 방지 및 빠른 검색
-> **총 포스트 수**: 77개
+> **총 포스트 수**: 83개
 > **최종 업데이트**: 2026-01-26
 
 ---
 
 ## 📚 카테고리별 포스트
 
-### 🏗️ Architecture & Design (5개)
+### 🏗️ Architecture & Design (6개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
 | 2026-01-25 | 집에서 굴리는 Kubernetes 클러스터 아키텍처 | [보기](/study/2026-01-25-local-k8s-architecture/) |
+| 2026-01-22 | Homeserver Kubernetes 아키텍처 완성 | [보기](/study/2026-01-22-homeserver-kubernetes-architecture/) |
 | 2026-01-22 | Istio Service Mesh 완전 아키텍처 | [보기](/study/2026-01-22-istio-service-mesh-architecture/) |
 | 2026-01-22 | Istio mTLS 보안 | [보기](/study/2026-01-22-istio-mtls-security/) |
 | 2026-01-22 | Istio Traffic Management | [보기](/study/2026-01-22-istio-traffic-management/) |
 | 2025-10-12 | 인프라 Helm 아키텍처 완성 | [보기](/study/2025-10-12-infra-helm-fin-arch2/) |
 
-### 🔄 CI/CD & GitOps (11개)
+### 🔄 CI/CD & GitOps (13개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
+| 2026-01-20 | ArgoCD 설치 완전 가이드 (Helm vs kubectl) | [보기](/study/2026-01-20-argocd-installation-complete-guide/) |
 | 2026-01-20 | GitOps CI/CD 파이프라인 구축 | [보기](/study/2026-01-20-gitops-cicd-pipeline/) |
 | 2026-01-21 | Canary 배포 전략 비교 (WEB vs WAS) | [보기](/study/2026-01-21-canary-deployment-web-was-comparison/) |
 | 2025-12-29 | Argo Rollouts로 Canary 배포 마스터하기 | [보기](/study/2025-12-29-argo-rollouts-canary-architecture/) |
@@ -31,6 +33,7 @@
 | 2025-12-23 | Jenkins GitOps CI/CD 파이프라인 완벽 가이드 | [보기](/study/2025-12-23-jenkins-gitops-cicd-pipeline/) |
 | 2025-12-15 | Argo Rollouts로 Canary 배포 완벽 구현하기 | [보기](/study/2025-12-15-argo-rollouts-canary-deployment/) |
 | 2025-11-17 | Tekton 기본 가이드 | [보기](/study/2025-11-17-tekton-basic/) |
+| 2025-11-16 | Tekton vs Jenkins: 컨테이너 CI/CD 도구 비교 | [보기](/study/2025-11-16-tekton-vs-jenkins-cicd-comparison/) |
 | 2025-10-12 | 인프라 Helm ArgoCD + Jenkins | [보기](/study/2025-10-12-infra-helm-6-ArgoCD-jenkins/) |
 
 ### 🔥 DR & High Availability (4개)
@@ -84,15 +87,16 @@
 | 2025-11-18 | Longhorn 트러블슈팅 정리 가이드 | [보기](/study/2025-11-18T19:54:54+09:00-longhorn-트러블-슈팅-정리-가이드/) |
 | 2025-11-18 | Kubernetes + Longhorn + VMware Worker 환경 PVC 문제 해결 | [보기](/study/2025-11-18T19:30:30+09:00-kubernetes-+-longhorn-+-vmware-worker-환경에서-pvc가-계속-망가지는-문제-해결/) |
 
-### 📊 Monitoring & Observability (3개)
+### 📊 Monitoring & Observability (4개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
+| 2026-01-20 | Datadog 수준 Observability 시스템 구축 (PLG Stack) | [보기](/study/2026-01-20-observability-plg-stack-complete/) |
 | 2025-12-29 | Redis Session 모니터링 완벽 가이드 | [보기](/study/2025-12-29-redis-session-monitoring-complete-guide/) |
 | 2025-11-26 | Grafana Dashboard 뿌시기 | [보기](/study/2025-11-26T19:43:33+09:00-grafana-dashboard-뿌시기/) |
 | 2025-11-05 | Prometheus에서 Kubernetes Node 메트릭 수집 에러 해결 | [보기](/study/2025-11-05T19:54:41+09:00-prometheus에서-kubernetesnode-메트릭-수집시-에러-해/) |
 
-### 🔧 Troubleshooting (15개)
+### 🔧 Troubleshooting (16개)
 
 #### ArgoCD & GitOps
 | 날짜 | 제목 | 링크 |
@@ -129,6 +133,11 @@
 |------|------|------|
 | 2025-12-21 | MySQL Connection Broken Pipe 완벽 해결하기 | [보기](/study/2025-12-21-mysql-connection-broken-pipe-fix/) |
 
+#### Networking
+| 날짜 | 제목 | 링크 |
+|------|------|------|
+| 2025-11-16 | Cloudflare Proxy vs Tunnel 트러블슈팅 | [보기](/study/2025-11-16-cloudflare-proxy-tunnel-troubleshooting/) |
+
 #### 기타
 | 날짜 | 제목 | 링크 |
 |------|------|------|
@@ -154,12 +163,13 @@
 | 2025-11-07 | EKS 3-Tier 아키텍처 설계 여정: Auto Mode에서 실전 구성까지 | [보기](/study/2025-11-07T20:04:35+09:00-eks-3-tier-아키텍처-설계-여정:-auto-mode에서-실전-구성까지/) |
 | 2025-11-07 | Amazon EKS 완전 가이드 | [보기](/study/2025-11-07T09:31:48+09:00-amazon-eks-완전-가이드/) |
 
-### 🛠️ DevOps Tools (5개)
+### 🛠️ DevOps Tools (6개)
 
 | 날짜 | 제목 | 링크 |
 |------|------|------|
 | 2025-12-02 | Java 개발자가 아니여도 뿌실 수 있는 빌드 및 Tomcat 운영 | [보기](/study/2025-12-02T14:34:07+09:00-java-개발자가아니여도-뿌실-수있는-빌드-및-tomcat-운영/) |
 | 2025-11-17 | 개발 페이지 만들서 원 서없게 만들어보기 | [보기](/study/2025-11-17T19:33:06+09:00-개발-페이지-만들서-원-서없게-만들어보기/) |
+| 2025-11-16 | Hugo 블로그 완벽 가이드: 구조부터 배포까지 | [보기](/study/2025-11-16-hugo-blog-complete-architecture/) |
 | 2025-10-25 | Repo 동기화 이슈 지식 공유 | [보기](/study/2025-10-25-repo-동기화-이슈-지식-공유/) |
 | 2025-10-12 | Elasticsearch 아키텍처 | [보기](/study/2025-10-12-elasticsearch-arch/) |
 | 2025-10-12 | Elasticsearch Config | [보기](/study/2025-10-12-elasticsearch-config/) |
@@ -203,5 +213,5 @@ git push
 ---
 
 **작성일**: 2026-01-25
-**총 포스트**: 77개
+**총 포스트**: 83개
 **최종 업데이트**: 2026-01-26
