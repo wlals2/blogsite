@@ -3,7 +3,7 @@ title: "Cilium eBPF 네트워킹 & Hubble 관측성"
 date: 2026-01-14
 description: "eBPF 기반 Kubernetes CNI와 Hubble로 L7 네트워크 정책 및 실시간 트래픽 모니터링 구현"
 tags: ["cilium", "ebpf", "hubble", "kubernetes", "cni", "network-policy", "observability"]
-categories: ["study"]
+categories: ["study", "Networking"]
 ---
 
 ## 개요

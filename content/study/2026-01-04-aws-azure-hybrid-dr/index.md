@@ -2,7 +2,7 @@
 title: "AWS와 Azure를 연결한 하이브리드 클라우드 DR 구축기"
 date: 2026-01-04T00:00:00+09:00
 tags: ["DR", "Disaster Recovery", "AWS", "Azure", "Route53", "CloudFront", "Multi-Cloud"]
-categories: ["DR & High Availability"]
+categories: ["study", "Cloud & Terraform"]
 description: "AWS 장애 시 Azure로 자동 Failover되는 듀얼 도메인 DR 시스템을 구축하면서 겪은 CloudFront 제약과 해결 과정"
 ---
 

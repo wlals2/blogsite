@@ -3,7 +3,7 @@ title: "Java 빌드와 Tomcat 운영 완벽 가이드"
 date: 2025-12-02
 draft: false
 tags: ["Java", "Tomcat", "Build", "DevOps", "Troubleshooting"]
-categories: ["Backend", "Infrastructure"]
+categories: ["study", "Troubleshooting"]
 series: ["Java 운영 가이드"]
 description: "Java 개발자가 아니어도 이해할 수 있는 빌드 프로세스와 Tomcat 운영 방식 완벽 정리"
 ---

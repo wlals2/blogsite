@@ -3,7 +3,7 @@ title: "트러블슈팅 기록: VSCode Remote SSH & AWS Bastion 접속"
 date: 2025-10-09
 draft: false
 tags: ["troubleshooting", "vscode", "aws", "alb", "bastion", "ssh"]
-categories: ["DevOps"]
+categories: ["study", "Troubleshooting"]
 series: ["트러블슈팅"]
 ---
 

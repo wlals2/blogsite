@@ -3,7 +3,7 @@ title: "Istio Service Mesh 아키텍처 완전 가이드"
 date: 2026-01-22
 description: "mTLS, Traffic Routing, Circuit Breaker, Distributed Tracing까지 프로덕션급 Service Mesh 구축"
 tags: ["kubernetes", "istio", "service-mesh", "mtls", "kiali", "jaeger", "canary-deployment", "circuit-breaker"]
-categories: ["study"]
+categories: ["study", "Service Mesh"]
 ---
 
 ## 개요

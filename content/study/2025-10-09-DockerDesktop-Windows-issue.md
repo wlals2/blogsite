@@ -3,7 +3,7 @@ title: "Docker Desktop Windows 컨테이너 모드 이슈 해결"
 date: 2025-10-09T10:49:57-04:00
 draft: false
 tags: ["troubleshooting", "DockerDesktop", "issue", "npipe", "Windows", "Hyper-V"]
-categories: ["Infra"]
+categories: ["study", "Troubleshooting", "Development"]
 author: "지민 오"
 description: "Docker Desktop에서 npipe 마운트 오류 해결하기: Linux 컨테이너와 Windows 컨테이너 모드 전환 가이드"
 ---

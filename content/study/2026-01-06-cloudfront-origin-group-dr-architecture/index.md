@@ -2,7 +2,7 @@
 title: "CloudFront Origin Group으로 3단계 DR 구축하기"
 date: 2026-01-06
 tags: ["AWS", "CloudFront", "DR", "Azure", "High Availability", "Failover"]
-categories: ["DR & High Availability"]
+categories: ["study", "Cloud & Terraform"]
 description: "AWS EKS → Azure VM → Static Web Apps 3단계 자동 Failover를 CloudFront Origin Group으로 구현한 경험을 공유합니다."
 ---
 

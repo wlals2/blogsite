@@ -3,7 +3,7 @@ title: "Homeserver K8s 현재 상태 및 다음 구축 계획"
 date: 2026-01-22
 summary: "Homeserver Kubernetes 아키텍처 완성: GitHub Actions CI + ArgoCD GitOps + Argo Rollouts Canary 배포 구현 완료"
 tags: ["kubernetes", "homeserver", "architecture", "argocd", "argo-rollouts", "gitops"]
-categories: ["kubernetes"]
+categories: ["study", "Kubernetes"]
 series: ["Infrastructure Learning Journey"]
 weight: 1
 showtoc: true

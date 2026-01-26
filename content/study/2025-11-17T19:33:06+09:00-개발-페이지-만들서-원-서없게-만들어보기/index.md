@@ -2,7 +2,7 @@
 title: "Hugo 블로그 kubernetes 마이그레이션 가이드"
 date: 2025-11-17T19:33:06+09:00
 draft: false
-categories: ["hugo","nginx","kubernetes"]
+categories: ["study", "Kubernetes", "Networking"]
 tags: ["hugo","kuveretnes","nginx","test","dev"]
 description: "개발 페이지 만들서 원 서버 문제없게 만들어보기"
 author: "늦찌민"

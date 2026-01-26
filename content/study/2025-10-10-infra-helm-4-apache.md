@@ -4,6 +4,7 @@ subtitle: "좀 더 고급으로 변하는 인프라 구조 - Helm, Values ④"
 date: 2025-10-10T16:37:00+09:00
 author: "늦찌민"
 tags: ["Kubernetes", "Helm", "Apache", "PVC", "Troubleshooting"]
+categories: ["study", "Kubernetes"]
 description: "K8s 구조 이해와 Apache2 Helm 배포를 중심으로, values.yaml 기반 구성과 PVC 선택 판단까지 트러블슈팅 기록"
 series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---

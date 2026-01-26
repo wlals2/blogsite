@@ -3,7 +3,7 @@ title: "Istio mTLS와 AuthorizationPolicy로 Zero Trust 보안 구현하기"
 date: 2026-01-22
 description: "Istio Service Mesh에서 mTLS 암호화와 AuthorizationPolicy를 활용한 프로덕션급 보안 구현"
 tags: ["istio", "kubernetes", "mtls", "security", "zero-trust", "authorization"]
-categories: ["study"]
+categories: ["study", "Security", "Service Mesh"]
 ---
 
 ## 개요

@@ -3,7 +3,7 @@ title: "Apache httpd 프록시 설정 학습"
 date: 2025-10-09
 draft: false
 tags: ["apache", "httpd", "proxy", "reverse-proxy", "study"]
-categories: ["Web Server"]
+categories: ["study", "Development"]
 series: ["Apache 학습"]
 ---
 

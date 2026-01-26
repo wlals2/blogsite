@@ -3,7 +3,7 @@ title: "Terraform 클라우드 자동화 여정 #1"
 date: 2025-10-09T10:55:01-04:00
 draft: false
 tags: ["Terraform", "AWS", "IaC", "automation", "EC2", "Ubuntu"]
-categories: ["Study"]
+categories: ["study", "Cloud & Terraform"]
 series: ["Terraform 클라우드 자동화"]
 author: "지민 오"
 description: "Terraform과 AWS CLI 설치부터 EC2 인스턴스 생성 및 SSH 접속까지: IaC 입문 실습 가이드"

@@ -1,7 +1,7 @@
 ---
 title: "Bespin 프로젝트 완전한 아키텍처 가이드"
 date: 2026-01-07
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Cloud & Terraform", "Kubernetes"]
 tags: ["AWS", "EKS", "Kubernetes", "ArgoCD", "Multi-Cloud", "DR", "GitOps", "Terraform", "PetClinic"]
 description: "Spring PetClinic을 AWS EKS 기반 3-Tier 아키텍처로 구축하고, Azure를 활용한 멀티 클라우드 DR 환경까지 구현한 완전한 여정입니다."
 slug: bespin-project-complete-architecture

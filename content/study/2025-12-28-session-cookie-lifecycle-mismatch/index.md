@@ -2,7 +2,7 @@
 title: "세션 쿠키 수명 불일치 완벽 해결하기"
 date: 2025-12-28
 tags: ["Spring Boot", "Redis", "Session Management", "Cookie", "Troubleshooting"]
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Troubleshooting", "Development"]
 series: ["Spring Session 완벽 가이드"]
 description: "시크릿 모드에서는 로그인이 되는데 일반 브라우저에서는 무한 리다이렉트가 발생하는 문제를 겪었어요. Redis 세션과 브라우저 쿠키의 생명주기 불일치 문제를 완벽하게 해결한 과정을 공유합니다."
 showToc: true

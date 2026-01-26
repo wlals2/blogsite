@@ -3,7 +3,7 @@ title: "Windows 가상화 충돌 해결: VMware & Docker Desktop"
 date: 2025-10-09T10:36:27-04:00
 draft: false
 tags: ["troubleshooting", "windows", "virtualize", "vmware", "Hyper-V", "ssh", "WSL2"]
-categories: ["DevOps"]
+categories: ["study", "Troubleshooting", "Development"]
 author: "지민 오"
 description: "Windows에서 VMware, Docker Desktop, Hyper-V 간 가상화 충돌 문제 해결 방법과 AMD-V/VBS 설정 가이드"
 ---

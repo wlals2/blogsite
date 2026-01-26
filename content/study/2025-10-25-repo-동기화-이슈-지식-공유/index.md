@@ -2,7 +2,7 @@
 title: "repo 동기화 이슈 지식 공유"
 date: 2025-10-26T12:10:36+09:00
 draft: false
-categories: ["repo","yum","linux"]
+categories: ["study"]
 tags: ["ubuntu","repo","동기화","이슈","트러블 슈팅","시간"]
 description: "repo 동기화 이슈 지식 공유"
 author: "늦찌민"

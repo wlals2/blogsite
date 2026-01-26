@@ -2,7 +2,7 @@
 title: "Amazon EKS 완전 가이드"
 date: 2025-11-07T09:31:48+09:00
 draft: false
-categories: ["amazon eks 완전 가이드"]
+categories: ["study", "Cloud & Terraform"]
 tags: ["eks","k8s","k9s","study","karpenter"]
 description: "Amazon EKS 완전 가이드"
 author: "늦찌민"

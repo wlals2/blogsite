@@ -1,7 +1,7 @@
 ---
 title: "Elasticsearch 기초: 구조 nested 이해하기"
 tags: ["Elasticsearch", "Inverted Index", "검색엔진", "색인"]
-categories: ["Elasticsearch", "Search Engine"]
+categories: ["study", "Elasticsearch"]
 date: 2025-10-11T01:27:54-04:00
 draft: false
 author: "늦찌민"

@@ -2,7 +2,7 @@
 title: "GitHub Actions 자동 배포 트러블 슈팅정리"
 date: 2025-11-05T21:05:59+09:00
 draft: false
-categories: ["github","auto-deploy","self-hosted-runner"]
+categories: ["study"]
 tags: ["github","ci/cd","blog","cloudflare","self-hosted-runner","git-actions","sudoers"]
 description: "GitHub Actions 자동 배포 트러블 슈팅정리"
 author: "늦찌민"

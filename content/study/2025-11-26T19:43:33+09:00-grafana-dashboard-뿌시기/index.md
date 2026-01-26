@@ -2,7 +2,7 @@
 title: "Grafana Dashboard 뿌시기"
 date: 2025-11-26T19:43:33+09:00
 draft: false
-categories: ["Grafana","Prometheus","Dashboard"]
+categories: ["study", "Observability"]
 tags: ["Grafana","Proemetheus","Dashboard"]
 description: "Grafana Dashboard 뿌시기"
 author: "늦찌민"

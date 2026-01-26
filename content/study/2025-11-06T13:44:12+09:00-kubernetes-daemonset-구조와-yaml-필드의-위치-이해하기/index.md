@@ -2,7 +2,7 @@
 title: "Kubernetes DaemonSet 구조와 YAML 필드의 위치 이해하기"
 date: 2025-11-06T13:44:12+09:00
 draft: false
-categories: []
+categories: ["study", "Kubernetes"]
 tags: []
 description: "Kubernetes DaemonSet 구조와 YAML 필드의 위치 이해하기"
 author: "늦찌민"

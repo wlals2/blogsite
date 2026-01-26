@@ -2,7 +2,7 @@
 title: "Terraform State Lock 완벽 이해하기"
 date: 2025-12-30
 tags: ["Terraform", "IaC", "AWS", "DynamoDB", "State Management"]
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Cloud & Terraform"]
 description: "Terraform State Lock이 어떻게 동작하는지, DynamoDB를 활용한 동시성 제어 메커니즘을 단계별로 깊이 있게 알아봅니다."
 ---
 

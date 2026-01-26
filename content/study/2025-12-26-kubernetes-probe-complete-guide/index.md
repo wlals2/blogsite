@@ -2,7 +2,7 @@
 title: "Kubernetes Probe 완벽 이해하기"
 date: 2025-12-26
 tags: ["Kubernetes", "Probe", "Health Check", "Spring Boot", "Actuator"]
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Kubernetes"]
 series: ["Kubernetes 운영 가이드"]
 description: "StartupProbe, LivenessProbe, ReadinessProbe의 차이가 헷갈렸어요. 'StartupProbe가 기다리기만 하면 진짜 에러는 언제 감지하나?' 같은 의문을 실전 경험으로 해결한 과정을 공유합니다."
 showToc: true

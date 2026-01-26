@@ -2,7 +2,7 @@
 title: "longhorn 트러블 슈팅 정리 가이드"
 date: 2025-11-18T19:54:54+09:00
 draft: false
-categories: ["longhorn","troubleshooting"]
+categories: ["study", "Storage"]
 tags: ["k8s","longhorn","troubleshooting","PVC","creating"]
 description: "longhorn 트러블 슈팅 정리 가이드 - 추가 정리"
 author: "늦찌민"

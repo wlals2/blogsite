@@ -2,7 +2,7 @@
 title: "블로그 docker 구축 환경으로 부터온 트러블 슈팅 feat 글자이슈"
 date: 2025-11-19T15:50:53+09:00
 draft: false
-categories: ["trouble shooting","font","docker"]
+categories: ["study", "Development"]
 tags: ["docker_dev","trouble shooting","font","css","public","error"]
 description: "블로그 docker 구축 환경으로 부터온 트러블 슈팅 feat 글자이슈"
 author: "늦찌민"

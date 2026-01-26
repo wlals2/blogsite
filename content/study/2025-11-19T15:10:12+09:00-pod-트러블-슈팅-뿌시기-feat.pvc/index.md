@@ -2,7 +2,7 @@
 title: "pod 트러블 슈팅 뿌시기 feat.PVC"
 date: 2025-11-19T15:10:12+09:00
 draft: false
-categories: ["pod","trouble shooting","PVC"]
+categories: ["study", "Storage", "Kubernetes"]
 tags: ["k8s","PVC","trouble shooting","longhorn","init_container"]
 description: "pod 트러블 슈팅 뿌시기 feat.PVC"
 author: "늦찌민"

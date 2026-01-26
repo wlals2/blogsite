@@ -3,7 +3,7 @@ title: "Cilium Hubble로 Kubernetes 네트워크 트래픽 관찰하기"
 date: 2026-01-22
 description: "Cilium Hubble Relay & UI를 활용한 실시간 네트워크 모니터링 실전 가이드"
 tags: ["cilium", "hubble", "kubernetes", "observability", "ebpf", "network"]
-categories: ["study"]
+categories: ["study", "Networking"]
 ---
 
 ## 개요

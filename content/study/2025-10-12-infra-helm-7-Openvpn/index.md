@@ -4,7 +4,7 @@ date: 2025-10-11T22:29:23
 author: "늦찌민"
 description: "Docker-compose로 OpenVPN을 구현하며, K8s 설정의 복잡성을 돌아보고 ArgoCD 통합을 준비한 기록"
 tags: ["DevOps", "Kubernetes", "OpenVPN", "Docker-compose", "Helm", "ArgoCD"]
-categories: ["Infra", "Helm-Values","kubenetes","OpenVPN"]
+categories: ["study", "Kubernetes"]
 series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---
 

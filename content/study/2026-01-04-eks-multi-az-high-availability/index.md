@@ -2,7 +2,7 @@
 title: "AWS EKS Multi-AZ로 99.99% 가용성 달성하기"
 date: 2026-01-04T16:00:00+09:00
 tags: ["AWS EKS", "Multi-AZ", "High Availability", "Kubernetes", "topologySpreadConstraints", "Karpenter"]
-categories: ["Architecture & Design"]
+categories: ["study", "Cloud & Terraform"]
 description: "AWS EKS에서 Pod를 여러 가용 영역에 균등 분산하여 단일 AZ 장애 시에도 서비스를 유지하는 고가용성 아키텍처 구축 경험을 공유합니다. topologySpreadConstraints, Pod Anti-Affinity, Karpenter 설정까지 실전 노하우를 담았습니다."
 ---
 

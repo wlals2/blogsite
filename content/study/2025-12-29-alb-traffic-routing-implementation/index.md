@@ -2,7 +2,7 @@
 title: "ALB Traffic Routing으로 정확한 Canary 배포 구현하기"
 date: 2025-12-29
 tags: ["AWS", "ALB", "Argo Rollouts", "Canary Deployment", "Traffic Routing", "Kubernetes"]
-categories: ["CI/CD & GitOps"]
+categories: ["study", "Cloud & Terraform", "Kubernetes"]
 description: "Replica Shifting의 한계를 극복하고, ALB Weighted Target Groups로 정확한 트래픽 비율 제어를 구현한 경험을 공유합니다."
 ---
 

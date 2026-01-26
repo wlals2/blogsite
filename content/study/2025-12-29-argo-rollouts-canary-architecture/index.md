@@ -2,7 +2,7 @@
 title: "Argo Rollouts로 Canary 배포 마스터하기"
 date: 2025-12-29
 tags: ["Argo Rollouts", "Kubernetes", "Canary Deployment", "CI/CD", "GitOps"]
-categories: ["CI/CD & GitOps"]
+categories: ["study", "Kubernetes"]
 description: "Argo Rollouts를 사용한 Canary 배포의 모든 것 - 개념부터 실전까지, 트러블슈팅 과정을 포함한 완벽 가이드"
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "Elasticsearch 기초: 색인과 역색인 이해하기"
 date: 2025-10-11
-categories: ["Elasticsearch", "Search Engine"]
+categories: ["study", "Elasticsearch"]
 tags: ["Elasticsearch", "Inverted Index", "검색엔진", "색인"]
 draft: false
 author: "늦찌민"

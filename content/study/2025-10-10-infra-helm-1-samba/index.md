@@ -3,7 +3,7 @@ title: "『온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤
 date: 2025-10-06T10:08:00
 author: "늦찌민"
 slug: "infra-helm-values-1-samba-k8s"
-categories: ["Infrastructure", "Kubernetes", "Helm"]
+categories: ["study", "Kubernetes"]
 tags: ["on-prem", "cloud", "helm", "values.yaml", "kubernetes", "samba", "PVC", "PV", "NodePort", "HostPort", "troubleshooting"]
 series: ["좀 더 고급으로 변하는 인프라 구조"]
 draft: false

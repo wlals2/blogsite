@@ -2,7 +2,7 @@
 title: "Argo Rollouts로 안전한 Canary 배포 구현하기"
 date: 2025-12-15T10:00:00+09:00
 tags: ["Argo Rollouts", "Canary", "Kubernetes", "GitOps", "Blue-Green"]
-categories: ["CI/CD & GitOps"]
+categories: ["study", "Kubernetes"]
 description: "Kubernetes Deployment의 한계를 극복하고 Argo Rollouts로 단계별 트래픽 제어와 자동 롤백이 가능한 Canary 배포를 구현한 경험을 공유합니다."
 ---
 

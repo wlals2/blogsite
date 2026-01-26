@@ -2,7 +2,7 @@
 title: "Canary 배포 전략 3가지 비교: 왜 ALB Traffic Routing을 선택했나"
 date: 2025-12-29T11:00:00+09:00
 tags: ["Canary", "Argo Rollouts", "ALB", "Traffic Routing", "Kubernetes"]
-categories: ["CI/CD & GitOps"]
+categories: ["study", "Cloud & Terraform"]
 description: "Argo Rollouts로 Canary 배포를 구현할 때 Replica Shifting, ALB Traffic Routing, Replica Scaling 3가지 전략을 비교하고, 왜 ALB Traffic Routing을 선택했는지 실전 경험을 공유합니다."
 ---
 

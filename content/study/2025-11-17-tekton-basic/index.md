@@ -2,7 +2,7 @@
 title: "Tekton 처음부터 이해하기 - Kubernetes 네이티브 CI/CD의 시작"
 date: 2025-11-17T00:00:00
 draft: false
-categories: ["DevOps","Kubernetes","CI/CD","Tekton"]
+categories: ["study", "Kubernetes"]
 tags: ["DevOps","Kubernetes","CI/CD","Tekton","Cloud Native","Pipeline"]
 author: "늦찌민"
 series: ["좀 더 고급으로 변하는 인프라 구조"]

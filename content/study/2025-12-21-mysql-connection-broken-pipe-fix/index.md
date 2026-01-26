@@ -2,7 +2,7 @@
 title: "MySQL 연결이 Broken pipe로 끊기는 문제 해결기"
 date: 2025-12-21T09:00:00+09:00
 tags: ["MySQL", "Connection Pool", "Broken Pipe", "Tomcat JDBC", "DR"]
-categories: ["Troubleshooting"]
+categories: ["study", "Troubleshooting", "Storage"]
 description: "Azure DR 환경에서 장시간 유휴 후 MySQL 연결이 Broken pipe로 끊기는 문제를 Connection Pool 검증 설정으로 해결한 과정을 공유합니다. wait_timeout의 원리와 testOnBorrow, testWhileIdle 설정 방법을 다룹니다."
 ---
 

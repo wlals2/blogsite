@@ -2,7 +2,7 @@
 title: "Kubernetes + Longhorn + VMware Worker 환경에서 PVC가 계속 망가지는 문제 해결"
 date: 2025-11-18T19:30:30+09:00
 draft: false
-categories: ["Longhorn","vmware","worker","kubernetes"]
+categories: ["study", "Storage", "Troubleshooting"]
 tags: ["kubernetes","PVC","PV","VMware","Lognhorn","faulted"]
 description: "Kubernetes + Longhorn + VMware Worker 환경에서 PVC가 계속 망가지는 문제 해결"
 author: "늦찌민"

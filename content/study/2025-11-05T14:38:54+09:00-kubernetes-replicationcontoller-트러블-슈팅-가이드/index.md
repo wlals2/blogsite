@@ -2,7 +2,7 @@
 title: "Kubernetes ReplicationContoller 트러블 슈팅 가이드"
 date: 2025-11-05T14:38:54+09:00
 draft: false
-categories: ["k8s","ReplicationContoller","Troubleshooting"]
+categories: ["study", "Kubernetes", "Storage"]
 tags: ["k8s","ReplicationContoller","Troubleshooting"]
 description: "Kubernetes ReplicationContoller 트러블 슈팅 가이드"
 author: "늦찌민"

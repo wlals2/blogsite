@@ -2,7 +2,7 @@
 title: "k8s-cni-csi-guide"
 date: 2025-11-24T12:49:02+09:00
 draft: false
-categories: ["cni","csi"]
+categories: ["study", "Networking", "Storage"]
 tags: ["cni","csi","k9s","guide","longhorn","cilium"]
 description: "k8s-cni-csi-guide"
 author: "늦찌민"

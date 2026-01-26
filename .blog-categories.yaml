@@ -1,0 +1,180 @@
+# 블로그 카테고리 정의 (고정)
+# 새 포스트 작성 시 이 목록에서만 선택
+#
+# 작성일: 2026-01-26
+# 목적: study 포스트 카테고리 일관성 유지
+
+categories:
+  kubernetes:
+    name: "Kubernetes"
+    description: "클러스터, GitOps, Helm, 배포 전략"
+    keywords:
+      - kubernetes
+      - k8s
+      - helm
+      - argocd
+      - gitops
+      - argo-rollouts
+      - canary-deployment
+      - deployment
+      - pod
+      - hpa
+      - kubectl
+      - kubeconfig
+
+  service-mesh:
+    name: "Service Mesh"
+    description: "Istio, mTLS, Traffic Management"
+    keywords:
+      - istio
+      - service-mesh
+      - mtls
+      - gateway
+      - virtualservice
+      - destinationrule
+      - kiali
+      - jaeger
+      - circuit-breaking
+      - traffic-management
+
+  networking:
+    name: "Networking"
+    description: "Cilium, eBPF, CNI, 네트워크 정책"
+    keywords:
+      - cilium
+      - ebpf
+      - cni
+      - hubble
+      - network-policy
+      - kube-proxy
+      - metallb
+      - ingress
+      - nginx
+      - proxy
+
+  security:
+    name: "Security"
+    description: "Falco, IDS/IPS, Zero Trust, 보안"
+    keywords:
+      - falco
+      - security
+      - ids
+      - ips
+      - zero-trust
+      - authorization
+      - authorizationpolicy
+      - securitycontext
+      - runtime-security
+
+  storage:
+    name: "Storage"
+    description: "Longhorn, MySQL, PVC, 백업, HA"
+    keywords:
+      - longhorn
+      - storage
+      - mysql
+      - pvc
+      - backup
+      - csi
+      - volume
+      - ha
+      - replica
+      - cronjob
+
+  observability:
+    name: "Observability"
+    description: "Prometheus, Grafana, Loki, 모니터링"
+    keywords:
+      - observability
+      - prometheus
+      - grafana
+      - loki
+      - monitoring
+      - metrics
+      - dashboard
+      - alert
+
+  cloud-terraform:
+    name: "Cloud & Terraform"
+    description: "AWS, Azure, EKS, Terraform, IaC, DR"
+    keywords:
+      - aws
+      - azure
+      - terraform
+      - eks
+      - s3
+      - dynamodb
+      - iac
+      - cloudfront
+      - alb
+      - route53
+      - dr
+      - disaster-recovery
+      - multi-cloud
+
+  elasticsearch:
+    name: "Elasticsearch"
+    description: "ELK, EFK, 검색 엔진, 로그 분석"
+    keywords:
+      - elasticsearch
+      - elk
+      - efk
+      - kibana
+      - fluent-bit
+      - logstash
+      - inverted-index
+      - term
+      - analyzer
+
+  troubleshooting:
+    name: "Troubleshooting"
+    description: "문제 해결, 디버깅, 트러블슈팅"
+    keywords:
+      - troubleshooting
+      - 트러블슈팅
+      - 문제
+      - 해결
+      - issue
+      - crashloopbackoff
+      - error
+      - fix
+      - debug
+
+  development:
+    name: "Development"
+    description: "Spring Boot, Redis, Docker, CI/CD"
+    keywords:
+      - spring-boot
+      - redis
+      - session
+      - docker
+      - github-actions
+      - cicd
+      - jenkins
+      - openvpn
+      - apache
+      - httpd
+
+# 특별 규칙
+rules:
+  - name: "Troubleshooting 우선"
+    condition: "제목에 '트러블슈팅' 또는 'troubleshooting' 포함"
+    category: "troubleshooting"
+
+  - name: "복수 카테고리 허용"
+    condition: "Kubernetes + Service Mesh 등 복수 매칭 가능"
+    action: "점수가 높은 2개까지 선택 가능"
+
+# 사용 예시
+examples:
+  - title: "Istio Service Mesh 아키텍처 완전 가이드"
+    tags: ["kubernetes", "istio", "service-mesh", "mtls"]
+    suggested_categories: ["Service Mesh", "Kubernetes"]
+
+  - title: "Longhorn CSI Plugin CrashLoopBackOff 문제"
+    tags: ["kubernetes", "longhorn", "storage", "troubleshooting"]
+    suggested_categories: ["Troubleshooting", "Storage"]
+
+  - title: "Cilium eBPF 네트워킹 & Hubble 관측성"
+    tags: ["cilium", "ebpf", "hubble", "kubernetes"]
+    suggested_categories: ["Networking"]

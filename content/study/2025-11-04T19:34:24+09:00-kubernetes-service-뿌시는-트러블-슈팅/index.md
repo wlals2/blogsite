@@ -2,7 +2,7 @@
 title: "Kubernetes Service 뿌시는 트러블 슈팅"
 date: 2025-11-04T19:34:24+09:00
 draft: false
-categories: ["k8s","service","network","pod"]
+categories: ["study", "Kubernetes"]
 tags: ["k8s","데이터 영속성","longhorn","service","nodeport","네트워크","deployment","k9s"]
 description: "Kubernetes Service 뿌시는 트러블 슈팅 Service 완벽 정복(?)"
 author: "늦찌민"

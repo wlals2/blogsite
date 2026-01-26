@@ -2,7 +2,7 @@
 title: "Elasticsearch 기초: term이란 무엇인가?"
 date: 2025-10-11T02:02:37-04:00
 tags: ["Elasticsearch", "term", "match", "Analyzer", "검색엔진"]
-categories: ["Elasticsearch", "Search Engine"]
+categories: ["study", "Elasticsearch"]
 draft: false
 author: "늦찌민"
 description: "검색 엔진을 위한 제일 작은 단위 term"

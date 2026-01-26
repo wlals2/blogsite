@@ -3,7 +3,7 @@ title: "Datadog 수준의 Observability 시스템 구축 완료 (PLG Stack)"
 date: 2026-01-20
 summary: "Prometheus + Loki + Grafana로 완전한 모니터링 시스템 구축 - Nginx/WAS/MySQL Dashboard, AlertManager, 트러블슈팅 가이드"
 tags: ["observability", "prometheus", "grafana", "loki", "monitoring", "alertmanager"]
-categories: ["infrastructure", "monitoring"]
+categories: ["study", "Observability"]
 series: ["Infrastructure Learning Journey"]
 weight: 2
 showtoc: true

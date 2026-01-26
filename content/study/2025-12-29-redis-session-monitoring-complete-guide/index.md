@@ -1,7 +1,7 @@
 ---
 title: "Redis Session 모니터링 완벽 가이드"
 date: 2025-12-29
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Development"]
 tags: ["Redis", "Spring Session", "Monitoring", "Grafana", "Prometheus", "Kubernetes", "Session Clustering"]
 description: "Spring Session과 Redis를 활용한 세션 클러스터링 구현부터 실시간 모니터링까지, WAS Pod 간 세션 공유의 모든 것을 다룹니다."
 slug: redis-session-monitoring-complete-guide

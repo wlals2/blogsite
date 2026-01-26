@@ -2,7 +2,7 @@
 title: "Jenkins로 구축한 GitOps CI/CD 파이프라인 실전 구축기"
 date: 2025-12-23T14:00:00+09:00
 tags: ["Jenkins", "GitOps", "CI/CD", "Docker", "ArgoCD", "Kubernetes"]
-categories: ["CI/CD & GitOps"]
+categories: ["study", "Kubernetes", "Development"]
 description: "Jenkins와 ArgoCD로 멱등성과 재현성을 보장하는 GitOps CI/CD 파이프라인을 구축한 실전 경험을 공유합니다. Docker 기반 빌드, ECR 이미지 관리, 자동 배포까지 전 과정을 다룹니다."
 ---
 

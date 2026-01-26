@@ -2,7 +2,7 @@
 title: "Selector의 본질 뿌시기"
 date: 2025-11-05T18:50:01+09:00
 draft: false
-categories: ["k8s","selector",""]
+categories: ["study", "Kubernetes", "Storage"]
 tags: ["k8s","pvc","pv","selector"]
 description: "Selector의 본질 뿌시기"
 author: "늦찌민"

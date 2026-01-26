@@ -3,7 +3,7 @@ title: "Nginx Ingress 제거 및 Istio Gateway 일원화"
 date: 2026-01-24
 description: "중복 L7 라우팅 레이어 제거로 아키텍처 단순화 및 성능 개선"
 tags: ["kubernetes", "istio", "gateway", "ingress", "service-mesh", "metallb", "architecture"]
-categories: ["study"]
+categories: ["study", "Service Mesh", "Networking"]
 ---
 
 ## 개요

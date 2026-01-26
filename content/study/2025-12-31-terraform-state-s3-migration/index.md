@@ -2,7 +2,7 @@
 title: "Terraform State S3 마이그레이션 실전 가이드"
 date: 2025-12-31
 tags: ["Terraform", "Infrastructure as Code", "S3", "DynamoDB", "State Management"]
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Cloud & Terraform"]
 series: ["Terraform 완벽 가이드"]
 description: "로컬에 저장된 Terraform State 파일을 S3 Backend로 마이그레이션했어요. 파일 손실과 팀원 간 충돌 문제를 완벽하게 해결한 과정을 공유합니다."
 showToc: true

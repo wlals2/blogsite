@@ -2,7 +2,7 @@
 title: "k8s-삽질-containerd"
 date: 2025-11-26T00:26:39+09:00
 draft: false
-categories: ["삽질","k8s","containerd"]
+categories: ["study", "Kubernetes"]
 tags: ["삽질","k8s","containerd","마이그레이션"]
 description: "k8s-삽질-containerd"
 author: "늦찌민"

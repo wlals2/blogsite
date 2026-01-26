@@ -3,7 +3,7 @@ title: "Longhorn CSI Plugin CrashLoopBackOff 문제"
 date: 2026-01-23
 description: "Replica 수와 Worker 노드 수 불일치로 인한 Longhorn 장애 해결"
 tags: ["kubernetes", "longhorn", "storage", "csi", "troubleshooting"]
-categories: ["study"]
+categories: ["study", "Storage", "Troubleshooting"]
 ---
 
 ## 상황

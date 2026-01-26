@@ -2,7 +2,7 @@
 title: "kubernetes PVC 삭제뿌시기"
 date: 2025-11-23T16:04:52+09:00
 draft: false
-categories: ["k8s","pvc","finlayzer"]
+categories: ["study", "Storage", "Kubernetes"]
 tags: ["k8s","pvc","migrade","storageclass","pvc binding"]
 description: "kubernetes PVC 삭제뿌시기"
 author: "늦찌민"

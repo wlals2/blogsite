@@ -2,7 +2,7 @@
 title: "🚀 Cilium으로 본 Kubernetes 네트워킹 진화 — kube-proxy를 넘어 eBPF로"
 date: 2025-11-06T19:21:34+09:00
 draft: false
-categories: ["Clium을 이용한 k8s 네트워킹 "]
+categories: ["study", "Networking"]
 tags: ["k8s","network","cilium","kube-proxy"]
 description: "🚀 Cilium으로 본 Kubernetes 네트워킹 진화 — kube-proxy를 넘어 eBPF로"
 author: "늦찌민"

@@ -1,7 +1,7 @@
 ---
 title: "Kubernetes 운영 도구 완벽 설치 가이드"
 date: 2025-12-25
-categories: ["Infrastructure & IaC"]
+categories: ["study", "Observability", "Kubernetes"]
 tags: ["Kubernetes", "Monitoring", "Metrics Server", "Redis Exporter", "Grafana", "Prometheus", "DevOps"]
 description: "Kubernetes 클러스터에서 핵심 아키텍처와 분리된 운영/모니터링 도구를 설치하고 관리하는 완전한 가이드입니다."
 slug: kubernetes-addons-operational-guide

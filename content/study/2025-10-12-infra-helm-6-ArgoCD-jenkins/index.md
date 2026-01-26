@@ -4,6 +4,7 @@ date:  2025-10-11T22:10:23
 draft: false
 categroies: ["DevOps","Kubenetes","Gitops","CD","CI","helm","Hugo","kubenetes"]
 tags: ["DevOps","Kubenetes","Gitops","CD","CI","helm","Hugo","kubenetes","IaC"]
+categories: ["study", "Kubernetes"]
 author: "늦찌민"
 series: ["좀 더 고급으로 변하는 인프라 구조"]
 description: "컨테이너로 CI/CD 도 말아보자"

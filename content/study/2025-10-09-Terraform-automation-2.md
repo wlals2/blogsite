@@ -3,7 +3,7 @@ title: "Terraform 클라우드 자동화 여정 #2: 기초편"
 date: 2025-10-09T10:55:58-04:00
 draft: false
 tags: ["Terraform", "IaC", "HCL", "automation", "variables", "loops"]
-categories: ["Study"]
+categories: ["study", "Cloud & Terraform"]
 series: ["Terraform 클라우드 자동화"]
 author: "지민 오"
 description: "Terraform 핵심 문법 마스터하기: Resource/Data 블록, 변수, Output, 반복문(count, for_each, for, dynamic) 완벽 가이드"
