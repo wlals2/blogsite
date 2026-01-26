@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- ==============================================================================
+         Logback Configuration for OpenTelemetry Trace Integration
+         ==============================================================================
+         목적: Spring Boot 로그에 trace_id와 span_id 포함
+
+         OpenTelemetry Java Agent가 자동으로 MDC에 다음 값들을 주입:
+         - trace_id: 분산 추적 ID (Grafana Tempo로 연결)
+         - span_id: 현재 Span ID
+         - trace_flags: Sampling 여부 (01 = sampled)
+
+         Grafana Loki → Tempo 연동:
+         - Loki에서 trace_id 추출
+         - Tempo에서 해당 trace 조회
+         ============================================================================== -->
+
+    <!-- Console Appender (stdout) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [trace_id=%X{trace_id:-} span_id=%X{span_id:-}] %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- JSON Appender (선택 사항: 구조화된 로그) -->
+    <!--
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>trace_id</includeMdcKeyName>
+            <includeMdcKeyName>span_id</includeMdcKeyName>
+        </encoder>
+    </appender>
+    -->
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- Spring Boot 로그 레벨 조정 -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="com.jimin.board" level="DEBUG"/>
+
+    <!-- Hibernate SQL 로그 (선택 사항) -->
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+
+    <!-- OpenTelemetry 로그 (에러 디버깅용) -->
+    <logger name="io.opentelemetry" level="INFO"/>
+</configuration>
