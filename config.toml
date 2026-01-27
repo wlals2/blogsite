@@ -12,7 +12,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   date = ["date", "publishDate", ":git", ":fileModTime", "lastmod"]
 
 [pagination]
-  pagerSize = 10
+  pagerSize = 100  # 카테고리 필터를 위해 모든 포스트를 한 페이지에 렌더링
 
 [minify]
   minifyOutput = true

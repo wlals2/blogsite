@@ -163,6 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Filter articles
+    let visibleCount = 0;
     articles.forEach(article => {
       const categoriesStr = article.getAttribute('data-categories');
       if (!categoriesStr) {
@@ -175,14 +176,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (selectedCategory === 'all') {
         article.style.display = '';
+        visibleCount++;
       } else {
         if (categories.includes(selectedCategory)) {
           article.style.display = '';
+          visibleCount++;
         } else {
           article.style.display = 'none';
         }
       }
     });
+
+    // 페이지네이션 처리
+    const pagination = document.querySelector('.page-footer');
+    if (pagination) {
+      if (selectedCategory === 'all') {
+        pagination.style.display = '';  // "All"이면 페이지네이션 표시
+      } else {
+        pagination.style.display = 'none';  // 필터 사용 시 페이지네이션 숨김
+      }
+    }
 
     // Update URL without reload
     const newUrl = new URL(window.location);
