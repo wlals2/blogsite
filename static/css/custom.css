@@ -840,3 +840,97 @@ table a:hover {
 .dark table tbody tr:hover {
     background: rgba(255, 255, 255, 0.05);
 }
+
+/* ==================== */
+/* Category Filter Box  */
+/* ==================== */
+
+.category-filter-box {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: var(--entry);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0 30px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.category-filter-box h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+    color: var(--content);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.category-btn {
+    background: var(--theme);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.9em;
+    color: var(--content);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.category-btn:hover {
+    background: var(--primary);
+    color: var(--theme);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-btn.active {
+    background: var(--primary);
+    color: var(--theme);
+    border-color: var(--primary);
+    font-weight: 600;
+}
+
+.category-btn .count {
+    opacity: 0.7;
+    font-size: 0.85em;
+    margin-left: 4px;
+}
+
+/* 반응형 - 모바일 */
+@media screen and (max-width: 768px) {
+    .category-filter-box {
+        padding: 15px;
+        margin: 15px 0 20px 0;
+    }
+
+    .category-filter-box h3 {
+        font-size: 1em;
+        margin-bottom: 12px;
+    }
+
+    .category-buttons {
+        gap: 8px;
+    }
+
+    .category-btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+}
+
+/* 다크모드 최적화 */
+.dark .category-filter-box {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .category-btn:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
