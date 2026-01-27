@@ -145,29 +145,70 @@ document.addEventListener('DOMContentLoaded', function() {
   const categoryButtons = document.querySelectorAll('.category-btn');
   const articles = document.querySelectorAll('article[data-categories]');
 
+  // Get current filter from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentFilter = urlParams.get('category') || 'all';
+
+  // Apply initial filter
+  applyFilter(currentFilter);
+
+  function applyFilter(selectedCategory) {
+    // Update active button
+    categoryButtons.forEach(btn => {
+      if (btn.getAttribute('data-category') === selectedCategory) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Filter articles
+    articles.forEach(article => {
+      const categoriesStr = article.getAttribute('data-categories');
+      if (!categoriesStr) {
+        article.style.display = 'none';
+        return;
+      }
+
+      // Split and trim to handle spaces
+      const categories = categoriesStr.split(',').map(c => c.trim());
+
+      if (selectedCategory === 'all') {
+        article.style.display = '';
+      } else {
+        if (categories.includes(selectedCategory)) {
+          article.style.display = '';
+        } else {
+          article.style.display = 'none';
+        }
+      }
+    });
+
+    // Update URL without reload
+    const newUrl = new URL(window.location);
+    if (selectedCategory === 'all') {
+      newUrl.searchParams.delete('category');
+    } else {
+      newUrl.searchParams.set('category', selectedCategory);
+    }
+    window.history.pushState({}, '', newUrl);
+  }
+
   categoryButtons.forEach(button => {
     button.addEventListener('click', function() {
       const selectedCategory = this.getAttribute('data-category');
-
-      // Update active button
-      categoryButtons.forEach(btn => btn.classList.remove('active'));
-      this.classList.add('active');
-
-      // Filter articles
-      articles.forEach(article => {
-        const categories = article.getAttribute('data-categories').split(',');
-
-        if (selectedCategory === 'all') {
-          article.style.display = '';
-        } else {
-          if (categories.includes(selectedCategory)) {
-            article.style.display = '';
-          } else {
-            article.style.display = 'none';
-          }
-        }
-      });
+      applyFilter(selectedCategory);
     });
+  });
+
+  // Update pagination links to preserve category filter
+  const paginationLinks = document.querySelectorAll('.pagination a');
+  paginationLinks.forEach(link => {
+    if (currentFilter !== 'all') {
+      const url = new URL(link.href);
+      url.searchParams.set('category', currentFilter);
+      link.href = url.toString();
+    }
   });
 });
 </script>
