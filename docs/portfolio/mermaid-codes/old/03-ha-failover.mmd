@@ -1,0 +1,34 @@
+flowchart TD
+    subgraph Cluster["Kubernetes Cluster"]
+        Master[🖥️ k3s-master<br/>Control Plane]
+
+        subgraph Workers["Worker Nodes"]
+            W1[💻 worker-1<br/>WEB A, WAS A, MySQL]
+            W2[💻 worker-2<br/>WEB B, WAS B<br/>❌ OOM 장애]
+            W3[💻 worker-3<br/>WEB C, WAS C]
+        end
+    end
+
+    subgraph Failover["Auto-Failover"]
+        Detect[🔍 감지<br/>NotReady<br/>5초]
+        Longhorn[💾 Longhorn<br/>Volume Detach<br/>2분]
+        Schedule[📋 Scheduler<br/>새 노드 선택]
+        Attach[🔗 Volume Attach<br/>Replica 복구<br/>1분]
+        Start[▶️ Pod 시작<br/>MySQL 초기화<br/>30초]
+        Ready[✅ Ready<br/>서비스 복구<br/>총 5분]
+    end
+
+    W2 -.->|장애| Detect
+    Detect -->|timeout| Longhorn
+    Longhorn -->|분리| Schedule
+    Schedule -->|선택| Attach
+    Attach -->|Mount| Start
+    Start -->|Check| Ready
+
+    style W2 fill:#ff6b6b
+    style Detect fill:#ffd700
+    style Longhorn fill:#87ceeb
+    style Schedule fill:#90ee90
+    style Attach fill:#dda0dd
+    style Start fill:#ffb6c1
+    style Ready fill:#98fb98

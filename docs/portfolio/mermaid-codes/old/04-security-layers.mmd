@@ -1,0 +1,34 @@
+flowchart TD
+    Internet[🌐 Internet<br/>악의적 트래픽]
+
+    L7_CDN[🛡️ L7: Cloudflare WAF<br/>SQL Injection 차단<br/>XSS 차단<br/>DDoS 방어]
+
+    L7_Istio[🔐 L7: Istio mTLS<br/>Service 간 암호화<br/>PERMISSIVE 모드]
+
+    L4_Cilium[🚧 L4: NetworkPolicy<br/>Pod 트래픽 제어<br/>L7 Protocol 인식]
+
+    Runtime[⚡ Runtime: Falco IDS/IPS<br/>syscall 모니터링<br/>Talon 자동 격리]
+
+    App[🔒 App: SecurityContext<br/>runAsNonRoot<br/>drop ALL capabilities]
+
+    Pod[📦 Application Pod<br/>WEB, WAS, MySQL]
+
+    Internet -->|공격| L7_CDN
+    L7_CDN -->|필터링| L7_Istio
+    L7_Istio -->|mTLS| L4_Cilium
+    L4_Cilium -->|허용| Runtime
+    Runtime -->|정상| App
+    App -->|준수| Pod
+
+    L7_CDN -.->|차단| Internet
+    L7_Istio -.->|차단| Internet
+    L4_Cilium -.->|DROP| Internet
+    Runtime -.->|격리| Pod
+
+    style Internet fill:#ff6b6b
+    style L7_CDN fill:#ffd700
+    style L7_Istio fill:#87ceeb
+    style L4_Cilium fill:#98fb98
+    style Runtime fill:#ffb6c1
+    style App fill:#dda0dd
+    style Pod fill:#90ee90

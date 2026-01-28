@@ -1,0 +1,241 @@
+# 블로그 시스템 아키텍처 (D2 버전)
+# WEB + WAS 3-TIER 구조 (Hugo 정적 블로그 + Spring Boot API)
+# 작성일: 2026-01-24
+# 상태: ✅ Production 운영 중 (58일+)
+
+direction: down
+
+# ============================================================
+# 1. 전체 아키텍처
+# ============================================================
+
+title: 블로그 시스템 전체 아키텍처 {
+  near: top-center
+  style: {
+    font-size: 24
+    bold: true
+  }
+}
+
+user: 사용자 (HTTPS) {
+  shape: person
+  style.fill: "#E8F5E9"
+  style.stroke: "#4CAF50"
+}
+
+cloudflare: Cloudflare CDN + Security {
+  style.fill: "#FF9800"
+  style.stroke: "#F57C00"
+
+  cdn: DDoS Protection L3/4/7\nSSL/TLS Termination\nWAF\nCache {
+    style.fill: "#FFB74D"
+  }
+
+  tunnel: Cloudflare Tunnel {
+    style.fill: "#FFA726"
+  }
+
+  cdn -> tunnel
+}
+
+k8s: Kubernetes Cluster v1.31.13 (4 nodes) {
+  style.fill: "#E3F2FD"
+  style.stroke: "#1976D2"
+
+  ingress_layer: Ingress Layer {
+    style.fill: "#BBDEFB"
+
+    metallb: MetalLB LoadBalancer\n192.168.X.200 {
+      style.fill: "#2196F3"
+      style.stroke: "#1976D2"
+    }
+
+    nginx: Nginx Ingress Controller\nNodePort 30080 {
+      style.fill: "#009688"
+      style.stroke: "#00796B"
+    }
+
+    metallb -> nginx
+  }
+
+  istio: Istio Service Mesh (mTLS PERMISSIVE) {
+    style.fill: "#F3E5F5"
+    style.stroke: "#7B1FA2"
+
+    vs: VirtualService\nblog-virtualservice {
+      style.fill: "#673AB7"
+      style.stroke: "#512DA8"
+    }
+
+    web: WEB (Argo Rollout) {
+      style.fill: "#C8E6C9"
+      style.stroke: "#388E3C"
+
+      web_app: nginx:alpine\nHugo 정적\n━━━━━━━━━\nCPU: 100m\nMem: 128Mi\nReplicas: 2-5\nHPA: 60% {
+        style.fill: "#4CAF50"
+        style.stroke: "#2E7D32"
+        style.font-color: "#FFFFFF"
+      }
+
+      web_security: 🔐 SecurityContext:\n- runAsNonRoot\n- drop ALL caps\n- Private GHCR {
+        style.fill: "#81C784"
+      }
+
+      web_canary: 📊 Canary 배포\n10% → 50% → 90%\nIstio Traffic Split {
+        style.fill: "#66BB6A"
+      }
+    }
+
+    was: WAS (Argo Rollout) {
+      style.fill: "#B3E5FC"
+      style.stroke: "#0277BD"
+
+      was_app: Spring Boot\nboard-was\n━━━━━━━━━\nCPU: 250m\nMem: 512Mi\nReplicas: 2-10\nHPA: 70% {
+        style.fill: "#03A9F4"
+        style.stroke: "#0277BD"
+        style.font-color: "#FFFFFF"
+      }
+
+      was_security: 🔐 SecurityContext:\n- runAsNonRoot\n- drop ALL caps\n- Private GHCR {
+        style.fill: "#4FC3F7"
+      }
+    }
+
+    db: Database {
+      style.fill: "#FFCDD2"
+      style.stroke: "#C62828"
+
+      mysql: MySQL 8.0\n━━━━━━━━━\nCPU: 200m\nMem: 512Mi\nPVC: 5Gi Longhorn {
+        shape: cylinder
+        style.fill: "#F44336"
+        style.stroke: "#C62828"
+        style.font-color: "#FFFFFF"
+      }
+
+      mysql_storage: 💾 Storage:\n- Replica: 3\n- S3 Backup daily 3AM\n- RTO: 5분\n- RPO: 24h {
+        style.fill: "#EF5350"
+      }
+    }
+
+    vs -> web.web_app: / (정적)
+    vs -> was.was_app: /api/** (API)
+    was.was_app -> db.mysql: 평문 TCP\n(Istio Mesh 제외) {
+      style.stroke-dash: 3
+    }
+    web.web_app -> was.was_app: mTLS 🔒 {
+      style.stroke: "#4CAF50"
+      style.stroke-width: 3
+    }
+  }
+
+  security: 🛡️ 보안 계층 (Falco Runtime Security) {
+    style.fill: "#FCE4EC"
+    style.stroke: "#C2185B"
+
+    falco: Falco DaemonSet\n4 nodes\n━━━━━━━━━\neBPF syscall 모니터링\nCVE, RCE, Reverse Shell {
+      style.fill: "#E91E63"
+      style.stroke: "#AD1457"
+      style.font-color: "#FFFFFF"
+    }
+
+    sidekick: Falcosidekick\nAlert Routing Hub {
+      style.fill: "#EC407A"
+      style.stroke: "#C2185B"
+    }
+
+    talon: Falco Talon IPS\n━━━━━━━━━\nDry-Run Phase 1\nNetworkPolicy 격리\nCRITICAL → 즉시 격리 {
+      style.fill: "#C2185B"
+      style.stroke: "#880E4F"
+      style.font-color: "#FFFFFF"
+    }
+
+    loki_sec: Loki 7일 {
+      style.fill: "#F48FB1"
+    }
+
+    k8s_api: Kubernetes API\nPod 격리 {
+      style.fill: "#F06292"
+    }
+
+    falco -> sidekick: 이상 탐지 시
+    sidekick -> loki_sec: 1. 장기 보관
+    sidekick -> talon: 2. 자동 대응
+    talon -> k8s_api: NetworkPolicy 생성
+  }
+
+  monitoring: 📊 모니터링 & 로깅 (PLG Stack) {
+    style.fill: "#FFF3E0"
+    style.stroke: "#E65100"
+
+    prom: Prometheus\n━━━━━━━━━\nNode Exporter\nMySQL Exporter\nPushgateway\nIstio Telemetry {
+      style.fill: "#FF5722"
+      style.stroke: "#D84315"
+      style.font-color: "#FFFFFF"
+    }
+
+    loki: Loki\n━━━━━━━━━\n로그 수집 & 검색\nRetention: 7일 168h\n자동 삭제 {
+      style.fill: "#FF7043"
+      style.stroke: "#E64A19"
+    }
+
+    grafana: Grafana\n━━━━━━━━━\n통합 대시보드\nK8s, MySQL, Istio {
+      style.fill: "#FF6F00"
+      style.stroke: "#E65100"
+      style.font-color: "#FFFFFF"
+    }
+
+    prom -> grafana
+    loki -> grafana
+  }
+
+  gitops: ⚙️ GitOps 배포 (ArgoCD) {
+    style.fill: "#E8EAF6"
+    style.stroke: "#283593"
+
+    argocd: ArgoCD\n━━━━━━━━━\nAuto-Sync: 3초\nSelf-Heal\nArgo Rollouts Canary {
+      style.fill: "#3F51B5"
+      style.stroke: "#283593"
+      style.font-color: "#FFFFFF"
+    }
+
+    git: github.com/wlals2/\nk8s-manifests {
+      shape: document
+      style.fill: "#5C6BC0"
+    }
+
+    git -> argocd
+  }
+
+  storage_layer: 💾 스토리지 (Longhorn) {
+    style.fill: "#F3E5F5"
+    style.stroke: "#6A1B9A"
+
+    longhorn: Longhorn CSI\n━━━━━━━━━\nReplica: 3\nworker1, 2, 3\nAuto Failover\nS3 Backup daily 3AM {
+      style.fill: "#9C27B0"
+      style.stroke: "#6A1B9A"
+      style.font-color: "#FFFFFF"
+    }
+  }
+
+  network: 🌐 CNI (Cilium v1.18.4) {
+    style.fill: "#E0F7FA"
+    style.stroke: "#006064"
+
+    cilium: Cilium eBPF\n━━━━━━━━━\nNetworkPolicy 지원\nService LB\nHubble Observability {
+      style.fill: "#00BCD4"
+      style.stroke: "#006064"
+      style.font-color: "#FFFFFF"
+    }
+  }
+
+  ingress_layer.nginx -> istio.vs
+  istio.db.mysql -> storage_layer.longhorn: PVC {
+    style.stroke-dash: 3
+  }
+  security.talon -> network.cilium: NetworkPolicy 관리 {
+    style.stroke-dash: 3
+  }
+}
+
+user -> cloudflare.cdn: HTTPS
+cloudflare.tunnel -> k8s.ingress_layer.metallb

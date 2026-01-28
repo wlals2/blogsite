@@ -1,0 +1,26 @@
+flowchart LR
+    Dev["[Dev]<br/>git push"]
+    Actions["[GitHub Actions]<br/>Build + Test"]
+    GHCR["[GHCR]<br/>Private Registry<br/>board-web:v60"]
+    GitOps["[GitOps]<br/>k8s-manifests<br/>image: v60"]
+    ArgoCD["[ArgoCD]<br/>Auto-Sync<br/>3sec"]
+    Rollout["[Argo Rollouts]<br/>Canary<br/>10%→50%→100%"]
+    Stable["[Stable]<br/>v59<br/>90%"]
+    Canary["[Canary]<br/>v60<br/>10%"]
+
+    Dev -->|"1. Push"| Actions
+    Actions -->|"2. Build"| GHCR
+    Actions -->|"3. Update"| GitOps
+    GitOps -->|"4. Sync"| ArgoCD
+    ArgoCD -->|"5. Apply"| Rollout
+    Rollout -->|"6. Create"| Canary
+    Rollout -->|"7. Keep"| Stable
+
+    style Dev fill:#e1f5ff
+    style Actions fill:#ffd700
+    style GHCR fill:#90ee90
+    style GitOps fill:#ffb6c1
+    style ArgoCD fill:#dda0dd
+    style Rollout fill:#87ceeb
+    style Stable fill:#d3d3d3
+    style Canary fill:#ffa07a

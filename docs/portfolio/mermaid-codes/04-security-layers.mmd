@@ -1,0 +1,27 @@
+flowchart TD
+    Internet["[Internet]<br/>Attack Traffic"]
+    L7_CDN["[L7: Cloudflare WAF]<br/>SQL Injection / XSS / DDoS"]
+    L7_Istio["[L7: Istio mTLS]<br/>Service Encryption<br/>PERMISSIVE Mode"]
+    L4_Cilium["[L4: Cilium NetworkPolicy]<br/>Pod Traffic Control<br/>L7 Protocol Aware"]
+    Runtime["[Runtime: Falco IDS/IPS]<br/>syscall Monitoring<br/>Auto Isolation"]
+    App["[App: SecurityContext]<br/>runAsNonRoot<br/>drop ALL capabilities"]
+    Pod["[Application Pod]<br/>WEB / WAS / MySQL"]
+
+    Internet -->|"Attack"| L7_CDN
+    L7_CDN -->|"Filtered"| L7_Istio
+    L7_Istio -->|"mTLS"| L4_Cilium
+    L4_Cilium -->|"Allow"| Runtime
+    Runtime -->|"Normal"| App
+    App -->|"Secure"| Pod
+
+    L7_CDN -.->|"Block"| Internet
+    L4_Cilium -.->|"DROP"| Internet
+    Runtime -.->|"Isolate"| Pod
+
+    style Internet fill:#ff6b6b
+    style L7_CDN fill:#ffd700
+    style L7_Istio fill:#87ceeb
+    style L4_Cilium fill:#98fb98
+    style Runtime fill:#ffb6c1
+    style App fill:#dda0dd
+    style Pod fill:#90ee90

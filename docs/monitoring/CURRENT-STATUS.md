@@ -1,7 +1,7 @@
-# Monitoring 시스템 현재 상태
+# Observability 플랫폼 현재 상태
 
-> PLG Stack (Prometheus + Loki + Grafana) 운영 현황
-> 최종 업데이트: 2026-01-23
+> PLTG Stack (Prometheus + Loki + Tempo + Grafana) - Full Observability
+> 최종 업데이트: 2026-01-26
 
 ---
 
@@ -13,11 +13,17 @@
 - **안정성**: ✅ 정상 작동 중
 
 ### 구축된 컴포넌트
-- ✅ Prometheus (메트릭 수집)
-- ✅ Grafana (시각화)
-- ✅ Loki (로그 수집)
-- ✅ AlertManager (알림)
-- ✅ Exporters (nginx, mysql, node, kube-state-metrics)
+
+**Observability 3 Pillars**:
+- ✅ **Prometheus** - 메트릭 수집 (130+ node metrics)
+- ✅ **Loki** - 로그 수집 (7-day retention)
+- ✅ **Tempo** - 분산 추적 (48h retention) 🆕 2026-01-26
+- ✅ **Grafana** - 통합 시각화 (Metrics + Logs + Traces)
+
+**Agent & Exporters**:
+- ✅ **Grafana Alloy** - All-in-One Agent (Promtail + node-exporter 대체, 67% Pod 감소) 🆕
+- ✅ **AlertManager** - 알림 발송 (Slack 연동 준비)
+- ✅ **Exporters** - nginx, mysql, blackbox, kube-state-metrics
 
 ---
 
@@ -67,7 +73,7 @@ curl -I http://monitoring.jiminhome.shop
 
 ## 🏗️ 인프라 상태
 
-### Pod 상태 (2026-01-20 기준)
+### Pod 상태 (2026-01-26 기준)
 
 ```bash
 kubectl get pods -n monitoring
@@ -78,8 +84,9 @@ kubectl get pods -n monitoring
 | prometheus-586bfbd66f-zh24m | Running | k8s-worker2 | 0 | 74분 |
 | grafana-577c4944db-9vxvb | Running | k8s-worker2 | 0 | 6시간 |
 | loki-stack-0 | Running | k8s-worker1 | 0 | 17시간 |
+| tempo-849bd96cf9-xb6dt | Running | k8s-worker2 | 0 | 2시간 | 🆕
 | alertmanager-6df68c4764-5f62d | Running | k8s-worker2 | 0 | 19시간 |
-| loki-stack-promtail-xxx (3개) | Running | 모든 노드 | 0 | - |
+| grafana-alloy-xxx (3개) | Running | 모든 노드 | 0 | - | 🆕
 
 ### Service 상태
 
@@ -92,6 +99,7 @@ kubectl get svc -n monitoring
 | grafana | NodePort | 3000:30300 | Dashboard |
 | prometheus | NodePort | 9090:30090 | 메트릭 쿼리 |
 | loki-stack | ClusterIP | 3100 | 로그 수집 |
+| tempo | ClusterIP | 3200, 4317, 4318 | Trace 수집/쿼리 | 🆕
 | alertmanager | ClusterIP | 9093 | 알림 발송 |
 
 ### Exporter 상태
@@ -190,13 +198,27 @@ kubectl exec -n monitoring <prometheus-pod> -- \
 
 ### Loki 로그 수집
 
-- **Promtail Agent**: 3개 (모든 노드)
+- **Grafana Alloy Agent**: 3개 (모든 노드, Promtail 대체)
 - **로그 소스**:
   - WEB (nginx)
   - WAS (spring-boot)
   - MySQL
   - Kubernetes system logs
-- **보관 기간**: 30일 (기본)
+- **보관 기간**: 7일 (retention_period: 168h)
+
+### Tempo 분산 추적 🆕
+
+- **Tempo Backend**: 1개 (tempo-849bd96cf9-xb6dt)
+- **Trace 소스**:
+  - WAS (OpenTelemetry Java Agent v1.32.0)
+  - Istio Service Mesh (CLIENT_AND_SERVER mode)
+- **프로토콜**: OTLP gRPC (port 4317), OTLP HTTP (port 4318), Jaeger (14250, 14268)
+- **보관 기간**: 48시간
+- **Sampling**: 100% (always_on)
+- **Correlation**:
+  - Trace → Logs (trace_id in logback)
+  - Trace → Metrics (Prometheus serviceMap)
+  - Logs → Trace (Grafana derivedFields)
 
 ---
 
@@ -282,6 +304,27 @@ kube_pod_status_phase{namespace="blog-system"}
 ---
 
 ## 🔄 최근 변경 사항
+
+### 2026-01-26 🆕
+- ✅ **Grafana Tempo 배포** (분산 추적 백엔드)
+  - OTLP gRPC/HTTP receiver (4317/4318)
+  - Jaeger protocol 지원 (14250/14268)
+  - 48h retention, 5Gi PVC
+- ✅ **WAS OpenTelemetry 계측** (Java Agent v1.32.0)
+  - Auto-instrumentation (zero code change)
+  - trace_id 자동 생성 및 전파
+  - Tempo OTLP gRPC 전송
+- ✅ **Istio Telemetry 설정**
+  - 100% sampling (randomSamplingPercentage: 100)
+  - Tempo provider 연동 (otel-tracing)
+  - CLIENT_AND_SERVER mode (양방향 추적)
+- ✅ **Log-Trace Correlation 설정**
+  - logback-spring.xml 생성 (trace_id/span_id 로깅)
+  - Grafana derivedFields (Loki → Tempo 연동)
+- ✅ **Grafana Alloy 마이그레이션**
+  - Promtail + node-exporter 대체
+  - 67% Pod 감소 (9개 → 3개)
+  - All-in-One Agent 방식
 
 ### 2026-01-20
 - ✅ MySQL Exporter scrape job 추가

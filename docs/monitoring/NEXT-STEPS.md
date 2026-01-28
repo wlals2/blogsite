@@ -1,6 +1,6 @@
 # 다음 구축 계획
 
-> 현재 구축 완료: PLG Stack + 4 Dashboards + 8 Alert Rules
+> 현재 구축 완료: PLTG Stack (Full Observability) + 4 Dashboards + 8 Alert Rules
 
 ---
 
@@ -8,11 +8,19 @@
 
 | 항목 | 상태 |
 |------|------|
+| **Observability 3 Pillars** | |
 | Prometheus | ✅ 메트릭 수집, Alert Rules 8개 |
-| Grafana | ✅ Dashboard 4개 |
-| Loki | ✅ 로그 수집 |
+| Loki | ✅ 로그 수집 (7-day retention) |
+| Tempo | ✅ 분산 추적 (48h retention) 🆕 2026-01-26 |
+| **Visualization & Alerting** | |
+| Grafana | ✅ Dashboard 4개, Datasources 3개 (Prometheus/Loki/Tempo) |
 | AlertManager | ✅ 실행 중 (Slack 연동 대기) |
+| **Agents & Exporters** | |
+| Grafana Alloy | ✅ All-in-One Agent (67% Pod 감소) 🆕 |
 | Exporters | ✅ nginx, mysql, node, kube-state-metrics |
+| **Instrumentation** | |
+| WAS OpenTelemetry | ✅ Java Agent v1.32.0, trace_id logging 🆕 |
+| Istio Telemetry | ✅ 100% sampling, Tempo provider 🆕 |
 
 ---
 
@@ -66,15 +74,24 @@ groups:
 
 ### 📅 중기 (1-2일)
 
-#### 3. Distributed Tracing (Jaeger) ⭐⭐
+#### 3. ✅ 완료: Distributed Tracing (Tempo) ⭐⭐⭐
 **목적**: Request 추적 (WEB → WAS → MySQL)
 
-**필요 작업**:
-1. Jaeger 설치
-2. Spring Boot에 OpenTelemetry SDK 추가
-3. Nginx에 Trace ID 전달 설정
+**완료 작업** (2026-01-26):
+- ✅ Grafana Tempo 배포 (OTLP gRPC/HTTP receiver)
+- ✅ WAS OpenTelemetry 계측 (Java Agent v1.32.0)
+- ✅ Istio Telemetry 설정 (100% sampling, Tempo provider)
+- ✅ Log-Trace Correlation (trace_id in logback)
+- ✅ Grafana Datasources 연동 (Traces ↔ Logs ↔ Metrics)
 
-**효과**: 병목 구간 파악, 성능 최적화
+**효과**: 병목 구간 파악, 디버깅 시간 10분 → 10초
+
+**다음 단계** (선택 사항):
+- ⏳ Istio Ingress Gateway trace 시작점 설정
+- ⏳ Nginx (WEB) trace context propagation
+- ⏳ End-to-End Trace 검증 (Gateway → WEB → WAS → MySQL)
+- ⏳ Unified Dashboard (Service Map + Golden Signals)
+- ⏳ Trace Sampling 조정 (100% → 10%)
 
 ---
 
@@ -141,9 +158,11 @@ groups:
 ## 🛠️ 권장 순서
 
 ```
+✅ 완료: Distributed Tracing (Tempo) - Full Observability 구축
+    ↓
 1단계 (즉시): Slack 알림 → Recording Rules
     ↓
-2단계 (여유 있을 때): Distributed Tracing
+2단계 (선택): Trace 고도화 (Entry Point, Unified Dashboard)
     ↓
 3단계 (필요 시): Service Mesh Observability
     ↓
@@ -180,5 +199,6 @@ groups:
 
 ---
 
+**최근 완료**: Distributed Tracing (Tempo) - Full Observability ✅
 **우선 작업**: Slack 알림 통합 (15분)
 **다음 작업**: Recording Rules (30분)

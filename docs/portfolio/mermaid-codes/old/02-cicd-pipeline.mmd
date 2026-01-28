@@ -1,0 +1,41 @@
+flowchart TD
+    Dev[👨‍💻 Developer<br/>git push main]
+
+    Actions[⚙️ GitHub Actions<br/>Hugo Build<br/>Docker Build]
+
+    GHCR[📦 GHCR<br/>ghcr.io/wlals2/board-web:v60]
+
+    GitOps[📝 GitOps Repo<br/>k8s-manifests<br/>image: v60]
+
+    ArgoCD[🔄 ArgoCD<br/>Auto-Sync 3초<br/>Self-Healing]
+
+    Rollout[🎯 Argo Rollouts<br/>Canary 10%→50%→90%→100%]
+
+    Stable[✅ Stable Pods<br/>v59<br/>90% 트래픽]
+
+    Canary[🆕 Canary Pods<br/>v60<br/>10% 트래픽]
+
+    Cache[☁️ Cloudflare<br/>Cache Purge]
+
+    Email[📧 Email<br/>배포 완료]
+
+    Dev -->|1. Push| Actions
+    Actions -->|2. Build| GHCR
+    Actions -->|3. Update| GitOps
+    GitOps -->|4. Sync| ArgoCD
+    ArgoCD -->|5. Apply| Rollout
+    Rollout -->|6. Create| Canary
+    Rollout -->|7. Keep| Stable
+    Actions -->|8. Purge| Cache
+    Actions -->|9. Notify| Email
+
+    style Dev fill:#e1f5ff
+    style Actions fill:#ffd700
+    style GHCR fill:#90ee90
+    style GitOps fill:#ffb6c1
+    style ArgoCD fill:#dda0dd
+    style Rollout fill:#87ceeb
+    style Stable fill:#d3d3d3
+    style Canary fill:#ffa07a
+    style Cache fill:#ffd700
+    style Email fill:#e1f5ff

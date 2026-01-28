@@ -1,0 +1,34 @@
+flowchart TD
+    User[👤 사용자<br/>https://blog.jiminhome.shop/]
+
+    CDN[☁️ Cloudflare CDN<br/>SSL/TLS 종료<br/>DDoS 방어]
+
+    MetalLB[⚖️ MetalLB<br/>192.168.1.200<br/>L2 LoadBalancer]
+
+    IGW[🚪 Istio Gateway<br/>L7 Routing<br/>포트: 80]
+
+    VS[📋 VirtualService<br/>URI: / → web<br/>URI: /api → web]
+
+    WEB[🌐 WEB Pod<br/>nginx + Hugo<br/>정적 파일]
+
+    WAS[☕ WAS Pod<br/>Spring Boot<br/>API 처리]
+
+    MySQL[💾 MySQL<br/>Longhorn PVC<br/>Replica 3]
+
+    User -->|1. HTTPS| CDN
+    CDN -->|2. HTTP 평문| MetalLB
+    MetalLB -->|3. Port 80| IGW
+    IGW -->|4. Host 매칭| VS
+    VS -->|5. URI /| WEB
+    VS -.->|5. URI /api| WEB
+    WEB -.->|6. nginx proxy<br/>/api → was:8080| WAS
+    WAS -.->|7. JDBC| MySQL
+
+    style User fill:#e1f5ff
+    style CDN fill:#ffd700
+    style MetalLB fill:#90ee90
+    style IGW fill:#ffb6c1
+    style VS fill:#dda0dd
+    style WEB fill:#87ceeb
+    style WAS fill:#ffa07a
+    style MySQL fill:#d3d3d3

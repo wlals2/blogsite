@@ -1,0 +1,27 @@
+flowchart LR
+    User["[User]<br/>blog.jiminhome.shop"]
+    CDN["[CDN]<br/>Cloudflare<br/>SSL/TLS"]
+    LB["[LB]<br/>MetalLB<br/>192.168.1.200"]
+    IGW["[Gateway]<br/>Istio<br/>Port 80"]
+    VS["[VirtualService]<br/>URI Routing"]
+    WEB["[WEB]<br/>nginx + Hugo"]
+    WAS["[WAS]<br/>Spring Boot"]
+    MySQL["[DB]<br/>MySQL<br/>Replica 3"]
+
+    User -->|"1. HTTPS"| CDN
+    CDN -->|"2. HTTP"| LB
+    LB -->|"3. Port 80"| IGW
+    IGW -->|"4. Host Match"| VS
+    VS -->|"5. URI /"| WEB
+    VS -.->|"5. URI /api"| WEB
+    WEB -.->|"6. nginx proxy"| WAS
+    WAS -.->|"7. JDBC"| MySQL
+
+    style User fill:#e1f5ff
+    style CDN fill:#ffd700
+    style LB fill:#90ee90
+    style IGW fill:#ffb6c1
+    style VS fill:#dda0dd
+    style WEB fill:#87ceeb
+    style WAS fill:#ffa07a
+    style MySQL fill:#d3d3d3

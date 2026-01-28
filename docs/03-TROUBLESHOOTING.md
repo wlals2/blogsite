@@ -1,7 +1,7 @@
 # Kubernetes CI/CD 트러블슈팅 가이드
 
 > Jenkins, GitHub Actions, ArgoCD 운영 중 발생한 모든 이슈와 해결 방법
-> 최종 업데이트: 2026-01-23
+> 최종 업데이트: 2026-01-26
 
 ---
 
@@ -16,6 +16,8 @@
 7. [Longhorn 스토리지 트러블슈팅](#7-longhorn-스토리지-트러블슈팅)
 8. [MySQL 백업 CronJob 트러블슈팅](#8-mysql-백업-cronjob-트러블슈팅)
 9. [Falco 런타임 보안 트러블슈팅](#9-falco-런타임-보안-트러블슈팅)
+11. [Grafana Alloy 통합 트러블슈팅](#11-grafana-alloy-통합-트러블슈팅)
+12. [Study 카테고리 필터 트러블슈팅](#12-study-카테고리-필터-트러블슈팅)
 
 ---
 
@@ -3258,3 +3260,1418 @@ curl -I http://192.168.1.200/ -H "Host: monitoring.jiminhome.shop"
 - [x] 모든 서비스 HTTP 200/302 응답 확인
 - [x] Nginx Ingress namespace 삭제 확인
 
+
+---
+
+## 11. Grafana Alloy 통합 트러블슈팅
+
+> **프로젝트**: Promtail + node-exporter + cadvisor → Grafana Alloy 완전 통합
+> **구축 일자**: 2026-01-26
+> **목표**: 3개 모니터링 Agent를 1개로 통합하여 운영 복잡도 67% 감소
+
+### 배경
+
+**Promtail EOL 대응**:
+- Promtail은 2026년 3월 2일에 End-of-Life (구축 시점: 37일 남음)
+- Grafana Labs 공식 권장: Promtail → Alloy 마이그레이션
+
+**통합 결정**:
+- 단순히 Promtail만 교체할 경우 → 여전히 12 Pods 운영 (promtail 4 + node-exporter 4 + cadvisor 4)
+- 완전 통합 시 → **4 Pods로 감소 (67% 감소)**
+
+**Before vs After**:
+```
+Before (12 Pods):
+  Promtail DaemonSet        4 Pods  (로그 수집)
+  node-exporter DaemonSet   4 Pods  (시스템 메트릭)
+  cadvisor DaemonSet        4 Pods  (컨테이너 메트릭)
+
+After (4 Pods):
+  Alloy DaemonSet           4 Pods  (All-in-One)
+    ├─ 로그 수집 → Loki
+    ├─ 시스템 메트릭 → Prometheus (node_exporter 역할)
+    └─ Alloy 자체 메트릭 → Prometheus
+```
+
+---
+
+### 문제 1: Alloy 로그 수집 권한 에러
+
+#### 증상
+```
+ts=2026-01-26T00:17:30Z level=error msg="error getting pod logs"
+component_path=/ component_id=loki.source.kubernetes.pods
+err="pods \"was-5bb794b9f9-dxnxb\" is forbidden:
+User \"system:serviceaccount:monitoring:alloy\" cannot get resource \"pods/log\"
+in API group \"\" in the namespace \"blog-system\""
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Alloy의 `loki.source.kubernetes` 컴포넌트는 Kubernetes API를 통해 Pod 로그를 읽습니다. 하지만 초기 ClusterRole에 `pods/log` 리소스 권한이 없었습니다.
+
+**Kubernetes RBAC 구조**:
+```
+ServiceAccount (alloy)
+  ↓
+ClusterRoleBinding (alloy)
+  ↓
+ClusterRole (alloy)
+  ├─ pods (get, list, watch) ✅
+  ├─ pods/log (get, list, watch) ❌ 누락
+  └─ ...
+```
+
+#### 해결 방법
+
+**ClusterRole에 pods/log 권한 추가**:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alloy
+  labels:
+    app: alloy
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+      - pods/log  # ← 추가
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - nonResourceURLs:
+      - /metrics
+      - /metrics/cadvisor
+    verbs: ["get"]
+```
+
+**적용**:
+```bash
+cd /home/jimin/k8s-manifests/monitoring
+kubectl apply -f alloy-daemonset.yaml
+
+# Alloy Pod 재시작
+kubectl rollout restart daemonset/alloy -n monitoring
+```
+
+#### 검증
+
+```bash
+# 로그 수집 성공 메시지 확인
+kubectl logs -n monitoring alloy-xxxxx | grep "opened log stream"
+
+# 출력 예시:
+ts=2026-01-26T00:18:15Z level=info msg="opened log stream"
+  target=blog-system/was-5bb794b9f9-dxnxb:spring-boot
+  component_path=/ component_id=loki.source.kubernetes.pods
+
+ts=2026-01-26T00:18:16Z level=info msg="opened log stream"
+  target=blog-system/web-859d9ddfc8-k7m8q:nginx
+  component_path=/ component_id=loki.source.kubernetes.pods
+```
+
+#### 배운 점
+
+**Kubernetes RBAC 권한 계층**:
+- `pods`: Pod 메타데이터 조회 (name, status, labels)
+- `pods/log`: Pod 로그 조회 (`kubectl logs` 명령어 수준)
+- `pods/exec`: Pod 내부 명령 실행 (더 강력한 권한)
+
+---
+
+### 문제 2: Prometheus Remote Write 미지원
+
+#### 증상
+```
+ts=2026-01-26T00:20:45Z level=error
+component_path=/ component_id=prometheus.remote_write.default
+msg="server returned HTTP status 404 Not Found:
+remote write receiver needs to be enabled with --web.enable-remote-write-receiver"
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+초기 Alloy 설정에서 `prometheus.remote_write`를 사용하여 메트릭을 Prometheus로 **Push** 방식으로 전송하려 했습니다:
+
+```alloy
+// ❌ 이 방식을 시도함
+prometheus.exporter.unix "system" {
+  include_exporter_metrics = true
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+prometheus.scrape "system" {
+  targets    = prometheus.exporter.unix.system.targets
+  forward_to = [prometheus.remote_write.default.receiver]  // Push to Prometheus
+}
+```
+
+하지만 현재 Prometheus 인스턴스는 **Remote Write Receiver가 비활성화** 상태였습니다:
+
+```bash
+# Prometheus 시작 옵션 확인
+kubectl describe deployment prometheus -n monitoring | grep args
+
+# 출력:
+--storage.tsdb.path=/prometheus/
+--config.file=/etc/prometheus/prometheus.yml
+# --web.enable-remote-write-receiver 플래그 없음 ❌
+```
+
+**Prometheus의 두 가지 메트릭 수집 방식**:
+```
+┌─────────────────────────────────────────────────┐
+│ 1. Pull (Scrape) - 전통적 방식                   │
+│   Prometheus → (HTTP GET) → Exporter/Agent      │
+│   장점: Prometheus가 타겟 상태 제어              │
+│   단점: Exporter가 HTTP 서버여야 함              │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│ 2. Push (Remote Write) - 신규 방식              │
+│   Agent → (HTTP POST) → Prometheus               │
+│   장점: Agent가 능동적으로 전송 가능              │
+│   단점: Prometheus에 추가 설정 필요               │
+│         (--web.enable-remote-write-receiver)     │
+└─────────────────────────────────────────────────┘
+```
+
+#### 해결 방법
+
+**Pull 방식으로 변경 (전통적 Prometheus 방식)**:
+
+1. **Alloy 설정 수정** - `forward_to = []`로 HTTP endpoint 노출:
+
+```alloy
+// ✅ 최종 작동 방식
+prometheus.exporter.unix "system" {
+  include_exporter_metrics = true
+}
+
+// forward_to가 빈 배열 → 메트릭이 HTTP endpoint에 노출됨
+prometheus.scrape "system" {
+  targets    = prometheus.exporter.unix.system.targets
+  forward_to = []  // ← 핵심: Push하지 않고 HTTP 노출
+}
+```
+
+2. **Prometheus 설정** - Alloy를 scrape:
+
+```yaml
+scrape_configs:
+  - job_name: 'alloy'
+    metrics_path: '/api/v0/component/prometheus.exporter.unix.system/metrics'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - monitoring
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: alloy
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: __address__
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}:12345'
+```
+
+#### 검증
+
+```bash
+# Prometheus 타겟 확인
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/targets?state=active' | grep alloy
+
+# 출력:
+"job": "alloy"
+"health": "up"
+"scrapeUrl": "http://192.168.1.187:12345/api/v0/component/prometheus.exporter.unix.system/metrics"
+```
+
+#### 배운 점
+
+**Prometheus 수집 방식 선택 기준**:
+
+| 상황 | 추천 방식 | 이유 |
+|------|----------|------|
+| **기존 Prometheus 인프라** | Pull (Scrape) | 설정 간단, 타겟 상태 제어 가능 |
+| **클라우드 환경 (Grafana Cloud)** | Push (Remote Write) | 동적 IP, 방화벽 문제 해결 |
+| **Edge/IoT 디바이스** | Push (Remote Write) | 단방향 통신 가능 |
+
+---
+
+### 문제 3: Prometheus ConfigMap Apply Conflict
+
+#### 증상
+```bash
+kubectl apply -f prometheus-config.yaml
+
+# 에러:
+error when patching "prometheus-config.yaml":
+the object has been modified; please apply your changes to the latest version and try again
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+다른 프로세스(또는 이전 `kubectl apply`)가 동일한 ConfigMap을 수정한 상태에서, 로컬 파일 기준으로 `apply`를 시도하면 발생하는 충돌입니다.
+
+**Kubernetes Apply의 3-way Merge**:
+```
+1. Live Object (현재 클러스터 상태)
+   ↓
+2. Last Applied Configuration (annotation에 저장된 이전 상태)
+   ↓
+3. Local File (로컬 YAML 파일)
+   ↓
+→ 3-way merge 시도 → 충돌 발생
+```
+
+#### 해결 방법
+
+**kubectl replace --force 사용**:
+
+```bash
+cd /home/jimin/k8s-manifests/monitoring
+kubectl replace -f prometheus-config.yaml --force
+
+# 출력:
+configmap "prometheus-config" deleted
+configmap/prometheus-config replaced
+```
+
+**동작 방식**:
+1. 기존 ConfigMap 삭제
+2. 새 ConfigMap 생성
+3. Prometheus Pod는 ConfigMap이 마운트된 상태이므로, 파일시스템 변경 감지
+
+#### 주의사항
+
+**ConfigMap 삭제 순간**:
+```
+kubectl replace --force 실행
+  ↓
+기존 ConfigMap 삭제 (1초)
+  ↓
+신규 ConfigMap 생성 (1초)
+  ↓
+✅ Prometheus는 메모리에 설정 로드되어 있어 영향 없음
+```
+
+**더 안전한 방법 (선택)**:
+```bash
+# 1. 수동 edit (실시간 충돌 없음)
+kubectl edit configmap prometheus-config -n monitoring
+
+# 2. patch 사용 (부분 업데이트)
+kubectl patch configmap prometheus-config -n monitoring --type=json \
+  -p='[{"op": "add", "path": "/data/prometheus.yml", "value": "..."}]'
+```
+
+#### 검증
+
+```bash
+# ConfigMap 변경 확인
+kubectl get configmap prometheus-config -n monitoring -o yaml | grep -A 5 "job_name: 'alloy'"
+
+# 출력:
+- job_name: 'alloy'
+  metrics_path: '/api/v0/component/prometheus.exporter.unix.system/metrics'
+  kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+          - monitoring
+```
+
+---
+
+### 문제 4: Prometheus CrashLoopBackOff - Storage Lock
+
+#### 증상
+```
+kubectl get pods -n monitoring
+
+# 출력:
+NAME                          READY   STATUS             RESTARTS   AGE
+prometheus-57b448ccd6-ftbpw   1/1     Running            0          10m   (구버전)
+prometheus-75d8b9c6d4-xyz12   0/1     CrashLoopBackOff   5          2m    (신버전)
+
+kubectl logs prometheus-75d8b9c6d4-xyz12 -n monitoring
+
+# 에러:
+level=ERROR ts=2026-01-26T00:25:30.123Z caller=main.go:456
+msg="Fatal error" err="opening storage failed:
+lock DB directory: resource temporarily unavailable"
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Prometheus Pod를 재시작(`kubectl rollout restart`)할 때, **구버전 Pod와 신버전 Pod가 동시에 같은 PersistentVolume에 접근**하면서 storage lock 충돌이 발생했습니다.
+
+**플로우**:
+```
+kubectl rollout restart deployment/prometheus
+  ↓
+1. 신규 Pod 생성 (prometheus-75d8b9c6d4-xyz12)
+  ↓
+2. 신규 Pod가 PVC 마운트 시도
+  ↓
+3. ❌ 구버전 Pod (prometheus-57b448ccd6-ftbpw)가 여전히 PVC를 lock한 상태
+  ↓
+4. 신규 Pod CrashLoopBackOff
+  ↓
+5. Kubernetes는 구버전 Pod가 Ready 상태가 아니면 종료하지 않음
+   (하지만 신규 Pod가 crash → 구버전 Pod는 계속 Running)
+```
+
+**TSDB Lock 메커니즘**:
+Prometheus는 Time Series Database(TSDB) 디렉터리를 열 때 `flock` 시스템 콜로 파일 잠금을 수행합니다:
+
+```c
+// Prometheus TSDB 내부
+fd = open("/prometheus/lock", O_CREAT|O_RDWR, 0644);
+if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
+  return "resource temporarily unavailable";  // ← 우리가 본 에러
+}
+```
+
+#### 시도한 해결 방법 (실패)
+
+**1. 구버전 Pod 수동 삭제**:
+```bash
+kubectl delete pod prometheus-57b448ccd6-ftbpw -n monitoring
+
+# 결과: ❌ 신규 Pod 여전히 crash
+# 이유: PVC lock이 즉시 해제되지 않음 (kernel caching)
+```
+
+**2. ReplicaSet Scale Down**:
+```bash
+kubectl scale replicaset prometheus-57b448ccd6 --replicas=0 -n monitoring
+
+# 결과: ❌ 신규 Pod 여전히 crash
+# 이유: Deployment controller가 자동으로 롤백
+```
+
+**3. 신규 Pod 삭제 후 재생성**:
+```bash
+kubectl delete pod prometheus-75d8b9c6d4-xyz12 -n monitoring
+
+# 결과: ❌ 재생성된 Pod도 crash
+# 이유: 근본 원인(PVC lock) 미해결
+```
+
+#### 최종 해결 방법
+
+**Rollback + HTTP Reload API 사용**:
+
+1. **Deployment 롤백**:
+```bash
+kubectl rollout undo deployment/prometheus -n monitoring
+
+# 구버전 Pod로 복구
+prometheus-57b448ccd6-ftbpw   1/1  Running  (안정화)
+```
+
+2. **HTTP Reload API로 설정 재로드** (Pod 재시작 불필요):
+```bash
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget --post-data='' -O- http://localhost:9090/-/reload
+
+# 출력:
+Connecting to localhost:9090 (127.0.0.1:9090)
+writing to stdout
+written to stdout
+```
+
+3. **변경사항 확인**:
+```bash
+# Prometheus 타겟에 alloy job 추가됨
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/targets?state=active' | grep alloy
+
+# 출력:
+"job": "alloy"
+"health": "up"
+```
+
+#### 검증
+
+```bash
+# Prometheus Pod 상태 (재시작 없이 설정 반영)
+kubectl get pod -n monitoring -l app=prometheus
+
+# 출력:
+NAME                          READY   STATUS    RESTARTS   AGE
+prometheus-57b448ccd6-ftbpw   1/1     Running   0          30m
+
+# 메트릭 수집 확인
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/query?query=node_cpu_seconds_total{job="alloy"}' \
+  | python3 -c "import json,sys; print(len(json.load(sys.stdin)['data']['result']), 'time series')"
+
+# 출력:
+176 time series ✅
+```
+
+#### 배운 점
+
+**Prometheus 설정 변경 Best Practice**:
+
+| 방법 | 장점 | 단점 | 추천 |
+|------|------|------|------|
+| **kubectl rollout restart** | 완전 재시작, 깨끗한 상태 | PVC lock 문제, 다운타임 | ❌ |
+| **HTTP Reload API** | 다운타임 없음, 빠름 | 일부 설정은 재시작 필요 | ✅ |
+| **ConfigMap 변경 + 대기** | 자동 reload (inotify) | 반영 지연 (10-60초) | ⚠️ |
+
+**HTTP Reload API 사용법**:
+```bash
+# 방법 1: wget
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget --post-data='' -O- http://localhost:9090/-/reload
+
+# 방법 2: curl (없을 수 있음)
+kubectl exec -n monitoring deployment/prometheus -- \
+  curl -X POST http://localhost:9090/-/reload
+
+# 방법 3: kill -HUP (SIGHUP 시그널)
+kubectl exec -n monitoring deployment/prometheus -- kill -HUP 1
+```
+
+**재시작이 필요한 경우**:
+- `--storage.tsdb.path` 변경
+- `--web.listen-address` 변경
+- 플래그 추가/제거
+
+**Reload로 충분한 경우**:
+- `scrape_configs` 변경 (대부분의 경우)
+- `rule_files` 변경
+- `alerting` 설정 변경
+
+---
+
+### 문제 5: Alloy가 node_* 메트릭을 기본 /metrics에 노출하지 않음
+
+#### 증상
+```bash
+# Alloy 메트릭 엔드포인트 확인
+kubectl port-forward -n monitoring alloy-xxxxx 12345:12345 &
+curl http://localhost:12345/metrics | grep node_cpu
+
+# 출력: (없음)
+# alloy_* 메트릭만 존재, node_* 메트릭 없음
+```
+
+```bash
+# Prometheus에서 메트릭 확인
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/query?query=node_cpu_seconds_total{job="alloy"}'
+
+# 결과:
+{
+  "data": {
+    "result": []  // ← 메트릭 0개
+  }
+}
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+**Alloy v2의 Component API 아키텍처**:
+
+Grafana Alloy v2에서는 각 컴포넌트가 **독립적인 HTTP endpoint**를 가집니다. `prometheus.exporter.unix` 메트릭은 기본 `/metrics` 경로에 노출되지 않고, **Component별 API 경로**를 통해서만 접근할 수 있습니다:
+
+```
+기본 /metrics:
+  http://alloy:12345/metrics
+  ↓
+  alloy_build_info
+  alloy_component_controller_running_components
+  alloy_resources_process_cpu_seconds_total
+  ... (Alloy 자체 메트릭만)
+
+Component API (prometheus.exporter.unix.system):
+  http://alloy:12345/api/v0/component/prometheus.exporter.unix.system/metrics
+  ↓
+  node_cpu_seconds_total
+  node_memory_MemAvailable_bytes
+  node_disk_io_time_seconds_total
+  ... (node_exporter 메트릭)
+```
+
+**조사 과정**:
+
+1. **Alloy 로그 확인** - exporter는 정상 작동 중:
+```bash
+kubectl logs -n monitoring alloy-xxxxx | grep "prometheus.exporter.unix"
+
+# 출력:
+ts=2026-01-26T00:31:29Z level=info
+  msg="Enabled node_exporter collectors"
+  component_path=/ component_id=prometheus.exporter.unix.system
+ts=2026-01-26T00:31:29Z level=info
+  component_path=/ component_id=prometheus.exporter.unix.system
+  collector=cpu
+ts=2026-01-26T00:31:29Z level=info
+  component_path=/ component_id=prometheus.exporter.unix.system
+  collector=filesystem
+...
+```
+
+2. **Prometheus 타겟 확인** - UP 상태지만 메트릭 없음:
+```bash
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/targets?state=active' | grep alloy
+
+# 출력:
+"job": "alloy"
+"health": "up"
+"scrapeUrl": "http://192.168.1.187:12345/metrics"  // ← 잘못된 경로
+```
+
+3. **웹 검색** - Component API 발견:
+   - [How to retrieve metrics from all processes using Grafana Alloy](https://www.claudiokuenzler.com/blog/1474/how-to-retrieve-metrics-all-processes-grafana-alloy)
+   - Alloy Component API 경로 패턴: `/api/v0/component/<component_id>/metrics`
+
+#### 해결 방법
+
+**Prometheus가 Component API 경로를 scrape하도록 설정**:
+
+```yaml
+scrape_configs:
+  - job_name: 'alloy'
+    # ✅ Component API 경로 명시
+    metrics_path: '/api/v0/component/prometheus.exporter.unix.system/metrics'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - monitoring
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: alloy
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: instance
+      - source_labels: [__address__]
+        target_label: __address__
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}:12345'
+```
+
+**적용**:
+```bash
+cd /home/jimin/k8s-manifests/monitoring
+kubectl replace -f prometheus-config.yaml --force
+
+# Prometheus 재로드
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget --post-data='' -O- http://localhost:9090/-/reload
+```
+
+#### 검증
+
+```bash
+# 20초 대기 후 메트릭 확인
+sleep 20
+
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/query?query=node_cpu_seconds_total{job="alloy"}' \
+  > /tmp/alloy_node_cpu.json
+
+python3 -c "
+import json
+with open('/tmp/alloy_node_cpu.json') as f:
+    data = json.load(f)
+results = data['data']['result']
+print(f'✅ node_cpu_seconds_total: {len(results)} time series')
+
+instances = sorted(set(r['metric'].get('instance') for r in results))
+print(f'   Nodes: {instances}')
+
+cpu_modes = sorted(set(r['metric'].get('mode') for r in results[:100]))
+print(f'   CPU modes: {cpu_modes}')
+"
+
+# 출력:
+✅ node_cpu_seconds_total: 176 time series
+   Nodes: ['k8s-cp', 'k8s-worker1', 'k8s-worker2', 'k8s-worker3']
+   CPU modes: ['idle', 'iowait', 'irq', 'nice', 'softirq', 'steal', 'system', 'user']
+```
+
+```bash
+# 모든 node_* 메트릭 카테고리 확인
+kubectl exec -n monitoring deployment/prometheus -- \
+  wget -qO- 'http://localhost:9090/api/v1/label/__name__/values' \
+  | grep -o 'node_[a-z_]*' | sort | uniq | wc -l
+
+# 출력: 130+ 개 메트릭 ✅
+```
+
+#### Component API 경로 패턴
+
+**일반 형식**:
+```
+/api/v0/component/<component_id>/metrics
+```
+
+**예제**:
+
+| Component 정의 | Component ID | Metrics 경로 |
+|---------------|-------------|-------------|
+| `prometheus.exporter.unix "system"` | `prometheus.exporter.unix.system` | `/api/v0/component/prometheus.exporter.unix.system/metrics` |
+| `prometheus.exporter.process "apps"` | `prometheus.exporter.process.apps` | `/api/v0/component/prometheus.exporter.process.apps/metrics` |
+| `prometheus.scrape "kubernetes"` | `prometheus.scrape.kubernetes` | `/api/v0/component/prometheus.scrape.kubernetes/metrics` |
+
+**Component ID 규칙**:
+```alloy
+prometheus.exporter.unix "system" {  // ← component_id = prometheus.exporter.unix.system
+  ...
+}
+
+prometheus.exporter.unix "custom_name" {  // ← component_id = prometheus.exporter.unix.custom_name
+  ...
+}
+```
+
+#### 배운 점
+
+**Alloy v2 vs v1 (Grafana Agent Flow)**:
+
+| 항목 | Alloy v1 (Agent Flow) | Alloy v2 |
+|------|----------------------|----------|
+| **Exporter 메트릭 노출** | `/metrics`에 자동 통합 | Component API 경로 필요 |
+| **설정 복잡도** | 낮음 | 높음 (경로 명시) |
+| **유연성** | 낮음 | 높음 (Component별 격리) |
+| **학습 곡선** | 낮음 | 높음 |
+
+**Component API의 장점**:
+- Component별 메트릭 격리 → 충돌 방지
+- 동일한 exporter 타입을 여러 개 실행 가능 (예: `prometheus.exporter.unix "system1"`, `"system2"`)
+- 세밀한 모니터링 가능 (Component별 health)
+
+---
+
+### 문제 6: Loki "Entry Too Far Behind" 경고
+
+#### 증상
+```
+ts=2026-01-26T00:31:38Z level=error
+msg="final error sending batch, no retries left, dropping data"
+component_path=/ component_id=loki.write.default
+component=client host=loki-stack.monitoring.svc.cluster.local:3100
+status=400 error="server returned HTTP status 400 Bad Request (400):
+entry with timestamp 2026-01-22 11:32:18.897976786 +0000 UTC ignored,
+reason: 'entry too far behind' for stream: {instance=\"blog-system/was-xxx\", job=\"loki.source.kubernetes.pods\"}"
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Alloy가 재시작되면서 `/var/log/pods/` 디렉터리에 남아있던 **오래된 Pod 로그 파일**을 수집하려 했으나, Loki의 **retention 정책**에 의해 거부되었습니다.
+
+**Loki Retention 정책**:
+```
+현재 시간: 2026-01-26 00:31:38
+로그 타임스탬프: 2026-01-22 11:32:18
+차이: 3일 13시간
+
+Loki 기본 설정:
+  - reject_old_samples: true
+  - reject_old_samples_max_age: 168h (7일)
+  - ❌ 하지만 "Entry Too Far Behind" 에러 발생
+
+실제 원인:
+  - Loki가 TSDB block 단위로 데이터 관리
+  - 현재 활성 block 범위를 벗어난 타임스탬프는 거부
+```
+
+**플로우**:
+```
+1. Alloy 재시작
+   ↓
+2. /var/log/pods/ 스캔
+   ├─ was-xxx/0.log (2026-01-26) ✅
+   ├─ was-xxx/1.log (2026-01-25) ✅
+   └─ was-xxx/2.log (2026-01-22) ❌ "too far behind"
+   ↓
+3. Loki로 전송 시도
+   ↓
+4. Loki: HTTP 400 Bad Request
+```
+
+#### 이것은 정상 동작입니다
+
+**왜 문제가 아닌가?**
+
+1. **오래된 로그는 이미 수집됨**:
+   - Promtail이 이미 해당 로그를 Loki에 전송함
+   - Alloy 재시작 시 중복 전송 시도 → Loki가 정확히 거부
+
+2. **최신 로그는 정상 수집됨**:
+```bash
+kubectl logs -n monitoring alloy-xxxxx | grep "opened log stream"
+
+# 출력:
+ts=2026-01-26T00:31:40Z level=info msg="opened log stream"
+  target=blog-system/was-5bb794b9f9-dxnxb:spring-boot
+  start_time=2026-01-26T00:31:35Z  ✅ 최신 로그
+
+ts=2026-01-26T00:31:41Z level=info msg="opened log stream"
+  target=blog-system/web-859d9ddfc8-k7m8q:nginx
+  start_time=2026-01-26T00:31:36Z  ✅ 최신 로그
+```
+
+3. **에러가 1회성**:
+   - Alloy 시작 시 1회 발생
+   - 이후 정상 동작
+
+#### 검증
+
+```bash
+# Grafana Loki에서 최신 로그 확인
+# http://grafana:30300 → Explore → Loki
+
+# LogQL 쿼리:
+{namespace="blog-system"} | json | line_format "{{.log}}"
+
+# 결과:
+2026-01-26 00:32:15  POST /api/posts 200 (34ms)  ✅
+2026-01-26 00:32:20  GET / 200 (12ms)  ✅
+2026-01-26 00:32:25  GET /api/posts/123 200 (45ms)  ✅
+```
+
+#### 조치 불필요
+
+**무시해도 되는 이유**:
+- ✅ 최신 로그는 정상 수집됨
+- ✅ 오래된 로그는 이미 Loki에 저장됨
+- ✅ 1회성 에러 (재발 없음)
+
+**만약 지속 발생한다면** (드문 경우):
+```yaml
+# Loki 설정 변경 (일반적으로 불필요)
+limits_config:
+  reject_old_samples_max_age: 336h  # 7일 → 14일로 증가
+```
+
+---
+
+### 요약: Grafana Alloy 통합 트러블슈팅 체크리스트
+
+#### ✅ 필수 확인 사항
+
+**1. RBAC 권한**
+- [x] ServiceAccount `alloy` 생성
+- [x] ClusterRole에 `pods/log` 권한 추가
+- [x] ClusterRoleBinding 생성
+
+**2. Alloy 설정**
+- [x] `loki.source.kubernetes` 로그 수집
+- [x] `prometheus.exporter.unix` 시스템 메트릭
+- [x] `prometheus.scrape` with `forward_to = []` (HTTP 노출)
+
+**3. Prometheus 설정**
+- [x] `job_name: 'alloy'` 추가
+- [x] `metrics_path: '/api/v0/component/prometheus.exporter.unix.system/metrics'`
+- [x] HTTP Reload API 사용 (재시작 대신)
+
+**4. 검증**
+- [x] Alloy Pods: 4/4 Running
+- [x] Prometheus Targets: alloy UP
+- [x] Metrics: 176+ time series (`node_cpu_seconds_total`)
+- [x] Logs: Loki에 정상 전송
+
+#### 🔧 자주 발생하는 문제
+
+| 문제 | 증상 | 해결 |
+|------|------|------|
+| **RBAC 권한 없음** | `pods/log forbidden` | ClusterRole에 `pods/log` 추가 |
+| **Remote Write 미지원** | `404 Not Found: remote write` | `forward_to = []` 사용 (Pull 방식) |
+| **ConfigMap 충돌** | `object has been modified` | `kubectl replace --force` |
+| **PVC Lock** | `CrashLoopBackOff: lock DB` | HTTP Reload API 사용 (재시작 금지) |
+| **메트릭 없음** | `node_* metrics: 0` | Component API 경로 설정 |
+| **Loki 에러** | `entry too far behind` | 무시 (정상 동작) |
+
+#### 📚 참고 자료
+
+**공식 문서**:
+- [Grafana Alloy Documentation](https://grafana.com/docs/alloy/latest/)
+- [prometheus.exporter.unix Reference](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.unix/)
+- [loki.source.kubernetes Reference](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.kubernetes/)
+
+**커뮤니티**:
+- [How to retrieve metrics from all processes using Grafana Alloy](https://www.claudiokuenzler.com/blog/1474/how-to-retrieve-metrics-all-processes-grafana-alloy)
+- [How to scrape local Prometheus node exporter metrics running in Grafana Alloy](https://www.claudiokuenzler.com/blog/1462/how-to-scrape-node-exporter-metrics-grafana-alloy)
+
+**완전한 가이드**:
+- `/home/jimin/k8s-manifests/docs/monitoring/GRAFANA-ALLOY-INTEGRATION.md`
+
+
+
+---
+
+## 12. Study 카테고리 필터 트러블슈팅
+
+> Study 페이지 카테고리 필터 구현 시 발생한 5가지 문제와 해결 방법
+> 관련 문서: [`docs/blog-design/STUDY-CATEGORY-FILTER.md`](blog-design/STUDY-CATEGORY-FILTER.md)
+
+### 12.1. Hugo 빌드 실패 - nil categories
+
+#### 증상
+```bash
+Error: error building site: render: failed to render pages:
+template: study/list.html:89:50: executing "main" at
+<delimit $page.Params.categories ",">: error calling delimit:
+can't iterate over <nil>
+```
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+일부 포스트가 `categories` front matter를 가지고 있지 않아 nil을 반환했습니다:
+
+```yaml
+# 정상 포스트
+---
+title: "Kubernetes 가이드"
+categories: ["study", "Kubernetes"]
+---
+
+# 문제 포스트 (categories 없음)
+---
+title: "포스트 제목"
+date: 2026-01-26
+---
+```
+
+Hugo 템플릿에서:
+```html
+<!-- $page.Params.categories → nil -->
+<article data-categories='{{ delimit $page.Params.categories "," }}'>
+                                          ↑
+                                    nil을 delimit 불가! ❌
+```
+
+#### 해결 방법
+
+**`.default slice` 파이프 추가**:
+
+```html
+<!-- Before (에러) -->
+<article data-categories='{{ delimit $page.Params.categories "," }}'>
+
+<!-- After (수정) -->
+<article data-categories='{{ delimit ($page.Params.categories | default slice) "," }}'>
+```
+
+**작동 원리**:
+```go
+$page.Params.categories | default slice
+         ↓
+만약 nil이면 빈 배열([])로 대체
+         ↓
+delimit [] "," → "" (빈 문자열)
+         ↓
+빌드 성공! ✅
+```
+
+#### 검증
+```bash
+# 빌드 테스트
+hugo --minify
+
+# 결과
+Start building sites ...
+                   | EN
+-------------------+-----
+  Pages            | 198
+  Paginator pages  |   0
+  Non-page files   |  17
+  Static files     | 113
+  Processed images |   0
+  Aliases          |  53
+  Sitemaps         |   1
+  Cleaned          |   0
+
+Total in 2847 ms
+```
+
+**커밋**: `62ac4ee` fix: Handle nil categories in study list template
+
+---
+
+### 12.2. 카테고리 필터 작동 안 함 - 공백 문제
+
+#### 증상
+- 사용자가 "Service Mesh" 버튼 클릭
+- 아무 포스트도 표시되지 않음
+- Console 에러 없음
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Hugo 템플릿의 `delimit` 함수가 공백을 포함하여 생성:
+
+```html
+<!-- Hugo 생성 HTML -->
+<article data-categories='study,Service Mesh,Networking'>
+                                 ↑ 여기 공백!
+```
+
+JavaScript에서 split 시:
+```javascript
+const categories = categoriesStr.split(',');
+// → ["study", " Service Mesh", " Networking"]
+//              ↑ 앞에 공백!
+
+// 버튼:
+<button data-category="Service Mesh">
+
+// 매칭 시도:
+categories.includes("Service Mesh")  // false! ❌
+// 왜? " Service Mesh" !== "Service Mesh"
+```
+
+#### 해결 방법
+
+**`.trim()` 추가**:
+
+```javascript
+// Before (버그)
+const categories = categoriesStr.split(',');
+
+// After (수정)
+const categories = categoriesStr.split(',').map(c => c.trim());
+// → ["study", "Service Mesh", "Networking"]
+//              ↑ 공백 제거됨!
+```
+
+#### 검증
+```javascript
+// 테스트
+const categoriesStr = "study, Service Mesh, Networking";
+
+// Before
+categoriesStr.split(',')
+// → ["study", " Service Mesh", " Networking"] ❌
+
+// After
+categoriesStr.split(',').map(c => c.trim())
+// → ["study", "Service Mesh", "Networking"] ✅
+```
+
+**커밋**: `058eb21` fix: Category filter 및 페이지네이션 상태 유지 개선
+
+---
+
+### 12.3. 페이지네이션 시 필터 초기화
+
+#### 증상
+1. Kubernetes 필터 선택 (37개 포스트 표시)
+2. 스크롤 아래로 → "다음 페이지" 버튼 클릭
+3. 필터가 "All"로 초기화됨 ❌
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+페이지네이션 링크가 카테고리 파라미터를 유지하지 않음:
+
+```html
+<!-- Hugo 생성 링크 -->
+<a href="/study/page/2/">다음 페이지</a>
+                        ↑
+                   ?category=Kubernetes 누락!
+```
+
+클릭 시:
+```
+현재 URL: /study/?category=Kubernetes
+    ↓ 클릭
+다음 URL: /study/page/2/
+    ↓
+JavaScript: urlParams.get('category') → null
+    ↓
+currentFilter = 'all' (기본값)
+```
+
+#### 해결 방법
+
+**페이지네이션 링크 동적 업데이트**:
+
+```javascript
+// 페이지 로드 시 실행
+const paginationLinks = document.querySelectorAll('.pagination a');
+paginationLinks.forEach(link => {
+  if (currentFilter !== 'all') {
+    const url = new URL(link.href);
+    url.searchParams.set('category', currentFilter);
+    link.href = url.toString();
+  }
+});
+```
+
+**Before / After**:
+```html
+<!-- Before -->
+<a href="/study/page/2/">다음 페이지</a>
+
+<!-- After (JavaScript가 수정) -->
+<a href="/study/page/2/?category=Kubernetes">다음 페이지</a>
+                        ↑
+                   파라미터 추가됨! ✅
+```
+
+#### 검증
+```javascript
+// 테스트
+currentFilter = 'Kubernetes'
+link.href = '/study/page/2/'
+
+// JavaScript 실행 후
+console.log(link.href)
+// → '/study/page/2/?category=Kubernetes' ✅
+```
+
+**커밋**: `058eb21` fix: Category filter 및 페이지네이션 상태 유지 개선
+
+---
+
+### 12.4. CSS 스타일이 안 보임 - Cloudflare 캐시
+
+#### 증상
+- 카테고리 필터 박스가 평문으로 표시
+- 버튼 스타일, 배경색, 호버 효과 없음
+- HTML은 정상, CSS는 로드되지만 스타일 적용 안 됨
+
+**사용자가 본 화면**:
+```
+All (96) Cloud & Terraform (15) Development (10) Elasticsearch (6) ...
+```
+(박스 형태 없이 일반 텍스트로만 표시)
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+1. **파일은 정상 배포됨**:
+```bash
+# Pod 안의 파일 확인
+kubectl exec -n blog-system web-xxx -- \
+  cat /usr/share/nginx/html/css/custom.css | grep "category-filter-box"
+
+# 결과: CSS 정상 존재 ✅
+.category-filter-box {
+    background: var(--entry);
+    border: 1px solid var(--border);
+    ...
+}
+```
+
+2. **하지만 Cloudflare가 이전 버전 캐시**:
+```bash
+curl -I https://blog.jiminhome.shop/css/custom.css | grep age
+# age: 79 ← 79초 전 캐시된 버전 (카테고리 스타일 없음)
+```
+
+3. **사용자 브라우저도 이전 버전 캐시**:
+- Cloudflare → 사용자 브라우저 → 오래된 CSS
+- 새로운 HTML (카테고리 박스 있음) + 오래된 CSS (스타일 없음) = 평문 표시
+
+**플로우**:
+```
+배포 파이프라인 실행
+    ↓
+새 Docker 이미지 빌드 (custom.css 포함)
+    ↓
+Kubernetes Pod 업데이트 ✅
+    ↓
+Cloudflare 캐시 삭제 실행 (purge_everything)
+    ↓
+하지만 사용자가 이미 페이지를 열어둠
+    ↓
+사용자 브라우저: 오래된 CSS 계속 사용 ❌
+```
+
+#### 해결 방법
+
+**방법 1: 즉시 해결 (사용자 측)**
+
+브라우저 하드 새로고침:
+```
+Windows/Linux: Ctrl + Shift + R
+Mac:           Cmd + Shift + R
+```
+
+**방법 2: 장기 해결 (배포 측)**
+
+빈 커밋으로 재배포 트리거:
+```bash
+git commit --allow-empty -m "chore: Purge Cloudflare cache for category filter styles"
+git push
+```
+
+GitHub Actions 실행:
+```yaml
+# .github/workflows/deploy-web.yml
+- name: Purge Cloudflare Cache
+  run: |
+    curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+      -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+      -H "Content-Type: application/json" \
+      --data '{"purge_everything":true}'
+```
+
+#### 검증
+```bash
+# 1. 캐시 상태 확인
+curl -I https://blog.jiminhome.shop/css/custom.css | grep -i cache
+
+# Before
+cf-cache-status: HIT
+age: 79
+
+# After (캐시 삭제 후)
+cf-cache-status: MISS
+age: 2
+
+# 2. CSS 내용 확인
+curl -s https://blog.jiminhome.shop/css/custom.css | tail -100 | grep "category-filter-box"
+
+# 결과: 카테고리 스타일 포함 ✅
+.category-filter-box {
+```
+
+**커밋**: `41860ef` chore: Purge Cloudflare cache for category filter styles
+
+#### 교훈
+
+**정적 파일 캐시 관리**:
+- ✅ 배포 시 자동 캐시 삭제 (CI/CD 파이프라인)
+- ✅ 사용자에게 하드 새로고침 안내
+- 🔜 향후 개선: CSS 파일명에 해시 추가 (`custom.abc123.css`)
+
+---
+
+### 12.5. 카테고리 선택 시 일부만 표시 - 페이지네이션
+
+#### 증상
+- Observability (6개) 버튼 클릭
+- 1개 포스트만 표시됨
+- 나머지 5개는 어디로?
+
+#### 원인 분석
+
+**왜 발생했는가?**
+
+Hugo 페이지네이션 설정:
+```toml
+# config.toml
+[pagination]
+  pagerSize = 10
+```
+
+Hugo 빌드 시:
+```
+96개 포스트
+    ↓ pagerSize = 10
+/study/index.html        → 10개 포스트 (1-10)
+/study/page/2/index.html → 10개 포스트 (11-20)
+/study/page/3/index.html → 10개 포스트 (21-30)
+...
+/study/page/10/index.html → 6개 포스트 (91-96)
+```
+
+사용자가 1페이지 접속:
+```
+1. HTML 로드: 10개 포스트만 포함
+   <article data-categories="study,Kubernetes">
+   <article data-categories="study,Observability"> ← 1개만!
+   <article data-categories="study,Storage">
+   ...
+
+2. JavaScript 필터링:
+   articles.forEach(article => {  // 10개만 순회!
+     if (categories.includes('Observability')) {
+       article.style.display = '';
+     }
+   })
+
+3. 결과: 1개만 표시 ❌
+```
+
+**문제의 핵심**:
+- JavaScript는 **DOM에 있는 요소만** 조작 가능
+- 2-10페이지에 있는 Observability 포스트 5개는 HTML에 없음
+- 따라서 필터링 불가능
+
+#### 해결 방법
+
+**pagerSize 증가**:
+
+```toml
+# config.toml
+
+# Before
+[pagination]
+  pagerSize = 10
+
+# After
+[pagination]
+  pagerSize = 100  # 96개 포스트 모두 한 페이지에
+```
+
+**효과**:
+```
+Hugo 빌드 시:
+    ↓
+/study/index.html → 96개 포스트 모두 포함
+    ↓
+JavaScript 필터링:
+    ↓
+articles.forEach(article => {  // 96개 모두 순회!
+  if (categories.includes('Observability')) {
+    article.style.display = '';  // 6개 모두 표시 ✅
+  }
+})
+```
+
+**+ 페이지네이션 동적 표시/숨김**:
+
+```javascript
+// layouts/study/list.html
+function applyFilter(selectedCategory) {
+  // ... 필터링 로직 ...
+
+  // 페이지네이션 처리
+  const pagination = document.querySelector('.page-footer');
+  if (pagination) {
+    if (selectedCategory === 'all') {
+      pagination.style.display = '';  // "All"이면 표시
+    } else {
+      pagination.style.display = 'none';  // 필터 사용 시 숨김
+    }
+  }
+}
+```
+
+**왜 페이지네이션을 숨기는가?**
+- 카테고리 필터 사용 시: 모든 결과를 한 페이지에 표시
+- 페이지네이션 불필요 (Observability 6개 → 1페이지로 충분)
+
+#### 검증
+```bash
+# 빌드 후 확인
+hugo --minify
+
+ls -lh public/study/
+# index.html만 존재 (page/ 디렉터리 없음)
+
+# HTML 크기 확인
+du -h public/study/index.html
+# Before: 30K (10개 포스트)
+# After:  60K (96개 포스트)
+
+# 크기 증가는 허용 가능 (이미지 1개 수준)
+```
+
+**브라우저 테스트**:
+```
+1. Observability 클릭
+   → 6개 포스트 모두 표시 ✅
+
+2. Kubernetes 클릭
+   → 37개 포스트 모두 표시 ✅
+
+3. "All" 클릭
+   → 96개 포스트 모두 표시 ✅
+   → 페이지네이션 버튼 없음 (1페이지만 존재)
+```
+
+**커밋**: `b714420` feat: 카테고리 필터링 시 모든 포스트 표시
+
+#### 트레이드오프
+
+| 항목 | Before (pagerSize=10) | After (pagerSize=100) |
+|------|----------------------|----------------------|
+| **초기 로드** | 빠름 (30KB) | 약간 느림 (60KB) |
+| **필터링** | 일부만 표시 ❌ | 전체 표시 ✅ |
+| **페이지네이션** | 필요 (10페이지) | 불필요 (1페이지) |
+| **UX** | 불편함 (페이지 이동 필요) | 편리함 (즉시 필터링) |
+
+**결론**: 60KB는 매우 작음 (이미지 1개 수준) → UX 개선 효과가 훨씬 큼!
+
+---
+
+### 12.6. 요약 및 교훈
+
+#### 해결한 문제 5가지
+
+| 문제 | 원인 | 해결 방법 | 커밋 |
+|------|------|----------|------|
+| **Hugo 빌드 실패** | nil categories | `\| default slice` 추가 | `62ac4ee` |
+| **필터 작동 안 함** | 공백 포함 매칭 실패 | `.trim()` 추가 | `058eb21` |
+| **페이지네이션 초기화** | URL 파라미터 누락 | 링크 동적 업데이트 | `058eb21` |
+| **CSS 스타일 없음** | Cloudflare 캐시 | 하드 새로고침 + 재배포 | `41860ef` |
+| **일부만 표시** | pagerSize=10 제한 | pagerSize=100 증가 | `b714420` |
+
+#### 핵심 교훈
+
+1. **Hugo 정적 사이트의 한계**:
+   - JavaScript는 DOM에 있는 요소만 조작 가능
+   - 페이지네이션 시 다른 페이지 요소 접근 불가
+   - 해결: 필터링 대상을 모두 한 페이지에 렌더링
+
+2. **공백 처리의 중요성**:
+   - `"Service Mesh"` vs `" Service Mesh"` → 매칭 실패
+   - 항상 `.trim()` 사용 필수
+
+3. **Cloudflare 캐시 관리**:
+   - 정적 파일(CSS, JS) 변경 시 캐시 삭제 필요
+   - CI/CD 파이프라인에 자동화 필수
+
+4. **URL 상태 관리**:
+   - `window.history.pushState()` 로 새로고침 없이 URL 변경
+   - 페이지네이션 링크에 파라미터 추가 필수
+
+#### 참고 자료
+
+**관련 문서**:
+- [`docs/blog-design/STUDY-CATEGORY-FILTER.md`](blog-design/STUDY-CATEGORY-FILTER.md) - 완전한 구현 가이드
+- [`CLAUDE.md`](../CLAUDE.md) - Study 카테고리 관리 규칙
+
+**변경된 파일**:
+- `config.toml` - pagerSize 증가
+- `layouts/study/list.html` - 필터 UI + JavaScript
+- `static/css/custom.css` - 카테고리 필터 스타일

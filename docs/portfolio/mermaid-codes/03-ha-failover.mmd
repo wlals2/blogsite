@@ -1,0 +1,31 @@
+flowchart TD
+    subgraph Cluster["4-Node Kubernetes Cluster"]
+        Master["[Master]<br/>k3s-master<br/>Control Plane"]
+        W1["[Worker-1]<br/>WEB A, WAS A, MySQL<br/>4C/8GB"]
+        W2["[Worker-2]<br/>WEB B, WAS B<br/>4C/8GB<br/>*** OOM FAILURE ***"]
+        W3["[Worker-3]<br/>WEB C, WAS C<br/>4C/8GB"]
+    end
+
+    subgraph Failover["Auto-Failover Process (5min)"]
+        Detect["[1. Detect]<br/>NotReady<br/>5sec"]
+        Longhorn["[2. Longhorn]<br/>Force Detach<br/>2min"]
+        Schedule["[3. Schedule]<br/>New Node<br/>Worker-1"]
+        Attach["[4. Attach]<br/>Volume Mount<br/>1min"]
+        Start["[5. Start]<br/>MySQL Init<br/>30sec"]
+        Ready["[6. Ready]<br/>Service OK<br/>Total: 5min"]
+    end
+
+    W2 -.->|"Failure"| Detect
+    Detect --> Longhorn
+    Longhorn --> Schedule
+    Schedule --> Attach
+    Attach --> Start
+    Start --> Ready
+
+    style W2 fill:#ff6b6b
+    style Detect fill:#ffd700
+    style Longhorn fill:#87ceeb
+    style Schedule fill:#90ee90
+    style Attach fill:#dda0dd
+    style Start fill:#ffb6c1
+    style Ready fill:#98fb98
