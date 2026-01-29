@@ -29,6 +29,37 @@ public class OAuthController {
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
+     * GitHub OAuth 시작 엔드포인트
+     *
+     * Decap CMS가 "Login with GitHub"를 클릭하면 이 URL로 요청합니다:
+     * https://blog.jiminhome.shop/auth?provider=github&site_id=...
+     *
+     * 이 메서드가 하는 일:
+     * 1. GitHub OAuth 인증 URL 생성
+     * 2. GitHub 로그인 페이지로 리다이렉트
+     */
+    @GetMapping("")
+    public void initiateOAuth(@RequestParam(required = false) String provider,
+                              @RequestParam(required = false, name = "site_id") String siteId,
+                              HttpServletResponse response) throws IOException {
+
+        log.info("OAuth initiation requested. provider: {}, site_id: {}", provider, siteId);
+
+        // GitHub OAuth 인증 URL 생성
+        // scope=repo: 리포지토리 읽기/쓰기 권한 요청
+        String authUrl = String.format(
+            "https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=repo",
+            clientId,
+            redirectUri
+        );
+
+        log.info("Redirecting to GitHub OAuth: {}", authUrl);
+
+        // GitHub OAuth 페이지로 리다이렉트
+        response.sendRedirect(authUrl);
+    }
+
+    /**
      * GitHub OAuth Callback 엔드포인트
      *
      * GitHub가 인증 후 이 URL로 리다이렉트합니다:
