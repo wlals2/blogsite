@@ -56,46 +56,60 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 <p style="margin-bottom: 2rem;">클라우드 엔지니어 지망생입니다.</p>
 
 <div class="profile-section">
-  <h3>📊 핵심 성과</h3>
+  <h3>핵심 성과</h3>
   <div class="highlight-box">
-    배포 시간 <span class='metric-badge' data-count='67' data-suffix='% 단축'>0%</span> (30분 → 10분) ·
-    가용성 <span class='metric-badge' data-count='99.9' data-suffix='%'>0%</span> 달성 ·
-    인프라 구축 <span class='metric-badge' data-count='94' data-suffix='% 자동화'>0%</span>
+    배포 자동화 <span class='metric-badge' data-count='98' data-suffix='% 단축'>0%</span> (30분 → 35초) ·
+    무중단 운영 <span class='metric-badge' data-count='62' data-suffix='일'>0일</span> (가용성 99.9%) ·
+    보안 강화 <span class='metric-badge' data-count='100' data-suffix='%'>0%</span> (mTLS 암호화)
   </div>
 </div>
 
 <div class="profile-section">
-  <h3>📅 프로젝트 타임라인</h3>
+  <h3>현재 운영 환경</h3>
+  <div class="highlight-box" style="background: linear-gradient(135deg, var(--entry) 0%, var(--code-bg) 100%);">
+    <strong>Homelab Kubernetes 클러스터</strong><br><br>
+    • 규모: 4노드 (1 CP + 3 Worker), 115개 Pod<br>
+    • 네트워킹: Cilium CNI (eBPF), Istio Service Mesh<br>
+    • 보안: Falco 런타임 보안, mTLS 100%<br>
+    • 스토리지: Longhorn 3-replica HA<br>
+    • 배포: ArgoCD GitOps, Argo Rollouts Canary<br>
+    • 모니터링: Prometheus + Loki + Grafana + Tempo<br><br>
+    <a href="/study/2026-01-25-local-k8s-architecture/" style="color: var(--primary); text-decoration: underline;">아키텍처 상세 보기 →</a>
+  </div>
+</div>
+
+<div class="profile-section">
+  <h3>프로젝트 타임라인</h3>
   <div class="timeline">
     <div class="timeline-item">
-      <div class="timeline-date">2024.11 ~ 현재 (62일)</div>
+      <div class="timeline-date">2024.11 ~ 현재</div>
       <div class="timeline-content">
-        <strong>Homelab Kubernetes 운영 중 🚀</strong><br>
-        4노드 클러스터 · 115개 Pod · Canary 배포 · GitOps 파이프라인<br>
-        <small style="color: var(--secondary);">Kubernetes, Cilium CNI, Istio Service Mesh, ArgoCD</small>
+        <strong>Homelab Kubernetes 프로젝트</strong><br>
+        베어메탈 클러스터 구축 및 운영 · Service Mesh · GitOps 파이프라인<br>
+        <small style="color: var(--secondary);">Kubernetes, Cilium, Istio, ArgoCD, Argo Rollouts</small>
       </div>
     </div>
     <div class="timeline-item">
       <div class="timeline-date">2026.01</div>
       <div class="timeline-content">
-        <strong>Istio Service Mesh 완성 (✅ 완료)</strong><br>
-        mTLS 보안 통신 · Traffic Management · Gateway API · Kiali 관측성<br>
-        <small style="color: var(--secondary);">Istio 1.24, VirtualService, DestinationRule, Gateway</small>
+        <strong>Istio Service Mesh 구축 완료</strong><br>
+        mTLS 보안 통신 · L7 Traffic Management · Distributed Tracing<br>
+        <small style="color: var(--secondary);">Istio Gateway, VirtualService, DestinationRule, Kiali</small>
       </div>
     </div>
     <div class="timeline-item">
-      <div class="timeline-date">2025.12 ~ 2026.01</div>
+      <div class="timeline-date">2025.12</div>
       <div class="timeline-content">
-        <strong>보안 & 모니터링 강화 (✅ 완료)</strong><br>
+        <strong>보안 & 관측성 강화</strong><br>
         Falco 런타임 보안 · PLG Stack · OpenTelemetry Tracing<br>
-        <small style="color: var(--secondary);">Falco, Prometheus, Loki, Grafana, Tempo, AlertManager</small>
+        <small style="color: var(--secondary);">Falco, Prometheus, Loki, Grafana, Tempo</small>
       </div>
     </div>
     <div class="timeline-item">
-      <div class="timeline-date">2025.11 (과거)</div>
+      <div class="timeline-date">2025.11</div>
       <div class="timeline-content">
-        <strong>AWS EKS Multi-Cloud DR</strong><br>
-        AWS + Azure 하이브리드 · 99.9% 가용성 · CloudFront Origin Group<br>
+        <strong>AWS EKS Multi-Cloud DR (과거 프로젝트)</strong><br>
+        AWS + Azure 하이브리드 DR · CloudFront Origin Group<br>
         <small style="color: var(--secondary);">EKS, Terraform, Route53, Azure AKS</small>
       </div>
     </div>
@@ -103,11 +117,11 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 </div>
 
 <div class="profile-section">
-  <h3>💻 기술 스택</h3>
+  <h3>기술 스택</h3>
   <div style="margin-bottom: 1.5rem;">
     <div style="margin-bottom: 1rem;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-        <span><strong>Kubernetes & Service Mesh</strong></span>
+        <span><strong>Kubernetes & Orchestration</strong></span>
         <span>90%</span>
       </div>
       <div class="skill-bar">
@@ -116,7 +130,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
     </div>
     <div style="margin-bottom: 1rem;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-        <span><strong>Networking (Cilium, Istio)</strong></span>
+        <span><strong>Service Mesh & Networking</strong></span>
         <span>85%</span>
       </div>
       <div class="skill-bar">
@@ -134,7 +148,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
     </div>
     <div style="margin-bottom: 1rem;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-        <span><strong>Observability (PLG Stack)</strong></span>
+        <span><strong>Observability & Security</strong></span>
         <span>80%</span>
       </div>
       <div class="skill-bar">
@@ -153,46 +167,35 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
     </div>
     <div>
       <strong>CI/CD & Application</strong><br>
-      GitHub Actions · Spring Boot · MySQL · nginx · Redis
+      GitHub Actions · Spring Boot · MySQL · nginx
     </div>
   </div>
 </div>
 
 <div class="profile-section">
-  <h3>🏠 홈서버 인프라</h3>
-  <div class="highlight-box" style="background: linear-gradient(135deg, var(--entry) 0%, var(--code-bg) 100%);">
-    <strong>이 블로그는 홈서버 Kubernetes Pod에서 운영 중입니다!</strong><br><br>
-    베어메탈 K8s 클러스터 직접 구축 (4노드: 1 CP + 3 Worker)<br>
-    Cilium CNI (eBPF) · Istio Service Mesh · Longhorn Storage<br>
-    Argo Rollouts Canary · Falco 런타임 보안 · PLG 모니터링<br><br>
-    <span class='metric-badge' data-count='62' data-suffix='일'>0일</span> 무중단 운영 중 ·
-    <span class='metric-badge' data-count='115' data-suffix='개 Pod'>0개</span> 실행 중<br><br>
-    <a href="/study/2026-01-25-local-k8s-architecture/" style="color: var(--primary); text-decoration: underline;">📐 전체 아키텍처 보기 →</a>
-  </div>
-</div>
-
-<div class="profile-section">
-  <h3>🎯 현재 구축 완료</h3>
+  <h3>구축 완료</h3>
   <div class="interest-box">
-    • <strong>Service Mesh</strong> - Istio mTLS, Traffic Management, Gateway API ✅<br>
-    • <strong>런타임 보안</strong> - Falco eBPF 기반 실시간 위협 탐지 ✅<br>
-    • <strong>Full Observability</strong> - PLG Stack + OpenTelemetry Distributed Tracing ✅
+    • <strong>Service Mesh</strong> - Istio 기반 mTLS 보안 통신, L7 트래픽 관리<br>
+    • <strong>런타임 보안</strong> - Falco eBPF 기반 실시간 위협 탐지<br>
+    • <strong>Full Observability</strong> - 메트릭/로그/트레이스 통합 모니터링<br>
+    • <strong>GitOps</strong> - ArgoCD Auto-Sync, Self-Heal (3초 이내 반영)<br>
+    • <strong>Canary 배포</strong> - Argo Rollouts 점진적 배포 및 자동 롤백
   </div>
 </div>
 
 <div class="profile-section">
-  <h3>🔜 다음 목표</h3>
+  <h3>다음 목표</h3>
   <div class="interest-box">
     • <strong>Cost 최적화</strong> - 리소스 사용량 분석 및 효율화<br>
-    • <strong>Chaos Engineering</strong> - Litmus로 장애 시뮬레이션<br>
-    • <strong>Multi-Cluster</strong> - Cluster Federation 구축
+    • <strong>Chaos Engineering</strong> - Litmus 기반 장애 시뮬레이션<br>
+    • <strong>Multi-Cluster</strong> - Cluster Federation, Service Mesh 확장
   </div>
 </div>
 
 <div class="profile-section">
-  <h3>✍️ 이 블로그는</h3>
+  <h3>블로그 소개</h3>
   <div class="goal-box">
-    클라우드 엔지니어로 성장하며 겪은 경험과 배움을 기록하고 공유합니다.<br>
+    클라우드 엔지니어로 성장하며 겪은 경험과 배움을 기록합니다.<br>
     실패와 해결 과정, 그리고 그 안에서 얻은 인사이트를 나눕니다.
   </div>
 </div>
