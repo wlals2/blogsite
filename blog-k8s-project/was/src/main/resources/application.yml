@@ -52,3 +52,10 @@ management:
   endpoint:
     health:
       show-details: always  # 헬스체크 상세 정보 표시
+
+# GitHub OAuth 설정
+github:
+  oauth:
+    client-id: ${GITHUB_OAUTH_CLIENT_ID:Ov23liUDXOW2o62lb8a3}
+    client-secret: ${GITHUB_OAUTH_CLIENT_SECRET}  # Kubernetes Secret에서 주입
+    redirect-uri: ${GITHUB_OAUTH_REDIRECT_URI:https://blog.jiminhome.shop/auth/callback}

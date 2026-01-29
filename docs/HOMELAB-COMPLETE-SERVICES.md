@@ -29,11 +29,11 @@
 
 | 항목 | 수치 | 상태 |
 |------|------|------|
-| **Kubernetes 노드** | 3대 (1 CP + 2 Worker) | ✅ Running |
-| **네임스페이스** | 6개 (blog-system, argocd, monitoring, falco, istio-system, kube-system) | ✅ Active |
-| **총 Pod 수** | ~35개 | ✅ Running |
+| **Kubernetes 노드** | 4대 (1 CP + 3 Worker) | ✅ Running |
+| **네임스페이스** | 16개 (주요: blog-system, argocd, monitoring, falco, istio-system, longhorn-system) | ✅ Active |
+| **총 Pod 수** | ~112개 | ✅ Running |
 | **애플리케이션** | WEB 2개, WAS 2개, MySQL 1개 | ✅ Running |
-| **운영 기간** | 60일 (2024-11-27~) | ✅ Stable |
+| **운영 기간** | 64일 (2024-11-27~) | ✅ Stable |
 | **배포 횟수** | v84 (WEB), v19 (WAS) | - |
 | **가용성** | 99.9% 목표 | ✅ Monitoring |
 
@@ -75,16 +75,17 @@ Falco → Falcosidekick → Slack (Security Events)
 
 ### 노드 구성
 
-| 노드명 | 역할 | IP 주소 | CPU | Memory | Disk | 상태 |
-|--------|------|---------|-----|--------|------|------|
-| **k8s-cp** | Control Plane | 192.168.1.187 | 4 Core | 8 GB | 100 GB | ✅ Ready |
-| **k8s-worker1** | Worker | 192.168.1.188 | 4 Core | 8 GB | 100 GB | ✅ Ready |
-| **k8s-worker2** | Worker | 192.168.1.189 | 4 Core | 8 GB | 100 GB | ✅ Ready |
+| 노드명 | 역할 | IP 주소 | CPU | Memory | Disk | 상태 | 추가일 |
+|--------|------|---------|-----|--------|------|------|--------|
+| **k8s-cp** | Control Plane | 192.168.1.187 | 4 Core | 8 GB | 100 GB | ✅ Ready | 64일 전 |
+| **k8s-worker1** | Worker | 192.168.1.61 | 4 Core | 8 GB | 100 GB | ✅ Ready | 64일 전 |
+| **k8s-worker2** | Worker | 192.168.1.62 | 4 Core | 8 GB | 100 GB | ✅ Ready | 64일 전 |
+| **k8s-worker3** | Worker | 192.168.1.60 | 4 Core | 8 GB | 100 GB | ✅ Ready | 6일 전 |
 
 **총 리소스**:
-- CPU: 12 Cores
-- Memory: 24 GB
-- Disk: 300 GB
+- CPU: 16 Cores (4 × 4 노드)
+- Memory: 32 GB (4 × 8 GB)
+- Disk: 400 GB (4 × 100 GB)
 
 ### Control Plane 컴포넌트
 
@@ -104,6 +105,29 @@ Falco → Falcosidekick → Slack (Security Events)
 | **kube-proxy** | v1.31.13 | 네트워크 프록시 | kube-system |
 | **Cilium** | v1.16.x | CNI (eBPF) | kube-system |
 | **Hubble** | v1.16.x | Cilium 네트워크 관찰성 | kube-system |
+
+### 전체 Namespace 목록 (16개)
+
+| Namespace | 용도 | Pod 수 (예상) | 주요 컴포넌트 |
+|-----------|------|---------------|---------------|
+| **blog-system** | 블로그 애플리케이션 | 7-8개 | WEB, WAS, MySQL, mysql-exporter, mysql-backup |
+| **monitoring** | 모니터링 스택 | 10-15개 | Prometheus, Grafana, Loki, Tempo, Alloy, AlertManager |
+| **argocd** | GitOps CD | 5-7개 | argocd-server, argocd-repo-server, argocd-application-controller |
+| **argo-rollouts** | Canary 배포 컨트롤러 | 1개 | argo-rollouts-controller |
+| **istio-system** | Service Mesh | 2-3개 | istiod, istio-ingressgateway |
+| **falco** | Runtime Security | 4-5개 | falco, falcosidekick, falco-exporter |
+| **longhorn-system** | 분산 스토리지 | 15-20개 | longhorn-manager, longhorn-driver, longhorn-engine |
+| **metallb-system** | LoadBalancer | 2-3개 | metallb-controller, metallb-speaker |
+| **cert-manager** | SSL/TLS 인증서 관리 | 3개 | cert-manager, cert-manager-webhook, cert-manager-cainjector |
+| **cilium-secrets** | Cilium 시크릿 저장소 | 0-1개 | (Secret 관리용) |
+| **kubernetes-dashboard** | K8s 대시보드 | 2개 | kubernetes-dashboard, dashboard-metrics-scraper |
+| **local-path-storage** | 로컬 스토리지 프로비저너 | 1개 | local-path-provisioner |
+| **kube-system** | Kubernetes 시스템 | 15-20개 | CoreDNS, kube-proxy, Cilium, etcd, kube-apiserver 등 |
+| **kube-public** | 공개 리소스 | 0개 | (ConfigMap 등) |
+| **kube-node-lease** | 노드 Lease 객체 | 0개 | (Lease 관리) |
+| **default** | 기본 네임스페이스 | 0-1개 | (사용자 정의) |
+
+**총 Pod 수**: ~112개 (변동 가능, CronJob 등 포함)
 
 ---
 
@@ -845,11 +869,11 @@ topologySpreadConstraints:
 | **falco** | 4개 | 400m | 1Gi |
 | **istio-system** | 2개 | 300m | 640Mi |
 | **kube-system** | 12개 | 600m | 1.5Gi |
-| **총합** | ~40개 | **3.85 Cores** | **9.4 GB** |
+| **총합** | ~112개 | **3.85 Cores** | **9.4 GB** |
 
 **여유 리소스**:
-- CPU: 12 Cores 중 3.85 사용 → **68% 여유**
-- Memory: 24 GB 중 9.4 사용 → **61% 여유**
+- CPU: 16 Cores 중 3.85 사용 → **76% 여유** (worker3 추가로 증가)
+- Memory: 32 GB 중 9.4 사용 → **71% 여유** (worker3 추가로 증가)
 
 ### 애플리케이션별 리소스 (blog-system)
 

@@ -1524,9 +1524,13 @@ public class SessionConfig {
 
 ### 4. DR 아키텍처 설계
 
-**문제**: CloudFront Origin Group은 POST 요청 미지원
-**해결**: Lambda@Edge로 Host 헤더 수정, Azure Blob Origin 연동
-**교훈**: Multi-Cloud DR은 서비스 제약 사항 사전 검토 필수
+**문제**: Azure Blob Storage 사용 시 호스트 헤더 변경 필요
+**해결 (현재)**: Lambda@Edge로 Host 헤더 수정, Azure Blob Origin 연동
+**개선 방향**: Azure SWA로 전환 시 Lambda@Edge 불필요 (직접 Custom Domain 설정)
+**교훈**:
+- Multi-Cloud DR은 서비스 제약 사항 사전 검토 필수
+- 프로젝트 완료 후 더 나은 솔루션 발견 가능 (SWA)
+- 완벽한 설계보다 빠른 구현 후 점진적 개선이 실용적
 
 ### 5. 비용 최적화
 
@@ -1573,6 +1577,35 @@ public class SessionConfig {
 
 5. **Kiali (Service Mesh 관찰성)** (30분)
    - 트래픽 흐름 시각화
+
+6. **Azure Static Web Apps(SWA)로 DR 전환** (1시간)
+   - **현재**: Azure Blob Storage + Lambda@Edge (호스트 헤더 수정)
+   - **개선**: Azure SWA로 전환 (Lambda@Edge 불필요)
+   - **장점**:
+     - Lambda@Edge 코드 제거 → 운영 단순화
+     - SWA에서 직접 호스트 헤더를 `goupang.shop`으로 설정 가능
+     - 배포 간소화 (Azure Portal에서 바로 배포)
+   - **작업**:
+     ```bash
+     # 1. Azure SWA 생성
+     az staticwebapp create \
+       --name goupang-dr \
+       --resource-group goupang-rg \
+       --location koreacentral
+
+     # 2. Custom Domain 설정
+     az staticwebapp hostname set \
+       --name goupang-dr \
+       --hostname www.goupang.shop
+
+     # 3. 정적 파일 배포
+     az staticwebapp deploy \
+       --name goupang-dr \
+       --source ./maintenance-page
+
+     # 4. Lambda@Edge 제거
+     # CloudFront에서 Lambda@Edge 연결 해제
+     ```
 
 ---
 

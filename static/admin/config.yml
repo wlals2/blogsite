@@ -1,0 +1,80 @@
+backend:
+  name: github
+  repo: wlals2/blogsite
+  branch: main
+  base_url: https://blog.jiminhome.shop
+  auth_endpoint: auth
+
+media_folder: "static/images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "study"
+    label: "Study Posts"
+    folder: "content/study"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
+      - {label: "Draft", name: "draft", widget: "boolean", default: false}
+      - {label: "Description", name: "description", widget: "string", required: false}
+      - {label: "Tags", name: "tags", widget: "list", required: false}
+      - label: "Categories"
+        name: "categories"
+        widget: "select"
+        multiple: true
+        min: 1
+        max: 2
+        options:
+          - {label: "Study (기본)", value: "study"}
+          - {label: "Kubernetes", value: "Kubernetes"}
+          - {label: "Service Mesh", value: "Service Mesh"}
+          - {label: "Networking", value: "Networking"}
+          - {label: "Security", value: "Security"}
+          - {label: "Storage", value: "Storage"}
+          - {label: "Observability", value: "Observability"}
+          - {label: "Cloud & Terraform", value: "Cloud & Terraform"}
+          - {label: "Elasticsearch", value: "Elasticsearch"}
+          - {label: "Troubleshooting", value: "Troubleshooting"}
+          - {label: "Development", value: "Development"}
+        default: ["study"]
+      - {label: "Body", name: "body", widget: "markdown"}
+
+  - name: "posts"
+    label: "Posts"
+    folder: "content/posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
+      - {label: "Draft", name: "draft", widget: "boolean", default: false}
+      - {label: "Description", name: "description", widget: "string", required: false}
+      - {label: "Tags", name: "tags", widget: "list", required: false}
+      - {label: "Body", name: "body", widget: "markdown"}
+
+  - name: "til"
+    label: "TIL (Today I Learned)"
+    folder: "content/til"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
+      - {label: "Draft", name: "draft", widget: "boolean", default: false}
+      - {label: "Tags", name: "tags", widget: "list", required: false}
+      - {label: "Body", name: "body", widget: "markdown"}
+
+  - name: "projects"
+    label: "Projects"
+    folder: "content/projects"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
+      - {label: "Draft", name: "draft", widget: "boolean", default: false}
+      - {label: "Description", name: "description", widget: "string", required: false}
+      - {label: "Tags", name: "tags", widget: "list", required: false}
+      - {label: "Body", name: "body", widget: "markdown"}
