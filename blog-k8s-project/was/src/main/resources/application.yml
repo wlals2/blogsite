@@ -59,3 +59,4 @@ github:
     client-id: ${GITHUB_OAUTH_CLIENT_ID:Ov23liUDXOW2o62lb8a3}
     client-secret: ${GITHUB_OAUTH_CLIENT_SECRET}  # Kubernetes Secret에서 주입
     redirect-uri: ${GITHUB_OAUTH_REDIRECT_URI:https://blog.jiminhome.shop/auth/callback}
+# Trigger: Build v23 with /auth endpoint
