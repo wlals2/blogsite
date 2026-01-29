@@ -68,6 +68,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   <h3>현재 운영 환경</h3>
   <div class="highlight-box" style="background: linear-gradient(135deg, var(--entry) 0%, var(--code-bg) 100%);">
     <strong>Homelab Kubernetes 클러스터</strong><br><br>
+    <img src="/images/local-k8s-architecture.png" alt="Homelab Kubernetes Architecture" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><br>
     • 규모: 4노드 (1 CP + 3 Worker), 115개 Pod<br>
     • 네트워킹: Cilium CNI (eBPF), Istio Service Mesh<br>
     • 보안: Falco 런타임 보안, mTLS 100%<br>
@@ -176,6 +177,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   <h3>구축 완료</h3>
   <div class="interest-box">
     • <strong>Service Mesh</strong> - Istio 기반 mTLS 보안 통신, L7 트래픽 관리<br>
+    <img src="/images/istio-config.png" alt="Istio Service Mesh Configuration" style="width: 100%; max-width: 600px; border-radius: 8px; margin: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><br>
     • <strong>런타임 보안</strong> - Falco eBPF 기반 실시간 위협 탐지<br>
     • <strong>Full Observability</strong> - 메트릭/로그/트레이스 통합 모니터링<br>
     • <strong>GitOps</strong> - ArgoCD Auto-Sync, Self-Heal (3초 이내 반영)<br>
