@@ -1,0 +1,109 @@
+name: Update Homepage Metrics
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 매일 자정 (KST 09:00) 자동 실행
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  update-metrics:
+    runs-on: self-hosted  # 홈서버에서 실행 (kubectl 접근 가능)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculate uptime days
+        id: uptime
+        run: |
+          START_DATE="2024-11-27"
+          CURRENT_DATE=$(date +%s)
+          START_TIMESTAMP=$(date -d "$START_DATE" +%s)
+          DAYS=$(( ($CURRENT_DATE - $START_TIMESTAMP) / 86400 ))
+          echo "days=$DAYS" >> $GITHUB_OUTPUT
+          echo "📅 운영 일수: $DAYS일"
+
+      - name: Get cluster metrics
+        id: cluster
+        run: |
+          # Pod 개수
+          TOTAL_PODS=$(kubectl get pods --all-namespaces --no-headers | wc -l)
+          echo "pods=$TOTAL_PODS" >> $GITHUB_OUTPUT
+          echo "🚀 전체 Pod: $TOTAL_PODS개"
+
+          # 노드 개수
+          TOTAL_NODES=$(kubectl get nodes --no-headers | wc -l)
+          echo "nodes=$TOTAL_NODES" >> $GITHUB_OUTPUT
+          echo "🖥️  노드: $TOTAL_NODES개"
+
+          # blog-system Pod 개수
+          BLOG_PODS=$(kubectl get pods -n blog-system --no-headers | grep Running | wc -l)
+          echo "blog_pods=$BLOG_PODS" >> $GITHUB_OUTPUT
+          echo "📦 blog-system Pod: $BLOG_PODS개"
+
+      - name: Update config.toml
+        run: |
+          UPTIME_DAYS=${{ steps.uptime.outputs.days }}
+          TOTAL_PODS=${{ steps.cluster.outputs.pods }}
+          TOTAL_NODES=${{ steps.cluster.outputs.nodes }}
+
+          # 운영 일수 업데이트
+          sed -i "s/data-count='[0-9]*' data-suffix='일'/data-count='$UPTIME_DAYS' data-suffix='일'/g" config.toml
+
+          # Pod 개수 업데이트
+          sed -i "s/data-count='[0-9]*' data-suffix='개 Pod'/data-count='$TOTAL_PODS' data-suffix='개 Pod'/g" config.toml
+
+          # 노드 정보 업데이트 (4노드 부분)
+          sed -i "s/규모: [0-9]노드/규모: ${TOTAL_NODES}노드/g" config.toml
+          sed -i "s/베어메탈 K8s 클러스터 직접 구축 ([0-9]노드/베어메탈 K8s 클러스터 직접 구축 (${TOTAL_NODES}노드/g" config.toml
+
+          echo "✅ config.toml 업데이트 완료"
+
+      - name: Check if changes exist
+        id: check_changes
+        run: |
+          if git diff --quiet config.toml; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ 변경사항 없음 (이미 최신 상태)"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 변경사항 감지됨"
+            git diff config.toml
+          fi
+
+      - name: Commit and push
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add config.toml
+          git commit -m "chore: Auto-update homepage metrics
+
+운영 일수: ${{ steps.uptime.outputs.days }}일
+전체 Pod: ${{ steps.cluster.outputs.pods }}개
+노드: ${{ steps.cluster.outputs.nodes }}개
+
+Co-Authored-By: GitHub Actions Bot <github-actions[bot]@users.noreply.github.com>"
+
+          git push origin main
+
+          echo "🚀 자동 배포 트리거됨 (deploy-web.yml 실행 예정)"
+
+      - name: Summary
+        run: |
+          echo "### 📊 자동 업데이트 완료" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **운영 일수**: ${{ steps.uptime.outputs.days }}일" >> $GITHUB_STEP_SUMMARY
+          echo "- **전체 Pod**: ${{ steps.cluster.outputs.pods }}개" >> $GITHUB_STEP_SUMMARY
+          echo "- **노드**: ${{ steps.cluster.outputs.nodes }}개" >> $GITHUB_STEP_SUMMARY
+          echo "- **blog-system Pod**: ${{ steps.cluster.outputs.blog_pods }}개" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
+            echo "✅ config.toml 자동 업데이트 및 배포 트리거" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ 변경사항 없음 (이미 최신 상태)" >> $GITHUB_STEP_SUMMARY
+          fi
