@@ -1158,7 +1158,159 @@ SPRING_DATASOURCE_URL: jdbc:mysql://mysql-service:3306/board
 # Secret (was-secret)
 SPRING_DATASOURCE_USERNAME: board_user
 SPRING_DATASOURCE_PASSWORD: [encrypted]
+
+# Secret (github-oauth-secret) - Decap CMS OAuth
+GITHUB_OAUTH_CLIENT_ID: Ov23liUDXOW2o62lb8a3
+GITHUB_OAUTH_CLIENT_SECRET: [encrypted]
+GITHUB_OAUTH_REDIRECT_URI: https://blog.jiminhome.shop/auth/callback
 ```
+
+### Decap CMS OAuth (웹 기반 블로그 작성)
+
+**작성일**: 2026-01-30
+**목적**: 웹 브라우저에서 블로그 글 작성/수정 가능하도록 GitHub OAuth 인증 구현
+
+#### 구현된 엔드포인트
+
+| 엔드포인트 | 메서드 | 역할 | 상태 |
+|-----------|--------|------|------|
+| `/auth` | GET | OAuth 시작 (GitHub 로그인 페이지로 리다이렉트) | ✅ |
+| `/auth/callback` | GET | OAuth 콜백 (code → token 교환, postMessage로 CMS에 전달) | ✅ |
+
+**흐름**:
+```
+1. Decap CMS → /auth?provider=github
+2. WAS → GitHub OAuth 페이지로 리다이렉트
+3. 사용자 GitHub 로그인
+4. GitHub → /auth/callback?code=...
+5. WAS → GitHub API (code → access token)
+6. WAS → postMessage로 Decap CMS에 token 전달
+7. Decap CMS → GitHub API 사용 (글 작성/수정)
+```
+
+#### 아키텍처 (계층적 보안)
+
+**라우팅 구조**:
+```
+외부 (Decap CMS)
+  ↓ HTTPS
+Cloudflare
+  ↓ HTTP
+Istio Gateway (blog-gateway)
+  ↓
+VirtualService (blog-routes) - /auth 라우팅
+  ↓
+Web Service (Nginx) - /auth proxy_pass
+  ↓
+WAS Service (Spring Boot) - OAuthController
+  ↓
+GitHub OAuth API
+```
+
+**보안 계층 (L3/L4 + L7 분리)**:
+- **Cilium NetworkPolicy (L3/L4)**: Pod label + Port 검사만
+  - web Pod → was Pod 8080 허용
+  - **HTTP Path 검사 제거** (Over-engineering 방지)
+- **Istio AuthorizationPolicy (L7)**: HTTP Path/Method 검사
+  - `/api/*`, `/actuator/*`, `/auth`, `/auth/*` 허용
+
+**핵심 교훈**: 각 계층이 명확한 역할을 가져야 함. Cilium과 Istio 모두 HTTP Path를 검사하면 중복되어 디버깅이 어려움.
+
+#### 핵심 설정
+
+**OAuthController.java**:
+```java
+// postMessage targetOrigin을 "*"로 설정 (Decap CMS 공식 프로토콜)
+window.opener.postMessage(
+    "authorizing:github",
+    "*"  // 특정 origin 지정 시 전달 실패
+);
+
+window.opener.postMessage(
+    'authorization:github:success:{"token":"...","provider":"github"}',
+    "*"
+);
+```
+
+**config.yml (Decap CMS)**:
+```yaml
+backend:
+  name: github
+  repo: wlals2/blogsite
+  branch: main
+  base_url: https://blog.jiminhome.shop
+  auth_endpoint: auth  # WAS OAuth 엔드포인트
+
+collections:
+  - name: "study"
+    folder: "content/study"
+    # Hugo Leaf Bundle 지원 (서브디렉터리의 index.md 인식)
+    nested:
+      depth: 100
+    path: "{{slug}}/index"
+```
+
+**web-nginx-config.yaml** (Nginx 프록시):
+```nginx
+location /auth {
+    proxy_pass http://was-service.blog-system.svc.cluster.local:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    # ... (타임아웃 5초)
+}
+```
+
+**blog-routes.yaml** (Istio VirtualService):
+```yaml
+- match:
+  - uri:
+      prefix: "/auth"
+  route:
+  - destination:
+      host: web-service
+      port:
+        number: 80
+  timeout: 15s
+```
+
+#### 트러블슈팅 사례
+
+**문제 1: 403 Forbidden**
+- **원인**: Cilium NetworkPolicy가 HTTP Path까지 검사 (`/api/*`, `/actuator/*`만 허용)
+- **해결**: HTTP rules 제거 → L3/L4만 검사 (Pod + Port)
+- **커밋**: `cilium-netpol.yaml` HTTP rules 제거
+
+**문제 2: postMessage 전달 실패**
+- **원인**: `targetOrigin: 'https://blog.jiminhome.shop'` (특정 origin 지정)
+- **해결**: `targetOrigin: "*"` (Decap CMS 공식 프로토콜)
+- **커밋**: [30f5ef1] fix: postMessage targetOrigin to wildcard
+
+**문제 3: 2026년 글 목록 안 보임 (33개 디렉터리)**
+- **원인**: Decap CMS가 `content/study/*.md` (단일 파일)만 인식
+- **해결**: `nested.depth: 100` 설정으로 서브디렉터리 인식
+- **커밋**: [2918218] feat: Add nested folder support to Decap CMS config
+
+**문제 4: 브라우저 캐시**
+- **원인**: Decap CMS가 config.yml을 브라우저에 캐시
+- **해결**: DuckDuckGo 브라우저 사용 또는 Application Storage 완전 삭제
+
+#### 현재 상태
+
+✅ **Production 운영 중** (2026-01-30 구축 완료)
+
+**기능**:
+- GitHub OAuth 인증 ✅
+- 웹에서 블로그 글 작성 ✅
+- Hugo Leaf Bundle 지원 (99개 Study Posts 접근) ✅
+- 자동 GitHub 커밋 ✅
+
+**접속**:
+- Decap CMS: https://blog.jiminhome.shop/admin/
+- 권장 브라우저: DuckDuckGo (캐시 문제 적음)
+
+**참고**:
+- Image: ghcr.io/wlals2/board-was:v24 (OAuth 구현 버전)
+- 코드: ~/blogsite/blog-k8s-project/was/src/main/java/com/jimin/board/controller/OAuthController.java
 
 ---
 
