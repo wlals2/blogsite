@@ -1,3 +1,10 @@
+---
+title: "온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤다 — 좀 더 고급으로 변하는 인프라 구조 (Helm, Values 1)"
+date: 2026-01-30T13:40:00+09:00
+draft: true
+categories:
+  - Kubernetes
+---
 d---
 title: "온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤다 — 좀 더 고급으로 변하는 인프라 구조 (Helm, Values 1)"
 date: 2025-10-10T00:50:00+09:00
