@@ -205,9 +205,15 @@ public class OAuthController {
     <script>
         // Decap CMS에 토큰 전달
         if (window.opener) {
+            // Decap CMS 공식 OAuth 프로토콜
+            window.opener.postMessage(
+                "authorizing:github",
+                "*"
+            );
+
             window.opener.postMessage(
                 'authorization:github:success:{"token":"TOKEN_VALUE","provider":"github"}',
-                'https://blog.jiminhome.shop'
+                "*"
             );
 
             // 3초 후 창 닫기
