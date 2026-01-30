@@ -14,6 +14,10 @@ collections:
     folder: "content/study"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    # 🌟 Hugo Leaf Bundle 지원: 서브디렉터리의 index.md 인식
+    nested:
+      depth: 100  # 하위 폴더 깊이 (모든 하위 폴더 탐색)
+    path: "{{slug}}/index"  # 새 글 작성 시 폴더 구조로 생성
     fields:
       - {label: "Title", name: "title", widget: "string"}
       - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
@@ -46,6 +50,10 @@ collections:
     folder: "content/posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    # Hugo Leaf Bundle 지원
+    nested:
+      depth: 100
+    path: "{{slug}}/index"
     fields:
       - {label: "Title", name: "title", widget: "string"}
       - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
@@ -59,6 +67,10 @@ collections:
     folder: "content/til"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    # Hugo Leaf Bundle 지원
+    nested:
+      depth: 100
+    path: "{{slug}}/index"
     fields:
       - {label: "Title", name: "title", widget: "string"}
       - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
@@ -71,6 +83,10 @@ collections:
     folder: "content/projects"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    # Hugo Leaf Bundle 지원
+    nested:
+      depth: 100
+    path: "{{slug}}/index"
     fields:
       - {label: "Title", name: "title", widget: "string"}
       - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DDTHH:mm:ss+09:00"}
