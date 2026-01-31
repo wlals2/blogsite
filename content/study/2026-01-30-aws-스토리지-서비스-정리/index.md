@@ -8,6 +8,7 @@ tags:
   - 기초공부문서
 categories:
   - study
+  - Cloud & Terraform
 ---
 # AWS Stroage Service
 ---
