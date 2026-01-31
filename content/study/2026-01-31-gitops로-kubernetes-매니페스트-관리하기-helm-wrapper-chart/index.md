@@ -71,6 +71,20 @@ k8s-manifests/
 
 ### 핵심: Wrapper Chart 패턴
 
+**무엇인가 ?**
+
+```
+
+Helm의 "Dependency(의존성)" 기능을 활용한 디자인 패턴이다.
+소프트웨어 개발에서 라이브러리를 `import` 해서 쓰는 것과 원리가 똑같다.
+
+* Upstream (Parent): 원본 차트 (예: Falco 공식 차트)
+* Wrapper (Child/Consumer): 내가 만든 껍데기 차트
+
+이 패턴의 핵심 목표는 \*\*"원본 코드는 1비트도 건드리지 않고(Immutable), 설정(Configuration)만 내 것으로 덮어씌우는(Override) 것"\*\*이다.
+
+```
+
 외부 helm 차트를 GitOps로 어떻게 관리할 것인가 ? 제일 큰 문제 였다.\
 차트를 가져올 수는 없으니.. URL은 설정이 불편 \
 해답은 **WrapperChart** 이었다. chart 와 values를 따로 구분해 chart와 나의 설정을 구분하였다.\
