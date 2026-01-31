@@ -1,7 +1,7 @@
 ---
 title: "[aws] 스토리지 서비스 정리"
 date: 2026-01-30T15:06:00+09:00
-draft: true
+draft: false
 description: AWS 기초 공부부터 다시 시작하기 위한 문서
 tags:
   - AWS
