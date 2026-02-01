@@ -99,24 +99,36 @@ Grafana Alert Rule을 생성하자마자 다음과 같은 에러메시지와 함
 Grafana가 데이터를 이해할 수 있도록 **\*파이프 라인**을 재설게헀다.
 
 * #### Step1. Query 단순화
- 과거의 데이터를 모두 가져오는 Range Query 대신, **"지금 이 순간"**의 데이터만 가져오는 Instant Query로 변경했습니다.\
-up (X) → vector(1) or last_over_time (O)
 
+   과거의 데이터를 모두 가져오는 Range Query 대신, **"지금 이 순간"**의 데이터만 가져오는 Instant Query로 변경했습니다.\
+  up (X) → vector(1) or last_over_time (O)
 * #### Step2. 차원 축소
-Prometheus가 준 시계열 데이터를 단일 값으로 압축하는 Reduce 단계를 명시적으로 추가했습니다.
-> Function: Last (가장 최근 값만 취한다)\
-> Mode: Strict 제거 (데이터가 비어있을 때 에러를 내지 않고 유연하게 처리)
-* #### 명확한 임계값
-압축된 단일 값을 기준선과 비교합니다.
-> Input: Reduce 단계의 결과물 (B)\
-> Condition: Is below 1 (1보다 작으면 비정상)
 
-##  교훈
----
+  Prometheus가 준 시계열 데이터를 단일 값으로 압축하는 Reduce 단계를 명시적으로 추가했습니다.
+
+  > Function: Last (가장 최근 값만 취한다)\
+  > Mode: Strict 제거 (데이터가 비어있을 때 에러를 내지 않고 유연하게 처리)
+* #### 명확한 임계값
+
+  압축된 단일 값을 기준선과 비교합니다.
+
+  > Input: Reduce 단계의 결과물 (B)\
+  > Condition: Is below 1 (1보다 작으면 비정상)
+
+## 최종 알람 rule
+
+- - -
+
+![](2.png)
+
+
+
+## 교훈
+
+- - -
 
 ### Key Takeaways (핵심 교훈)
+
 1. SaaS 통합의 함정: "표준"이라고 해서 모든 도구가 100% 호환되는 것은 아니다. (Alertmanager ↔ Discord) 프로토콜이 맞지 않을 때는 Native 지원 도구로 빠르게 선회하는 것이 엔지니어링 비용을 줄인다.
-
 2. 데이터 쉐이핑(Data Shaping): 모니터링 도구 간 데이터를 주고받을 때는 **"주는 쪽의 형태(Vector)"**와 **"받는 쪽의 기대(Scalar)"**를 정확히 파악하고, 중간에서 적절히 가공(Reduce)해 주어야 한다.
-
 3. 쿼리의 정확성: 알람 쿼리는 그래프 쿼리와 다르다. "전체 흐름"이 아니라 "현재 상태"를 명확히 지칭(Single Instance & Instant)해야 오탐을 막을 수 있다.
