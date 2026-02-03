@@ -14,9 +14,9 @@ Windows에서 VMware(Ubuntu 22.04)와 Docker Desktop을 설치하는 과정에�
 
 ---
 
-## ✅ 현상 및 문제 발생 배경
+## 현상 및 문제 발생 배경
 
-### 💡 문제 상황
+### 문제 상황
 
 - VMware Workstation에서 VM 실행 시 **"Virtualized AMD-V/RVI is not supported on this platform"** 오류 발생
 - Docker Desktop(WSL2 기반) 작동 불가
@@ -24,7 +24,7 @@ Windows에서 VMware(Ubuntu 22.04)와 Docker Desktop을 설치하는 과정에�
 - BIOS에서는 SVM Mode(AMD-V)가 이미 Enabled로 설정됨
 - 이전 Docker Desktop 설치 및 VirtualBox 혼합 사용으로 인해 설정이 꼬인 상태
 
-### 💡 시스템 환경
+### 시스템 환경
 
 - **CPU/메인보드**: AMD Ryzen 5 5600 + Aorus B550M (BIOS에서 가상화 활성화)
 - **OS**: Windows 10
@@ -32,7 +32,7 @@ Windows에서 VMware(Ubuntu 22.04)와 Docker Desktop을 설치하는 과정에�
 
 ---
 
-## ✅ 원인: Windows 가상화 기능 (VBS/Hyper-V/WSL2)과 충돌
+## 원인: Windows 가상화 기능 (VBS/Hyper-V/WSL2)과 충돌
 
 ### 문제의 핵심
 
@@ -50,7 +50,7 @@ Docker Desktop for Windows를 한번이라도 설치했다면, 그 과정에서 
 
 ---
 
-## ✅ 문제 파악 과정
+## 문제 파악 과정
 
 1. VMware/VirtualBox 실행 시 아래 오류 발생:
    ```
@@ -63,7 +63,7 @@ Docker Desktop for Windows를 한번이라도 설치했다면, 그 과정에서 
 
 3. Docker Desktop에서 **WSL2/Hyper-V not available** 혹은 가상화 기능 충돌 메시지
 
-## ✅ 문제 해결
+## 문제 해결
 
 ### 1️⃣ BIOS 확인
 
@@ -131,7 +131,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa
 
 ---
 
-## 📋 최종 체크리스트
+## 최종 체크리스트
 
 실전에서 사용할 수 있는 단계별 체크리스트입니다:
 

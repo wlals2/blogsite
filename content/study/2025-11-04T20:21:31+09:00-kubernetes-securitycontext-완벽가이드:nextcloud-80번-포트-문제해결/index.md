@@ -199,7 +199,7 @@ www-data    16  apache2 -DFOREGROUND        # 워커
 
 ## 문제 발생 시나리오
 
-### ❌ runAsUser: 33 설정 시
+### runAsUser: 33 설정 시
 
 ```yaml
 securityContext:
@@ -302,9 +302,9 @@ securityContext:
 ```
 
 **장점:**
-- ✅ 80번 포트 바인딩 가능 (root로 시작)
-- ✅ PVC 파일 권한 해결 (fsGroup: 33)
-- ✅ Apache 워커는 여전히 www-data로 실행 (보안)
+- 80번 포트 바인딩 가능 (root로 시작)
+- PVC 파일 권한 해결 (fsGroup: 33)
+- Apache 워커는 여전히 www-data로 실행 (보안)
 
 **동작:**
 ```

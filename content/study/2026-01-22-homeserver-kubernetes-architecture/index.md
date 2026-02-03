@@ -43,7 +43,7 @@ Ingress Nginx Controller
 
 ---
 
-## ✅ 현재 구축 완료된 것
+## 현재 구축 완료된 것
 
 ### 1. 네트워킹
 
@@ -202,12 +202,12 @@ argocd-server-5f8b4dfd84-bbqlt                      1/1     Running
 
 ---
 
-## ✅ CI/CD 완료 (2026-01-22 업데이트)
+## CI/CD 완료 (2026-01-22 업데이트)
 
 ### 1. GitOps 자동 배포 - 완료!
-- ✅ **GitHub Actions**: CI 파이프라인 (Self-hosted Runner, 35초 배포)
-- ✅ **ArgoCD**: GitOps 완전 자동화 (Auto-Sync, Prune, SelfHeal)
-- ✅ **Argo Rollouts**: Canary 배포 구현 완료 (20% → 50% → 80% → 100%)
+- **GitHub Actions**: CI 파이프라인 (Self-hosted Runner, 35초 배포)
+- **ArgoCD**: GitOps 완전 자동화 (Auto-Sync, Prune, SelfHeal)
+- **Argo Rollouts**: Canary 배포 구현 완료 (20% → 50% → 80% → 100%)
 
 처음엔 "배포가 이렇게 빠를 수 있나?"라고 놀랐어요. GitHub Actions + ArgoCD 조합이 정말 강력하더라구요.
 
@@ -216,14 +216,14 @@ argocd-server-5f8b4dfd84-bbqlt                      1/1     Running
 ---
 
 ### 2. Service Mesh
-- ❌ Istio: mTLS, Traffic Routing, Tracing 없음
-- ✅ Cilium: L3-4 네트워킹만 (L7 Service Mesh 아님)
+- Istio: mTLS, Traffic Routing, Tracing 없음
+- Cilium: L3-4 네트워킹만 (L7 Service Mesh 아님)
 
 Istio는 나중에 필요할 때 추가하기로 했어요. 지금은 Argo Rollouts만으로도 충분해요.
 
 ---
 
-## 🎯 구축 로드맵
+## 구축 로드맵
 
 ### Phase 1: GitOps 자동 배포 (ArgoCD) - ✅ 완료!
 
@@ -293,14 +293,14 @@ Istio는 나중에 필요할 때 추가하기로 했어요. 지금은 Argo Rollo
 - L7 트래픽 관리
 
 **트레이드오프**:
-- ✅ 고급 기능 (mTLS, Tracing, Circuit Breaker)
-- ❌ 메모리 +100MB/Pod
-- ❌ 지연시간 +5ms
-- ❌ 복잡도 증가
+- 고급 기능 (mTLS, Tracing, Circuit Breaker)
+- 메모리 +100MB/Pod
+- 지연시간 +5ms
+- 복잡도 증가
 
 ---
 
-## 💡 Istio vs Ingress Nginx 비교
+## Istio vs Ingress Nginx 비교
 
 ### 현재 (Ingress Nginx)
 
@@ -316,12 +316,12 @@ Ingress Nginx (192.168.1.200:80/443)
 ```
 
 **기능**:
-- ✅ HTTP/HTTPS Routing
-- ✅ TLS Termination
-- ✅ Path-based Routing
-- ❌ Canary 배포 (가중치 제어)
-- ❌ mTLS (Pod 간 암호화)
-- ❌ Distributed Tracing
+- HTTP/HTTPS Routing
+- TLS Termination
+- Path-based Routing
+- Canary 배포 (가중치 제어)
+- mTLS (Pod 간 암호화)
+- Distributed Tracing
 
 ---
 
@@ -343,13 +343,13 @@ Pod
 ```
 
 **장점**:
-- ✅ Canary 배포 (정확히 10% 트래픽)
-- ✅ Header 기반 라우팅 (A/B 테스트)
-- ✅ Fault Injection (카오스 엔지니어링)
+- Canary 배포 (정확히 10% 트래픽)
+- Header 기반 라우팅 (A/B 테스트)
+- Fault Injection (카오스 엔지니어링)
 
 **단점**:
-- ❌ 복잡도 증가
-- ❌ 메모리 사용량 증가
+- 복잡도 증가
+- 메모리 사용량 증가
 
 ---
 
@@ -414,7 +414,7 @@ Pod
 
 ---
 
-## 📊 리소스 사용량 예측
+## 리소스 사용량 예측
 
 ### 현재 상태
 ```bash
@@ -465,7 +465,7 @@ Total: 5200Mi (65%)
 
 ---
 
-## 🎯 다음 행동
+## 다음 행동
 
 ### 1단계: ArgoCD 구축 (진행 중) - ✅ 완료!
 

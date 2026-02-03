@@ -141,9 +141,9 @@ RC가 pod를 삭제할 때의 우선순위:
 - **오직 label selector만 확인**
 
 따라서 `app=web` 레이블만 같다면:
-- ✅ 같은 pod로 간주
-- ✅ replicas 카운트에 포함
-- ✅ 초과 시 삭제 대상
+- 같은 pod로 간주
+- replicas 카운트에 포함
+- 초과 시 삭제 대상
 
 ---
 

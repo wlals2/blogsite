@@ -18,7 +18,7 @@ tocopen: true
 
 ---
 
-## 📋 Quick Summary (1분 읽기)
+## Quick Summary (1분 읽기)
 
 | 항목 | 내용 |
 |------|------|
@@ -29,7 +29,7 @@ tocopen: true
 
 ---
 
-## 🎯 왜 이 프로젝트를?
+## 왜 이 프로젝트를?
 
 ### 문제 상황 (Situation)
 
@@ -253,7 +253,7 @@ Phase 2에서 Kubernetes로 자동화는 성공했지만:
 
 ---
 
-## 🛠️ 기술 선택 (Action)
+## 기술 선택 (Action)
 
 ### 왜 이 기술들인가?
 
@@ -273,7 +273,7 @@ Phase 2에서 Kubernetes로 자동화는 성공했지만:
 
 ---
 
-## 💡 핵심 구현
+## 핵심 구현
 
 ### 구현 1: Multi-AZ EKS 클러스터 (Terraform)
 
@@ -782,7 +782,7 @@ Azure Blob → 점검 페이지 표시 (HTML)
 
 ---
 
-## 📊 성과 (Result)
+## 성과 (Result)
 
 ### 정량적 성과
 
@@ -813,7 +813,7 @@ Azure Blob → 점검 페이지 표시 (HTML)
 
 ---
 
-## 🔥 주요 트러블슈팅
+## 주요 트러블슈팅
 
 ### 1. ArgoCD Sync Failed - resourceVersion 충돌
 

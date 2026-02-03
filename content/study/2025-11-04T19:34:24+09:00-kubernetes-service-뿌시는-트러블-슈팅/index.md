@@ -39,7 +39,7 @@ kubectl get pod -n <ns> --show-labels
 
 ```
 
-#### ✅ 흔한 실수
+#### 흔한 실수
 - app: grafana1G vs app: grafana
 - selector에 label이 누락됨
 ---
@@ -99,7 +99,7 @@ sudo ufw allow <nodeport>/tcp
 ```
 
 ---
-## 💡 실제 사례
+## 실제 사례
 
 ### 🧩 Case 1: Selector 오타
 증상: `Endpoint`가 `<none>`으로 표시됨
@@ -140,7 +140,7 @@ sudo ufw allow 30888/tcp
 ```
 ---
 
-### ✅ 체크리스트
+### 체크리스트
 
 | 항목                   | 확인 명령어                                               | 상태 |
 | -------------------- | ---------------------------------------------------- | -- |
@@ -154,7 +154,7 @@ sudo ufw allow 30888/tcp
 
 ---
 
-### 🔍 유용한 명령어 모음
+### 유용한 명령어 모음
 
 ```bash
 # 전체 리소스 한 번에 확인

@@ -16,7 +16,7 @@ series: ["K8s 개념 뿌시기"]
 
 ---
 
-### ✅ 실제 예시들
+### 실제 예시들
 ### 1️⃣ Service → Pod 선택 (트래픽 라우팅)
 
 ```yaml
@@ -64,7 +64,7 @@ spec:
 
 ```
 
-## 🎯 용도에 따른 selector.matchExpressions 정리
+## 용도에 따른 selector.matchExpressions 정리
 
 ### 1. 기본 - matchLabels 만 사용
 

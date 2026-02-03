@@ -10,12 +10,12 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---
 
 
-## 🎯 목표
+## 목표
 Kubernetes 환경에서 **Grafana + Prometheus + Exporter** 기반 모니터링 스택을 Helm 템플릿으로 구축하고,  
 `mysqld-exporter` CrashLoopBackOff 문제를 해결하는 과정을 정리한다.
 
 ---
-## ✅ values.yaml
+## values.yaml
 
 ```yaml
 prometheus:

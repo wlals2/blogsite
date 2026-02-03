@@ -19,7 +19,7 @@ VirtualBox 스냅샷을 찍어두었지만, 이는 **코드를 지키는 환경*
 
 
 
-## 🎯 목표
+## 목표
 - ArgoCD 구현 및 트러블슈팅  
 - Jenkins 구현 및 트러블슈팅  
 - 완벽한 IaC 구성  
@@ -96,7 +96,7 @@ values.yaml 파일을 만들어   nodeport  를 따로 지정해주었다.
 
 ```
 
-### ✅ Jenkins ArgoCD 서버 구축 
+### Jenkins ArgoCD 서버 구축 
 
 ```yaml
 # jenkins  파일 및 구현 helm repo를 이용한다.
@@ -149,7 +149,7 @@ git push -u origin main
 
 ```
 
-### 🔥 중요
+### 중요
 > 코드가 정말 완벽할때 `git commit` 을 하는 것이다. 필자는 코드가 섞이면서 .git 를 삭제하고 다시 init하는 둥 문제를 일으켜 \
 `merge` 를 했었다. 그 과정에서 코드들이 뒤죽박죽이 되고 yaml 파일들이 망가지는 경험을 했다. \
 다행인건 스냅샷을 찍어놓았다는 것 이었다. 코드를 보호하려다가 오히려 다 망가트린 것이다. \
@@ -158,7 +158,7 @@ git push -u origin main
 이번 글은 우리가 지금까지 구현해놓은 인프라를 `jenkins`와 `argoCD`에 맡기는 않았다. \
 충분한 백업을 한뒤 시도 해볼 것이다. 연습이라고 생각했으면 좋겠다. 
 
-### ✅ 연습용 my.app 생성
+### 연습용 my.app 생성
 
 ```yaml
 # myapp-appjs   종속성을 감안하여 nodejs를 사용하였다. 
@@ -279,13 +279,13 @@ spec:
 
 ```
 
-### 🔥 우리는 values.yaml 파일에 jenkins 비밀번호를 담아놓았기 때문에 그대로 사용하면된다.
+### 우리는 values.yaml 파일에 jenkins 비밀번호를 담아놓았기 때문에 그대로 사용하면된다.
 > **ID**: admin \
 **Passwd**: (values.yaml에 설정한 비밀번호)로 접속하면된다. 
 
 환경적인 변수 때문에 오류가 생길 수있다. 필자는 virtualbox에 git에 올리는 코드를 가져오는 방식을 사용하기에 scm을 사용하였다. jenkins 웹에서 코드를 작성하려 했으나 jenkins file만 존재할 뿐 우리는 deploy 등 다른 여분의 파일이 존재하기 때문에scm을 사용하였다.
 
-### ✅ Jenkins 설정
+### Jenkins 설정
 
 ```
 
@@ -309,7 +309,7 @@ Jenkinsfile, Dockerfile 등 변경시 → 코드를 Github에 푸시해야 jenki
 CI jenkins를 통해 이미지 코드 배포를 완료했으니 이제 실제로 실행 시켜주는 argoCD를 구현할 것이다.
 
 
-### ✅ ArgoCD 설정 및 실행
+### ArgoCD 설정 및 실행
 
 - `kubectl -n <namespace> get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
 - 초기 비밀번호를 통해 접속한다.
@@ -389,7 +389,7 @@ Path,Namespace,Cluster 정확히 일치 확인
 K8s 권한/네트워크, manifest YAML 문법오류 점검
 ---
 
-### 🔥 앞에서 언급한 대로 코드가 완벽한 상태에서 commit 하고 push 하는건 굉장히 중요한 일이다.
+### 앞에서 언급한 대로 코드가 완벽한 상태에서 commit 하고 push 하는건 굉장히 중요한 일이다.
 >그렇지않다면 그 안에서 해결하기 위해서는 merge 든 다른 방법을 찾게 되면서 코드를 망가질 수 가 있다.
 스냅샷이 없었다면 infra 코딩을 다시 해야할 것이다.
 무턱대고 ArgoCD에 올리거나 Git push를 하면 오히려 망가질 수 있다.

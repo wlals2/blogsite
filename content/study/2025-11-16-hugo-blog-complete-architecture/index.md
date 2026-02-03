@@ -9,7 +9,7 @@ description: "Hugo 블로그의 전체 구조와 작동 원리를 처음부터 �
 author: "늦찌민"
 ---
 
-## 🎯 이 글을 읽으면
+## 이 글을 읽으면
 
 처음 Hugo를 시작했을 때 정말 막막했어요. "이 설정이 뭘 의미하는 거지?", "왜 안 되는 거지?" 같은 질문들로 가득했죠. 이 글은 그때의 저처럼 고민하는 분들을 위해 작성했습니다.
 
@@ -257,7 +257,7 @@ series: ["Hugo 블로그 구축"]
 
 ---
 
-## 📝 3. 글 작성 완벽 가이드
+## 3. 글 작성 완벽 가이드
 
 ### 3.1 새 글 생성
 
@@ -717,7 +717,7 @@ hugo --cleanDestinationDir
 
 ---
 
-## 🚀 8. 성능 최적화
+## 8. 성능 최적화
 
 ### 8.1 이미지 최적화
 
@@ -771,7 +771,7 @@ Cloudflare를 쓰니까 블로그가 정말 빨라졌어요!
 
 ---
 
-## 📊 9. SEO 최적화
+## 9. SEO 최적화
 
 ### 9.1 robots.txt
 
@@ -825,7 +825,7 @@ cover:
 
 ---
 
-## 🎯 10. 체크리스트
+## 10. 체크리스트
 
 ### 새 글 발행 체크리스트
 
@@ -862,7 +862,7 @@ curl https://yourdomain.com/sitemap.xml
 
 ---
 
-## 📚 11. 추가 학습 자료
+## 11. 추가 학습 자료
 
 - **Hugo 공식 문서:** https://gohugo.io/documentation/
 - **PaperMod 테마:** https://github.com/adityatelange/hugo-PaperMod

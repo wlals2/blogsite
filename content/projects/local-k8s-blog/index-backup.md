@@ -30,7 +30,7 @@ draft: false
 
 ---
 
-## 🎯 왜 이 프로젝트?
+## 왜 이 프로젝트?
 
 ### "블로그도 Kubernetes에서 운영해야 진짜 아닌가?"
 
@@ -157,7 +157,7 @@ Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualServ
 
 ---
 
-## 🛠️ 기술 스택
+## 기술 스택
 
 ### 기존 인프라 (활용)
 
@@ -184,7 +184,7 @@ Cloudflare (HTTPS) → MetalLB (192.168.1.200) → Istio Gateway → VirtualServ
 
 ---
 
-## 🛡️ 신규 구축 기술 스택 (2026.01)
+## 신규 구축 기술 스택 (2026.01)
 
 ### Service Mesh & Networking
 
@@ -247,9 +247,9 @@ kubectl create secret docker-registry ghcr-secret \
 ```
 
 **보안 효과**:
-- ✅ 인증 없이 이미지 pull 불가
-- ✅ 블로그 콘텐츠 무단 복제 방지
-- ✅ K8s Pod만 ghcr-secret으로 인증하여 pull
+- 인증 없이 이미지 pull 불가
+- 블로그 콘텐츠 무단 복제 방지
+- K8s Pod만 ghcr-secret으로 인증하여 pull
 
 ### Storage & Database
 
@@ -261,7 +261,7 @@ kubectl create secret docker-registry ghcr-secret \
 
 ---
 
-## 📚 핵심 기술 상세
+## 핵심 기술 상세
 
 ### 전체 DevSecOps 아키텍처
 
@@ -724,13 +724,13 @@ spec:
 
 ---
 
-## 💡 주요 학습 포인트
+## 주요 학습 포인트
 
 ### 1. 베어메탈 Kubernetes 운영 경험
 
 **EKS와의 차이**:
-- ❌ EKS: AWS가 Control Plane 관리 → 쉬움
-- ✅ Homeserver: kubeadm으로 직접 구축 → **진짜 이해 필요**
+- EKS: AWS가 Control Plane 관리 → 쉬움
+- Homeserver: kubeadm으로 직접 구축 → **진짜 이해 필요**
 
 **배운 것**:
 - kubeadm으로 클러스터 초기화
@@ -843,9 +843,9 @@ ENTRYPOINT ["java", \
 
 ---
 
-## 📊 운영 현황 (58일 안정 운영 중)
+## 운영 현황 (58일 안정 운영 중)
 
-### ✅ 완료된 작업
+### 완료된 작업
 
 1. ✅ **Bare-metal Kubernetes 클러스터 구축** (kubeadm + Cilium + Longhorn)
 2. ✅ **Hugo 블로그 Pod 배포** (nginx:alpine, Multi-stage Build)
@@ -879,7 +879,7 @@ ENTRYPOINT ["java", \
 
 ---
 
-## 🎯 실제 성과 (58일 운영 결과)
+## 실제 성과 (58일 운영 결과)
 
 ### 정량적 성과
 
@@ -936,32 +936,32 @@ Local K8s Blog 완성 후 운영 개선 예정 (2026.02~):
 
 ---
 
-## 💭 왜 베어메탈 Kubernetes인가?
+## 왜 베어메탈 Kubernetes인가?
 
 ### Phase 3 (EKS)의 한계
 
 **EKS에서 배운 것**:
-- ✅ Managed Kubernetes의 편리함
-- ✅ AWS 생태계 통합 (ALB, RDS, Route53)
-- ✅ 프로덕션급 HA 구성
+- Managed Kubernetes의 편리함
+- AWS 생태계 통합 (ALB, RDS, Route53)
+- 프로덕션급 HA 구성
 
 **하지만...**
-- ❌ Control Plane은 블랙박스 (AWS가 관리)
-- ❌ 비용 부담 ($258/월)
-- ❌ PetClinic 샘플 앱 → 실제 사용 안 함
+- Control Plane은 블랙박스 (AWS가 관리)
+- 비용 부담 ($258/월)
+- PetClinic 샘플 앱 → 실제 사용 안 함
 
 ### Homeserver K8s의 장점
 
 **배울 수 있는 것**:
-- ✅ kubeadm으로 클러스터 직접 구축
-- ✅ CNI, Storage 직접 선택 및 관리
-- ✅ Ingress Controller 직접 설치
-- ✅ 진짜 트러블슈팅 (AWS 지원 없음)
+- kubeadm으로 클러스터 직접 구축
+- CNI, Storage 직접 선택 및 관리
+- Ingress Controller 직접 설치
+- 진짜 트러블슈팅 (AWS 지원 없음)
 
 **실전 경험**:
-- ✅ 매일 사용하는 블로그 → 장애 시 즉시 인지
-- ✅ 무료 운영 → 무한 실험 가능
-- ✅ 로컬 환경 → 네트워크 디버깅 편리
+- 매일 사용하는 블로그 → 장애 시 즉시 인지
+- 무료 운영 → 무한 실험 가능
+- 로컬 환경 → 네트워크 디버깅 편리
 
 ---
 
@@ -974,7 +974,7 @@ Local K8s Blog 완성 후 운영 개선 예정 (2026.02~):
 
 ---
 
-## 📝 업데이트 로그
+## 업데이트 로그
 
 - **2025-11-27**: 프로젝트 시작, Bare-metal K8s 클러스터 구축
 - **2025-12-XX**: Hugo 블로그 + Spring Boot WAS 배포 완료

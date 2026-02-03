@@ -18,7 +18,7 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 
 ---
 
-## 🎯 목표
+## 목표
 ###  K8s EFK 구현 및 트러블슈팅
 
 ## 📦 기본 구성
@@ -74,7 +74,7 @@ series: ["좀 더 고급으로 변하는 인프라 구조"]
 
 ```
 
-### 🔥 helm 차트로 ELK(+ Fluent bit) 통합 배포
+### helm 차트로 ELK(+ Fluent bit) 통합 배포
 
 - 전체적인 파드 로그 수집 설정 아무 문제가 없었다. 그러나 kibana 인덱스 Logstash가 찍어준 logstash_*만 보이며 Fleunt bit로 쓰이는 인덱스는 보이지 않았다.
 ### 시도해본 방법들
@@ -103,7 +103,7 @@ K8s에서 사용하던 helm 과 Kubectl 네임서버를 삭제하면 된다.
  
 ---
 
-## ✅ values.yaml
+## values.yaml
 
 ```yaml
 replicaCount: 1
@@ -162,7 +162,7 @@ fluentbit:
 
 ```
 
-## ✅ Elasitcsearch *.yaml
+## Elasitcsearch *.yaml
 
 ```yaml
 # elasticsearch-configmap
@@ -254,7 +254,7 @@ spec:
 
 ```
 
-## ✅  Fluentbit *.yaml
+## Fluentbit *.yaml
 
 ```yaml
 #fluentbit-configmap.yaml
@@ -371,7 +371,7 @@ spec:
 
 ```
 
-## ✅  kibana*.yaml
+## kibana*.yaml
 
 ```yaml
 # kibana-configmap.yaml
@@ -524,7 +524,7 @@ fluentbit:
 
 comapny-infra-c-elasticseach.efk.svc.cluster.local 을 사용한다. 위 host명을 바꾸어주면 된다.
 
-### 🔥 고생한거에 비해 글이 짧아 적으면서도 놀랐다. 
+### 고생한거에 비해 글이 짧아 적으면서도 놀랐다. 
 
 ```
 

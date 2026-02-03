@@ -15,7 +15,7 @@ Terraform의 기본 문법과 핵심 개념들을 정리합니다. Resource와 D
 
 ---
 
-## ✅ 리소스 유형
+## 리소스 유형
 
 ```hcl
 resource "타입" "이름" {...}
@@ -34,7 +34,7 @@ data "타입" "이름" {...}
 
 ---
 
-## 🎯 resource vs data 블록
+## resource vs data 블록
 
 ### 📌 resource
 
@@ -69,14 +69,14 @@ data "aws_ami" "ubuntu" {
 
 → 이미 있는 AMI 정보를 **찾아서 가져오기만** 합니다.
 
-### ✅ local_file의 경우
+### local_file의 경우
 
 - `resource "local_file"` → 로컬에 파일을 **생성/수정/삭제**
 - `data "local_file"` → 로컬에 이미 있는 파일을 **읽어서 조회** (파일을 만들지 않음)
 
 ---
 
-## ✅ 입력 변수 (Variable)
+## 입력 변수 (Variable)
 
 입력 변수는 인프라를 구성하는데 필요한 속성 값을 정의해 **코드의 변경 없이 여러 인프라를 생성**하는데 목적이 있습니다.
 
@@ -95,7 +95,7 @@ data "aws_ami" "ubuntu" {
 
 ---
 
-## ✅ local (지역 변수)
+## local (지역 변수)
 
 코드 내에서 사용자가 지정한 값이나 속성 값을 가공해 참조 가능한 **지역 변수**입니다. 코드 내에서만 가공되어 동작하는 값을 말합니다.
 
@@ -120,7 +120,7 @@ resource "local_file" "abc" {
 
 ---
 
-## ✅ Output 활용
+## Output 활용
 
 ```hcl
 resource "local_file" "abc" {
@@ -157,7 +157,7 @@ output "file_abspath" {
 
 ---
 
-## ✅ 반복문
+## 반복문
 
 list 형태의 값 목록이나 key-value 형태의 문자열 집합인 데이터가 있는 경우, 동일한 내용에 대해 Terraform 구성 정의를 **반복적으로 하지 않고 관리**할 수 있습니다.
 
@@ -304,7 +304,7 @@ resource "aws_security_group" "example" {
 
 ---
 
-## 📝 정리
+## 정리
 
 Terraform의 기본 문법과 핵심 개념들을 살펴보았습니다:
 

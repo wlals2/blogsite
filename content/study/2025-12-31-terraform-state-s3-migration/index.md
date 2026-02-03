@@ -291,7 +291,7 @@ aws dynamodb scan \
 ```bash
 cd terraform/azure-dr
 
-# ❌ 문제: 팀원 A와 팀원 B가 동시 작업
+# 문제: 팀원 A와 팀원 B가 동시 작업
 # 팀원 A
 terraform apply  # 로컬 state 수정
 
@@ -306,7 +306,7 @@ terraform apply  # 로컬 state 수정 → 충돌! 💥
 ```bash
 cd terraform/azure-dr
 
-# ✅ 해결: DynamoDB Lock으로 한 명만 작업
+# 해결: DynamoDB Lock으로 한 명만 작업
 # 팀원 A
 terraform apply  # S3 state lock 획득 → 작업 진행
 
@@ -545,16 +545,16 @@ DynamoDB Lock으로 동시 작업 충돌을 방지하니, 팀원과의 협업이
 로컬 State에서 S3 Backend로 마이그레이션하면서 정말 많은 걸 배웠어요.
 
 **Before**:
-- ❌ 파일 손실 불안
-- ❌ 동시 작업 충돌
-- ❌ 버전 관리 부족
-- ❌ 밤마다 걱정
+- 파일 손실 불안
+- 동시 작업 충돌
+- 버전 관리 부족
+- 밤마다 걱정
 
 **After**:
-- ✅ S3 Versioning으로 안전
-- ✅ DynamoDB Lock으로 충돌 방지
-- ✅ 완벽한 버전 관리
-- ✅ 편안한 숙면
+- S3 Versioning으로 안전
+- DynamoDB Lock으로 충돌 방지
+- 완벽한 버전 관리
+- 편안한 숙면
 
 **핵심 교훈**:
 - Terraform State는 S3에 저장하세요 (필수!)

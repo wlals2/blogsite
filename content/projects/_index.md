@@ -20,7 +20,7 @@ tocopen: true
 
 ---
 
-## 🎯 전체 학습 여정
+## 전체 학습 여정
 
 ```mermaid
 graph LR
@@ -73,7 +73,7 @@ EC2 수동 배포 30분 → Helm Chart 자동 배포 5분 (**83% 단축**)
 
 ---
 
-### ☁️ Phase 3: AWS EKS + Multi-Cloud DR
+### Phase 3: AWS EKS + Multi-Cloud DR
 
 > **기간**: 2025.11 ~ 2026.01 (3개월) | **역할**: 인프라 전체 설계 및 구축
 
@@ -85,7 +85,7 @@ EC2 수동 배포 30분 → Helm Chart 자동 배포 5분 (**83% 단축**)
 
 ---
 
-### 🚀 Phase 4: MSA (계획 중)
+### Phase 4: MSA (계획 중)
 
 > **예상 기간**: 2026.02 ~ (Phase 3 완료 후)
 
@@ -99,23 +99,23 @@ Monolith 한계 극복 - Service Mesh로 기능별 독립 배포
 
 ## 🆕 독립 프로젝트
 
-### ✅ Local K8s Blog (완료!)
+### Local K8s Blog (완료!)
 
 > **기간**: 2025.11 ~ 2026.01 (완료) | **역할**: GitOps 자동화 & 모니터링
 
 Netlify에서 내 Kubernetes로! 블로그를 K8s Pod로 운영
 
 **핵심 성과**:
-- ✅ PLG Stack 모니터링 (55일 운영, 4 대시보드, 8 Alert Rules)
-- ✅ GitHub Actions CI/CD (35초 배포)
-- ✅ HPA 자동 스케일링 (WAS 2-10, WEB 2-5)
-- ✅ ArgoCD GitOps 설치 완료
+- PLG Stack 모니터링 (55일 운영, 4 대시보드, 8 Alert Rules)
+- GitHub Actions CI/CD (35초 배포)
+- HPA 자동 스케일링 (WAS 2-10, WEB 2-5)
+- ArgoCD GitOps 설치 완료
 
 **[상세 보기 →](./local-k8s-blog/)**
 
 ---
 
-## 📊 전체 성과 요약
+## 전체 성과 요약
 
 | 항목 | Phase 1 | Phase 2 | Phase 3 | 총 개선 |
 |------|---------|---------|---------|---------|
@@ -144,7 +144,7 @@ Netlify에서 내 Kubernetes로! 블로그를 K8s Pod로 운영
 
 ---
 
-## 📚 문서화
+## 문서화
 
 모든 프로젝트는 **214개 이상의 문서**로 기록되어 있습니다:
 
@@ -159,7 +159,7 @@ Netlify에서 내 Kubernetes로! 블로그를 K8s Pod로 운영
 
 ---
 
-## 💡 핵심 교훈
+## 핵심 교훈
 
 ### 1. 문제 중심 사고
 
@@ -185,7 +185,7 @@ EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
 
 ---
 
-## 🎯 다음 목표
+## 다음 목표
 
 1. ~~**ArgoCD GitOps 전환**~~ → ✅ **완료** (Auto-Sync, Prune, SelfHeal)
 2. **Prometheus Alert 실전 테스트** (Slack 연동, 알림 훈련)

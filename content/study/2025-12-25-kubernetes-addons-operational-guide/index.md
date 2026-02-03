@@ -377,10 +377,10 @@ spec:
 처음에 설치 가이드를 작성할 때 ACM 인증서 ARN을 하드코딩했다가 큰 실수를 했어요.
 
 ```bash
-# ❌ 잘못된 방법
+# 잘못된 방법
 alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:123456789012:certificate/abc-def
 
-# ✅ 올바른 방법
+# 올바른 방법
 # 먼저 인증서 ARN 확인
 aws acm list-certificates --region ap-northeast-2
 

@@ -566,10 +566,10 @@ aws route53 get-health-check-status --health-check-id b1ddbda0-eb95-48a9-a7c3-c4
 네 번째 DR 테스트를 성공적으로 완료했어요. 매번 할 때마다 새로운 걸 배우고, 프로세스가 개선돼요.
 
 **이번 테스트에서 확인한 것**:
-- ✅ Failover 시간: 약 7분 (Blob 점검 페이지 1분 + Azure VM 생성 6분)
-- ✅ 데이터 손실: 0 (최신 백업 복원)
-- ✅ Failback 시간: 약 3분 (Pod 재생성 2분 + DNS 전파 1분)
-- ✅ Session 유지: ✅ (Redis 덕분)
+- Failover 시간: 약 7분 (Blob 점검 페이지 1분 + Azure VM 생성 6분)
+- 데이터 손실: 0 (최신 백업 복원)
+- Failback 시간: 약 3분 (Pod 재생성 2분 + DNS 전파 1분)
+- Session 유지: ✅ (Redis 덕분)
 
 **다음 개선 과제**:
 - Warm Standby로 전환 (VM 미리 생성, Failover 시간 1분 이내)

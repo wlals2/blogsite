@@ -43,7 +43,7 @@ kubectl explain ds.spec.template.spec.nodeSelector
 
 
 
-## 🎯 2. selector ↔ template.labels는 왜 일치해야 할까?
+## 2. selector ↔ template.labels는 왜 일치해야 할까?
 ### 📌 핵심 요약
 
 - 컨트롤러(Deployment, DaemonSet, StatefulSet 등)는
@@ -54,7 +54,7 @@ spec.template.labels는 “내가 만들 Pod에는 이 라벨을 붙일게”
 
 - 두 값은 반드시 논리적으로 일치해야 합니다.
 
-### ✅ 규칙
+### 규칙
 
 - template.labels는 selector.matchLabels의 부분집합이어야 합니다.
 
@@ -62,7 +62,7 @@ spec.template.labels는 “내가 만들 Pod에는 이 라벨을 붙일게”
 
 -템플릿 라벨은 더 많아도 OK, 빠지면 ❌ 오류!
 
-### ⚠️ 왜 이렇게 강제되었을까?
+### 왜 이렇게 강제되었을까?
 
 - selector는 컨트롤러의 정체성(Identity) 이라 변경이 위험합니다.
 - apps/v1 이후부터는 안전성 보장을 위해 필수 일치로 강화되었습니다.
@@ -72,7 +72,7 @@ kubectl explain ds.spec.template.metadata.labels
 
 ```
 
-### 💡 예시
+### 예시
 
 ```yaml
 selector:
@@ -118,7 +118,7 @@ kubectl explain pod.spec.containers
 
 ```
 ---
-### 🔍 마무리 정리
+### 마무리 정리
 
 | 항목                         | 올바른 위치                          | 이유                              |
 | -------------------------- | ------------------------------- | ------------------------------- |
@@ -126,11 +126,11 @@ kubectl explain pod.spec.containers
 | selector ↔ template.labels | 반드시 일치(부분집합 허용)                 | 컨트롤러가 Pod를 채택하기 위해 라벨 기반 매칭 필요  |
 | containers                 | `spec.template.spec.containers` | 컨테이너는 Pod 실행 단위이며 PodSpec 내부 필드 |
 
-### 💡 정리 문장으로 기억하기
+### 정리 문장으로 기억하기
 > “컨트롤러는 정책을, Pod는 실행을 담당한다.
 > 스케줄링·라벨·컨테이너 같은 ‘실행 세부 정보’는 항상 Pod 스펙 안에 들어가야 한다.”
 
-### ✅ 참고 명령어들
+### 참고 명령어들
 
 ```bash
 kubectl explain ds.spec

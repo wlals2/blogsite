@@ -48,7 +48,7 @@ tocopen: true
 
 ---
 
-## 🎯 목표 설정
+## 목표 설정
 
 ### 1. 가용성 목표
 
@@ -416,7 +416,7 @@ az storage blob upload \
 
 ---
 
-## ✅ Failover 테스트
+## Failover 테스트
 
 ### 시나리오 1: AWS ALB 강제 중단
 
@@ -494,7 +494,7 @@ done
 
 ---
 
-## 📊 성과 요약
+## 성과 요약
 
 ### 정량적 성과
 
@@ -523,7 +523,7 @@ False Negative (미탐지): 0건
 
 ---
 
-## 💡 핵심 교훈
+## 핵심 교훈
 
 ### 1. 단일 클라우드 의존의 위험성
 
@@ -628,7 +628,7 @@ AWS 장애 → 점검 페이지 표시 (고객에게 상황 안내)
 
 ---
 
-## 📚 관련 문서
+## 관련 문서
 
 - [AWS Route53 Failover Routing](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-failover.html)
 - [CloudFront with Custom Origin](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistS3AndCustomOrigins.html)

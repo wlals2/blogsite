@@ -15,21 +15,21 @@ draft: false
 
 ---
 
-## 🎯 학습 목표
+## 학습 목표
 
 이 튜토리얼을 완료하면:
 
-- ✅ Terraform으로 AWS VPC 3-Tier 아키텍처 구축
-- ✅ Infrastructure as Code 원칙 이해
-- ✅ Terraform State 관리 방법 학습
-- ✅ 보안 그룹 및 네트워크 설계 실습
+- Terraform으로 AWS VPC 3-Tier 아키텍처 구축
+- Infrastructure as Code 원칙 이해
+- Terraform State 관리 방법 학습
+- 보안 그룹 및 네트워크 설계 실습
 
 **예상 시간**: 2-3시간
 **난이도**: ⭐⭐⭐ (Intermediate)
 
 ---
 
-## 📋 사전 준비사항
+## 사전 준비사항
 
 ### 필수 도구
 
@@ -660,7 +660,7 @@ terraform force-unlock <LOCK_ID>
 
 ---
 
-## 📊 성과 측정
+## 성과 측정
 
 ### Before (수동 구축)
 
@@ -747,7 +747,7 @@ aws dynamodb delete-table --table-name terraform-lock
 
 ---
 
-## 📚 참고 자료
+## 참고 자료
 
 - [Terraform AWS Provider 공식 문서](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [AWS VPC 설계 모범 사례](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-design.html)

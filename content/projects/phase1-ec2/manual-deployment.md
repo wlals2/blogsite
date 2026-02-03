@@ -222,7 +222,7 @@ sudo tail -f /opt/tomcat/logs/catalina.out
 
 ---
 
-## 🔥 실제 발생한 문제들
+## 실제 발생한 문제들
 
 ### 문제 1: 잘못된 서버에 배포 (주 1회)
 
@@ -330,7 +330,7 @@ sudo cp /tmp/petclinic.war /opt/tomcat/webapps/
 
 ---
 
-## 📊 수동 배포 통계 (1개월)
+## 수동 배포 통계 (1개월)
 
 ### 배포 현황
 
@@ -373,7 +373,7 @@ sudo cp /tmp/petclinic.war /opt/tomcat/webapps/
 
 ---
 
-## 💡 왜 이렇게 힘들었나?
+## 왜 이렇게 힘들었나?
 
 ### 1. 수동 작업의 한계
 
@@ -428,7 +428,7 @@ A: 모른다. (문서 없음)
 
 ---
 
-## 🚀 Phase 2에서의 해결
+## Phase 2에서의 해결
 
 Phase 2에서 **Jenkins + ArgoCD GitOps**로 모든 문제를 해결했습니다.
 
@@ -504,7 +504,7 @@ Phase 2에서 **Jenkins + ArgoCD GitOps**로 모든 문제를 해결했습니다
 
 ---
 
-## 📚 관련 문서
+## 관련 문서
 
 - [Phase 2: CI/CD 파이프라인 구현](../phase2-k8s/cicd-pipeline.md)
 - [Terraform IaC로 인프라 자동화](./index.md)

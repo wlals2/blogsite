@@ -163,7 +163,7 @@ Elasticsearch는 이 토큰들을 역색인된 토큰 목록에서 검색합니�
 
 ```
 
-### ✅ min_gram / max_gram 조합의 의미
+### min_gram / max_gram 조합의 의미
 
 | 설정 | 결과 | 용도 |
 | --- | --- | --- |
@@ -171,7 +171,7 @@ Elasticsearch는 이 토큰들을 역색인된 토큰 목록에서 검색합니�
 | min_gram=3, max_gram=5 | “gal”, “gala”, “galax” | **짧은 조각은 버리고 효율 개선** |
 | min_gram=2, max_gram=3 | “ga”, “gal”, “al” | **짧은 prefix 기반 검색** |
 
-### 🚀 실무에서 이게 쓰이는 곳
+### 실무에서 이게 쓰이는 곳
 
 | 사용 사례 | 설명 |
 | --- | --- |

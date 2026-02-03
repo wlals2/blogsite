@@ -64,7 +64,7 @@ if (user.getPassword().equals(password)) {  // equals() 사용 ✅
 
 ---
 
-## 🎯 해결 방안: Canary 배포
+## 해결 방안: Canary 배포
 
 ### Canary 배포란?
 
@@ -291,7 +291,7 @@ ALB (Ingress)
 
 ---
 
-## ✅ Canary 배포 실행
+## Canary 배포 실행
 
 ### 시나리오: 새 버전 배포
 
@@ -477,7 +477,7 @@ done
 
 ---
 
-## 📊 성과 요약
+## 성과 요약
 
 ### 정량적 성과 (3개월)
 
@@ -505,7 +505,7 @@ Before (Rolling Update):
 
 ---
 
-## 💡 핵심 교훈
+## 핵심 교훈
 
 ### 1. Progressive Delivery의 힘
 
@@ -618,7 +618,7 @@ spec:
 
 ---
 
-## 📚 관련 문서
+## 관련 문서
 
 - [Argo Rollouts Documentation](https://argo-rollouts.readthedocs.io/)
 - [Progressive Delivery](https://www.weave.works/blog/what-is-progressive-delivery)

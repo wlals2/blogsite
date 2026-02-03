@@ -8,7 +8,7 @@ description: "🚀 Cilium으로 본 Kubernetes 네트워킹 진화 — kube-prox
 author: "늦찌민"
 ---
 
-# 🚀 Cilium으로 본 Kubernetes 네트워킹 진화 — kube-proxy를 넘어 eBPF로
+# Cilium으로 본 Kubernetes 네트워킹 진화 — kube-proxy를 넘어 eBPF로
 
 쿠버네티스의 네트워크 트래픽은 기본적으로 `kube-proxy` 가 관리한다. \
 Service의 `ClusterIP`를 생성하고, `iptables` 또는 `IPVS` 규칙을 통해 Pod로 패킷을 라우팅한다. \
@@ -20,7 +20,7 @@ Service의 `ClusterIP`를 생성하고, `iptables` 또는 `IPVS` 규칙을 통�
 
 ---
 
-### 🔍 내가 사용하는 클러스터는 Cilium? kube-proxy?
+### 내가 사용하는 클러스터는 Cilium? kube-proxy?
 - Cilium이 kube-proxy를 대체 중인지, 아니면 함께 공존 중인지는 아래 명령어로 알 수 있다.
 ```bash
 kubectl -n kube-system exec -it \

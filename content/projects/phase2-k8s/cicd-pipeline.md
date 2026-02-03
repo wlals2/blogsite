@@ -84,7 +84,7 @@ cp petclinic.war /opt/tomcat/webapps/
 
 ---
 
-## 🎯 목표: GitOps로 자동화
+## 목표: GitOps로 자동화
 
 ### 이상적인 배포 흐름
 
@@ -174,7 +174,7 @@ Git Push
 
 ---
 
-## 🛠️ 구현: Jenkins (CI)
+## 구현: Jenkins (CI)
 
 ### Jenkins 설치 및 설정
 
@@ -368,7 +368,7 @@ CMD ["catalina.sh", "run"]
 
 ---
 
-## 🛠️ 구현: ArgoCD (CD)
+## 구현: ArgoCD (CD)
 
 ### ArgoCD 설치
 
@@ -453,7 +453,7 @@ spec:
 
 ---
 
-## ✅ 배포 테스트
+## 배포 테스트
 
 ### 시나리오: 코드 수정 → 자동 배포
 
@@ -507,7 +507,7 @@ curl https://www.goupang.shop/petclinic/actuator/info
 
 ---
 
-## 📊 성과 요약
+## 성과 요약
 
 ### Before (Phase 1) vs After (Phase 2)
 
@@ -541,7 +541,7 @@ curl https://www.goupang.shop/petclinic/actuator/info
 
 ---
 
-## 💡 핵심 교훈
+## 핵심 교훈
 
 ### 1. GitOps의 강력함
 
@@ -670,7 +670,7 @@ stage('Integration Test') {
 
 ---
 
-## 📚 관련 문서
+## 관련 문서
 
 - [Jenkins Pipeline Documentation](https://www.jenkins.io/doc/book/pipeline/)
 - [ArgoCD Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/)

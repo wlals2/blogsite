@@ -38,7 +38,7 @@ Docker Desktop은 두 가지 컨테이너 모드를 지원합니다:
 
 ---
 
-## 📝 정리
+## 정리
 
 ### 문제점
 
@@ -54,7 +54,7 @@ Docker Desktop은 두 가지 컨테이너 모드를 지원합니다:
 
 ---
 
-## ✅ 해결 방법
+## 해결 방법
 
 Windows에서만 실행이 가능한 명령어나 기능(**npipe**, Windows 전용 이미지 등)이 있는 경우:
 
@@ -67,7 +67,7 @@ Windows에서만 실행이 가능한 명령어나 기능(**npipe**, Windows 전�
 
 ---
 
-## 📋 체크리스트
+## 체크리스트
 
 - [ ] Docker Desktop 설치 시 "Allow Windows containers to be used with this installation" 옵션 체크
 - [ ] Hyper-V 및 Containers Windows 기능 활성화

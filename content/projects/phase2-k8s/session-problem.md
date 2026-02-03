@@ -37,7 +37,7 @@ Phase 2에서 Kubernetes를 도입하고 HPA(Horizontal Pod Autoscaler)로 자�
 
 ---
 
-## 🔍 원인 분석
+## 원인 분석
 
 ### 1. 로그 확인
 
@@ -111,7 +111,7 @@ spring:
 
 ---
 
-## 🛠️ 시도한 해결 방법
+## 시도한 해결 방법
 
 ### 1. ALB Sticky Session (임시 해결)
 
@@ -153,8 +153,8 @@ ALB가 Cookie 생성 (AWSALB=pod-1-identifier)
 ```
 
 **결과:**
-- ✅ 로그인 유지됨
-- ✅ 사용자 경험 정상화
+- 로그인 유지됨
+- 사용자 경험 정상화
 
 **하지만 문제 발견:**
 
@@ -186,17 +186,17 @@ spec:
 ```
 
 **장점:**
-- ✅ 세션 문제 완전 해결
-- ✅ 구현 간단
+- 세션 문제 완전 해결
+- 구현 간단
 
 **단점:**
-- ❌ HPA 사용 불가
-- ❌ 트래픽 급증 시 수동 대응 필요
-- ❌ 단일 장애점 (Pod 1개)
+- HPA 사용 불가
+- 트래픽 급증 시 수동 대응 필요
+- 단일 장애점 (Pod 1개)
 
 ---
 
-## 📊 성능 영향 분석
+## 성능 영향 분석
 
 ### 부하 테스트 결과
 
@@ -233,7 +233,7 @@ Failed requests:        0
 
 ---
 
-## 💡 배운 점
+## 배운 점
 
 ### 1. Stateless vs Stateful 아키텍처
 
@@ -300,7 +300,7 @@ Pod는 상태를 저장하지 않음
 
 ---
 
-## 🚀 Phase 3에서의 해결
+## Phase 3에서의 해결
 
 Phase 3에서 **Redis Session Clustering**으로 완전히 해결했습니다.
 
@@ -329,7 +329,7 @@ WAS Pod 2 ──┘
 
 ---
 
-## 📚 참고 자료
+## 참고 자료
 
 - [Spring Session Documentation](https://docs.spring.io/spring-session/reference/)
 - [Kubernetes StatefulSet vs Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)

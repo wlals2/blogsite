@@ -14,7 +14,7 @@ draft: false
 
 <!--more-->
 
-## 🎯 목표
+## 목표
 
 - **Kubernetes에서 Samba 서버 구현**
 - **트러블슈팅(특히 NodePort ↔ Windows SMB 통신 문제)**
@@ -84,7 +84,7 @@ kubectl -n company-infra get pods,svc,pv,pvc
 - **원인**: Windows SMB는 139/445 고정 포트에 민감
 - **해결**: HostPort(139/445) 사용 및 정적 PV/PVC로 실제 경로 마운트
 
-## ✅ K8s - Samba 서버 구현 및 트러블 슈팅
+## K8s - Samba 서버 구현 및 트러블 슈팅
 ### 이번은 트러블 슈팅 과정 내에서 K8s nodeport로는 windows까지 닿지 못하는 경험을 하였다.
 **Windows**는 고정 포트 번호를 사용하기 때문일 것이다. PortFowarding Port로는 절대  도달하지 못하였다.
 
@@ -292,7 +292,7 @@ PVC에 storageClassName 지정하면  클러스터에 자동으로 PV를 생성/
 
 ```
 
-### 🔥 우리는 기본적으로 동적 프로비저닝을 사용했으며 Samba에서는 정적 프로비저닝을 사용하였다.
+### 우리는 기본적으로 동적 프로비저닝을 사용했으며 Samba에서는 정적 프로비저닝을 사용하였다.
 
 > 확연한 차이는 정적프로비저닝을 통해 로컬 경로를 직접 정했다는 것이다.
 > Samba / FTP 똑같이 직접 정한 경로를 사용할 수 있다면 많은 고민들이 해결 될 수 있다.

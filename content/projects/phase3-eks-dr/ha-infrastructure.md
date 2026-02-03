@@ -133,7 +133,7 @@ Before: 모든 Pod가 한 AZ에 집중
 
 ---
 
-## 🛠️ 해결: topologySpreadConstraints로 Pod 강제 분산
+## 해결: topologySpreadConstraints로 Pod 강제 분산
 
 ### 왜 topologySpreadConstraints인가?
 
@@ -199,7 +199,7 @@ kubectl rollout restart deployment web -n petclinic
 
 ---
 
-## 🎉 결과: Multi-AZ 분산 달성
+## 결과: Multi-AZ 분산 달성
 
 적용 후 Pod 분산 상태를 다시 확인했습니다.
 
@@ -238,7 +238,7 @@ After: Multi-AZ 분산 완료
 
 ---
 
-## 📊 성과 요약
+## 성과 요약
 
 | 지표 | Before | After | 개선 |
 |------|--------|-------|------|
@@ -254,7 +254,7 @@ Redis가 2c AZ에만 있어 SPOF(단일 장애점)입니다. Redis Sentinel 또�
 
 ---
 
-## 💡 핵심 교훈
+## 핵심 교훈
 
 ### 1. Canary 배포 도입 시 세션 공유는 필수
 
@@ -270,7 +270,7 @@ Pod 간 트래픽 분산이 일어나면 세션 문제가 바로 발생합니다
 
 ---
 
-## 📚 관련 문서
+## 관련 문서
 
 - [Kubernetes: Pod Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)
 - [Kubernetes: Affinity and Anti-Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)

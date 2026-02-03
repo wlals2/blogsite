@@ -708,8 +708,8 @@ kubectl get ingress goupang-ingress -o jsonpath='{.status.loadBalancer.ingress[0
 ```
 
 **전통적 방식과 비교:**
-- ❌ 수동: ALB 생성 → Target Group → Listener 규칙
-- ✅ Ingress: YAML 작성 → 자동 생성!
+- 수동: ALB 생성 → Target Group → Listener 규칙
+- Ingress: YAML 작성 → 자동 생성!
 
 ---
 

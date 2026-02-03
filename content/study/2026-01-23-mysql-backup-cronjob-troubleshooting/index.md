@@ -152,7 +152,7 @@ Istio sidecar가 Job Pod에 자동 주입되어 initContainer가 2개 생성됨:
 **잘못된 annotation 위치**:
 
 ```yaml
-# ❌ spec 레벨 - 무시됨
+# spec 레벨 - 무시됨
 spec:
   annotations:
     sidecar.istio.io/inject: "false"

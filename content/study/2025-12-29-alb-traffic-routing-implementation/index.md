@@ -491,8 +491,8 @@ aws elbv2 describe-rules --listener-arn $LISTENER_ARN \
 ```
 
 **확인 사항:**
-- ✅ Target Group 2개 생성됨 (stable, canary)
-- ✅ Weight가 90:10 (또는 현재 step의 비율)
+- Target Group 2개 생성됨 (stable, canary)
+- Weight가 90:10 (또는 현재 step의 비율)
 
 진짜 ALB 가중치가 10:90으로 설정된 걸 확인했을 때, 정말 감격스러웠어요!
 

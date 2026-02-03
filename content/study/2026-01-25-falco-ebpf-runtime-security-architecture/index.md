@@ -430,10 +430,10 @@ spec:
 ```
 
 **격리 효과**:
-- ✅ **Egress 차단**: C&C 서버 통신 불가, 데이터 유출 방지
-- ✅ **Ingress 차단**: 추가 공격 벡터 차단
-- ✅ **DNS 허용**: Pod가 정상 종료될 수 있도록
-- ✅ **Monitoring 허용**: Prometheus, Grafana에서 조사 가능
+- **Egress 차단**: C&C 서버 통신 불가, 데이터 유출 방지
+- **Ingress 차단**: 추가 공격 벡터 차단
+- **DNS 허용**: Pod가 정상 종료될 수 있도록
+- **Monitoring 허용**: Prometheus, Grafana에서 조사 가능
 
 ---
 

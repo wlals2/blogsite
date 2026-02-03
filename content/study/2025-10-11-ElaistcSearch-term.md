@@ -9,7 +9,7 @@ description: "검색 엔진을 위한 제일 작은 단위 term"
 series: "ES구축기"
 ---
 
-## 🔍 들어가며
+## 들어가며
 
 엘라스틱서치를 처음 접하면 `term`, `text`, `keyword` 라는 단어가 정말 자주 등장합니다.  
 “term 쿼리”, “keyword 필드”, “text 분석” 같은 개념들이죠.  
@@ -96,7 +96,7 @@ GET /index/_search
 | **text**    | ✅ 사용함    | 문장을 단어로 쪼개서 term 생성 (역색인) | 본문, 제목, 설명 등     |
 | **keyword** | ❌ 사용 안 함 | 전체 문자열을 하나의 term 으로 저장    | 코드, ID, 상태, 태그 등 |
 
-### 🎯 예시로 비교
+### 예시로 비교
 
 ``` json
 PUT index_test
@@ -132,7 +132,7 @@ POST index_test/_doc
 - text는 “문장 안 단어를 분석해서 검색”
 - keyword는 “값 전체가 정확히 일치할 때만 검색”
 
-### 💡 핵심 정리
+### 핵심 정리
 > 엘라스틱서치 검색의 본질은 term이다. \
 > text는 term을 여러 개 만들고, keyword는 term을 하나만 만든다. \
 > 검색 시 term 쿼리는 정확 일치, match 쿼리는 자연어 검색에 사용한다.

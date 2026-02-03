@@ -6,7 +6,7 @@ tags: ["MSA", "Istio", "Kafka", "Service Mesh"]
 weight: 4
 ---
 
-# 🚀 Phase 4: MSA (계획 중)
+# Phase 4: MSA (계획 중)
 
 > **예상 기간**: 2026.02 ~ (Phase 3 완료 후)
 

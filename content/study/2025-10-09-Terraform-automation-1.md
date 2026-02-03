@@ -17,13 +17,13 @@ description: "Terraform과 AWS CLI 설치부터 EC2 인스턴스 생성 및 SSH 
 
 ---
 
-## 🎯 목표
+## 목표
 
 - VirtualBox + NAT (Ubuntu 22.04) + AWS CLI / Terraform 설치
 - AWS configure 설정
 - 인스턴스 생성 및 키페어를 통한 AWS instance 접속
 
-### 💡 환경 선택
+### 환경 선택
 
 Terraform을 Windows / VirtualBox (Ubuntu 22.04) 둘 중 어디서 사용할지 고민했었습니다.
 
@@ -31,7 +31,7 @@ Terraform을 Windows / VirtualBox (Ubuntu 22.04) 둘 중 어디서 사용할지 
 
 ---
 
-## ✅ Ubuntu 22.04에 Terraform / AWS CLI 설치
+## Ubuntu 22.04에 Terraform / AWS CLI 설치
 
 ### Terraform 설치
 
@@ -69,7 +69,7 @@ aws --version
 
 ---
 
-## ✅ AWS CLI 인증 및 연결 확인
+## AWS CLI 인증 및 연결 확인
 
 ### AWS Configure 설정
 
@@ -85,7 +85,7 @@ aws configure
 - **Default region**: `ap-northeast-2` (서울 리전 권장)
 - **Default output format**: `json`
 
-### 💡 Access Key 발급 방법
+### Access Key 발급 방법
 
 1. AWS 콘솔 → IAM 유저 생성
 2. 보안 자격 증명 → Access Key 발급
@@ -104,9 +104,9 @@ aws sts get-caller-identity
 
 ---
 
-## ✅ Terraform 기본 실습
+## Terraform 기본 실습
 
-### 💡 실습 개요
+### 실습 개요
 
 AMI를 사용하여 간단한 t2.micro 인스턴스를 생성합니다. 테스트에 가까우니 가볍게 진행하면 됩니다.
 
@@ -134,9 +134,9 @@ terraform apply  # 클라우드 인프라 생성 시작
 
 ---
 
-## ✅ EC2를 안전하게 만들고 SSH로 접속
+## EC2를 안전하게 만들고 SSH로 접속
 
-### 💡 키페어(SSH Key Pair)란?
+### 키페어(SSH Key Pair)란?
 
 EC2 리눅스 인스턴스에 접속(SSH)할 때 **암호 대신 사용하는 파일 쌍**입니다. 공개키/개인키로 구성되어 있습니다.
 
@@ -165,7 +165,7 @@ chmod 400 ~/tf-key.pem
 
 ---
 
-## ✅ 키페어를 이용한 SSH 접속 설정
+## 키페어를 이용한 SSH 접속 설정
 
 키페어를 통한 접속을 위해 `main.tf` 파일을 다음과 같이 수정합니다:
 
@@ -219,7 +219,7 @@ terraform apply
 
 ```
 
-### 🔥 주의사항
+### 주의사항
 
 해당 파일은 VPC, Security Group, Security Group 룰까지 만드는 명령어입니다. 해당 인스턴스는 퍼블릭 IP를 주어 접근할 예정입니다.
 
@@ -227,7 +227,7 @@ terraform apply
 
 ---
 
-## ✅ EC2 인스턴스 접속
+## EC2 인스턴스 접속
 
 ### 퍼블릭 IP 확인
 
@@ -250,7 +250,7 @@ ssh -i ~/tf-key.pem ubuntu@<EC2-퍼블릭-IP>
 
 ## 🔓 트러블슈팅
 
-### 💡 경험
+### 경험
 
 기본적으로 코드 오타 말고는 크게 문제는 없었습니다. 복사해서 사용한다면 아마 정말 빠르게 진행될 실습이라고 생각합니다.
 
@@ -277,7 +277,7 @@ vpc_security_group_ids = [aws_security_group.allow_ssh.id]
 
 위와 같이 서로가 서로를 참조합니다.
 
-### ✅ 해결 방법
+### 해결 방법
 
 **정상적인 흐름**은 Security Group이 EC2보다 항상 먼저 생성 가능해야 합니다.
 
@@ -298,6 +298,6 @@ resource "aws_security_group" "allow_ssh" {
 
 ---
 
-## 📝 정리
+## 정리
 
 이번 실습을 통해 Terraform의 기본 개념과 AWS 인프라 구성 방법을 익혔습니다. 특히 의존성 관리의 중요성을 배울 수 있었습니다. 앞으로도 꾸준히 실습하며 IaC 역량을 키워나가겠습니다.

@@ -11,7 +11,7 @@ series: ["K8s 개념 뿌시기"]
 
 ## Git Secret 노출 트러블슈팅 정리
 
-### 📋 문제 발생 과정
+### 문제 발생 과정
 ---
 
 ### 1. 초기 상황
@@ -34,7 +34,7 @@ ggshield secret scan repo .
 
 ---
 
-### 🔍 왜 이런 일이 발생했나?
+### 왜 이런 일이 발생했나?
 ### 근본 원인
 
 1. 민감 정보를 파일로 저장: 토큰을 평문 파일로 저장
@@ -48,7 +48,7 @@ ggshield secret scan repo .
 - 해당 토큰으로 Kubernetes 클러스터의 모든 리소스 제어 가능 (cluster-admin 권한)
 - Git 히스토리에 남아있어 삭제해도 계속 접근 가능
 
-## 🛠️ 해결 과정
+## 해결 과정
 ####  1단계: 문제 인식
 
 ```
@@ -142,7 +142,7 @@ chmod +x .git/hooks/pre-commit
 
 ```
 
-## 📊 핵심 개념 정리
+## 핵심 개념 정리
 
 ### Kubernetes ServiceAccount Token의 구조
 
@@ -162,7 +162,7 @@ Payload에 포함되는 정보:
 
 #### Secret vs ServiceAccount 삭제의 차이
 
-### ✅ 최종 해결책
+### 최종 해결책
 
 ```bash
 #!/bin/bash

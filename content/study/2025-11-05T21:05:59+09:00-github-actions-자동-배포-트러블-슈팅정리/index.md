@@ -10,7 +10,7 @@ author: "늦찌민"
 
 # GitHub Actions 자동 배포 트러블슈팅 정리
 
-### ⚠️ 문제 상황
+### 문제 상황
 - GitHub Actions로 Hugo 블로그를 self-hosted runner에서 빌드하고 배포
 - Actions 로그상으로는 성공하지만 실제 블로그에 새 글이 반영되지 않음
 - 수동으로 rsync 실행 시에는 정상 작동

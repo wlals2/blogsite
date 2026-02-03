@@ -18,11 +18,11 @@ eBPF 기반 Kubernetes CNI인 Cilium과 Hubble 관측성 플랫폼을 구축하�
 | **Hubble CLI** | CLI 도구 | 실시간 플로우 조회 |
 
 **최종 달성**:
-- ✅ eBPF 기반 고성능 네트워킹 (30-40% 성능 향상)
-- ✅ L7 네트워크 정책 지원 (HTTP Method, Path)
-- ✅ Hubble 실시간 트래픽 모니터링
-- ✅ Service Dependency Map 시각화
-- ✅ VXLAN Tunnel Mode (Overlay 네트워크)
+- eBPF 기반 고성능 네트워킹 (30-40% 성능 향상)
+- L7 네트워크 정책 지원 (HTTP Method, Path)
+- Hubble 실시간 트래픽 모니터링
+- Service Dependency Map 시각화
+- VXLAN Tunnel Mode (Overlay 네트워크)
 
 ---
 
@@ -43,9 +43,9 @@ Cilium eBPF:
 ```
 
 **성능 이점**:
-- ✅ 30-40% 더 빠른 네트워크 처리
-- ✅ CPU 사용량 감소
-- ✅ Latency 30% 감소
+- 30-40% 더 빠른 네트워크 처리
+- CPU 사용량 감소
+- Latency 30% 감소
 
 ### 핵심 특징
 
@@ -146,8 +146,8 @@ Pod A (10.0.0.10)              Pod B (10.0.2.20)
 - L3 (IP), L4 (Port)까지만 정책 적용
 
 **Cilium**:
-- ✅ L7 (HTTP, gRPC, Kafka, DNS) 정책 적용
-- ✅ REST API 엔드포인트별 접근 제어
+- L7 (HTTP, gRPC, Kafka, DNS) 정책 적용
+- REST API 엔드포인트별 접근 제어
 
 **예시: GET만 허용, POST 차단**:
 ```yaml
@@ -341,9 +341,9 @@ hubble observe --protocol dns
 ### 현재 결정: 보류
 
 **이유**:
-- ✅ kube-proxy는 안정적으로 작동 중
-- ✅ Hubble로 충분한 개선 완료
-- ✅ 불필요한 리스크 회피 (학습 환경)
+- kube-proxy는 안정적으로 작동 중
+- Hubble로 충분한 개선 완료
+- 불필요한 리스크 회피 (학습 환경)
 
 **향후 고려**:
 - 프로덕션 환경에서 성능 이슈 발생 시
@@ -376,9 +376,9 @@ spec:
 ```
 
 **효과**:
-- ✅ WAS → MySQL: 허용
-- ❌ WEB → MySQL: 차단
-- ❌ Unknown Pod → MySQL: 차단
+- WAS → MySQL: 허용
+- WEB → MySQL: 차단
+- Unknown Pod → MySQL: 차단
 
 ### 예시 2: DNS 쿼리 모니터링
 

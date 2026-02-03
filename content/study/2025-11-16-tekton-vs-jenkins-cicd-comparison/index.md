@@ -594,11 +594,11 @@ pipeline {
 ```
 
 **문제점:**
-- ❌ `user: root` 사용 (보안 위험)
-- ❌ Docker 소켓 마운트 (보안 위험)
-- ❌ Hugo 매번 설치 체크
-- ❌ 권한 문제로 `chown` 매번 실행
-- ❌ Jenkins 컨테이너에서 호스트 systemd 접근 불가 → **실패!**
+- `user: root` 사용 (보안 위험)
+- Docker 소켓 마운트 (보안 위험)
+- Hugo 매번 설치 체크
+- 권한 문제로 `chown` 매번 실행
+- Jenkins 컨테이너에서 호스트 systemd 접근 불가 → **실패!**
 
 ---
 
@@ -704,11 +704,11 @@ spec:
 ```
 
 **장점:**
-- ✅ 각 Task가 독립적인 Pod
-- ✅ Hugo 이미지만 사용 (설치 불필요)
-- ✅ 권한 분리 (각 Task마다 ServiceAccount)
-- ✅ PVC로 워크스페이스 공유
-- ✅ Kubernetes Native (kubectl로 관리)
+- 각 Task가 독립적인 Pod
+- Hugo 이미지만 사용 (설치 불필요)
+- 권한 분리 (각 Task마다 ServiceAccount)
+- PVC로 워크스페이스 공유
+- Kubernetes Native (kubectl로 관리)
 
 Tekton으로 바꾸고 나서 정말 편해졌어요. 더 이상 권한 문제로 고생하지 않아도 되니까요!
 
@@ -978,10 +978,10 @@ Tekton의 보안 모델이 훨씬 안전하다는 걸 실감했어요.
 sudo apt install jenkins
 
 # 장점:
-# ✅ 컨테이너 문제 회피
-# ✅ 안정적 운영
-# ✅ sudo 권한 사용 가능
-# ✅ /var/www/blog 직접 접근
+# 컨테이너 문제 회피
+# 안정적 운영
+# sudo 권한 사용 가능
+# /var/www/blog 직접 접근
 ```
 
 결국 저는 이 방법을 선택했어요. 간단한 블로그 빌드에는 이게 최적이더라구요.
@@ -1031,15 +1031,15 @@ kubectl apply -f hugo-pipeline.yaml
 ```
 
 **장점:**
-- ✅ Kubernetes Native
-- ✅ 리소스 효율적
-- ✅ GitOps 가능
-- ✅ 권한 분리
+- Kubernetes Native
+- 리소스 효율적
+- GitOps 가능
+- 권한 분리
 
 **단점:**
-- ❌ 학습 곡선
-- ❌ Kubernetes 필요
-- ❌ 간단한 블로그에는 오버엔지니어링?
+- 학습 곡선
+- Kubernetes 필요
+- 간단한 블로그에는 오버엔지니어링?
 
 나중에 Kubernetes를 완전히 이해하게 되면 Tekton으로 전환할 생각이에요.
 

@@ -34,10 +34,10 @@ WEB/WAS는 다행히 두 AZ에 분산되어 있었어요. 하지만 이건 **우
 
 ### 문제점
 
-- ❌ Kubernetes Scheduler가 리소스만 보고 배치 (AZ 고려 안 함)
-- ❌ topologySpreadConstraints 없음 → 분산 보장 안 됨
-- ❌ Pod 재시작 시 모두 같은 AZ로 몰릴 수 있음
-- ❌ HPA 스케일 아웃 시 불균등 분산 가능
+- Kubernetes Scheduler가 리소스만 보고 배치 (AZ 고려 안 함)
+- topologySpreadConstraints 없음 → 분산 보장 안 됨
+- Pod 재시작 시 모두 같은 AZ로 몰릴 수 있음
+- HPA 스케일 아웃 시 불균등 분산 가능
 
 ---
 
@@ -482,23 +482,23 @@ spec:
 ```
 
 **장점:**
-- ✅ Multi-AZ 고가용성
-- ✅ 자동 failover
+- Multi-AZ 고가용성
+- 자동 failover
 
 **단점:**
-- ❌ 복잡도 증가 (Sentinel 설정 필요)
-- ❌ 리소스 3배 (3 replica)
+- 복잡도 증가 (Sentinel 설정 필요)
+- 리소스 3배 (3 replica)
 
 #### Option 2: ElastiCache for Redis (AWS 관리형)
 
 **장점:**
-- ✅ AWS 관리형 (자동 백업, 패치)
-- ✅ Multi-AZ 자동 failover
-- ✅ 설정 간단
+- AWS 관리형 (자동 백업, 패치)
+- Multi-AZ 자동 failover
+- 설정 간단
 
 **단점:**
-- ❌ 비용 증가 (~$30/month)
-- ❌ Terraform 설정 변경 필요
+- 비용 증가 (~$30/month)
+- Terraform 설정 변경 필요
 
 #### Option 3: 현재 유지 (세션 손실 허용)
 

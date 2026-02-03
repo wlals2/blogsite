@@ -11,7 +11,7 @@ tocopen: true
 draft: false
 ---
 
-## 🎯 프로젝트 개요
+## 프로젝트 개요
 
 Homeserver Kubernetes 클러스터에 **Datadog 수준의 완전한 Observability 시스템**을 구축했습니다.
 
@@ -19,15 +19,15 @@ Homeserver Kubernetes 클러스터에 **Datadog 수준의 완전한 Observabilit
 
 ### 구축 목표
 
-- ✅ Full Stack 모니터링 (WEB → WAS → DB)
-- ✅ 실시간 메트릭 & 로그 통합
-- ✅ 실용적 Alert 시스템
-- ✅ 빠른 트러블슈팅 환경
-- ✅ 100% 무료 오픈소스
+- Full Stack 모니터링 (WEB → WAS → DB)
+- 실시간 메트릭 & 로그 통합
+- 실용적 Alert 시스템
+- 빠른 트러블슈팅 환경
+- 100% 무료 오픈소스
 
 ---
 
-## 📊 구축 완료 현황
+## 구축 완료 현황
 
 ### 1. 모니터링 스택 (PLG)
 
@@ -61,12 +61,12 @@ Homeserver Kubernetes 클러스터에 **Datadog 수준의 완전한 Observabilit
 **주요 패널 (8개):**
 - 🌐 Request Rate (req/s)
 - 🔗 Active Connections
-- 📊 Total Requests
-- ✅ Nginx Status
+- Total Requests
+- Nginx Status
 - 📈 Request Rate Over Time (그래프)
 - 🔌 Connection States (Reading/Writing/Waiting)
-- 📊 Connections Accepted vs Handled
-- 📝 Nginx Access Logs (Loki 통합)
+- Connections Accepted vs Handled
+- Nginx Access Logs (Loki 통합)
 
 **사용 사례:**
 - 트래픽 급증 감지
@@ -85,17 +85,17 @@ WAS 모니터링은 좀 까다로웠어요. Spring Boot Actuator가 없어서...
 - 🟢 WAS Pod Status (Running/DOWN)
 - 🔄 Pod Restarts (최근 1시간)
 - 💾 Average Memory Usage (%)
-- ⚡ Average CPU Usage (%)
-- 📊 CPU Usage per Pod (그래프)
+- Average CPU Usage (%)
+- CPU Usage per Pod (그래프)
 - 💾 Memory Usage per Pod (그래프)
 - 🌐 HTTP Requests to /board (Nginx 경유)
 - 📡 Network I/O (RX/TX bytes/s)
-- 📝 WAS Error Logs (Loki 통합)
+- WAS Error Logs (Loki 통합)
 
 **제한사항 & 해결:**
-- ⚠️ WAS 컨테이너에 Spring Boot Actuator 없음
-- ✅ 컨테이너 레벨 메트릭으로 대체 (CPU, Memory, Network)
-- ✅ HTTP 트래픽은 Nginx 메트릭으로 간접 확인
+- WAS 컨테이너에 Spring Boot Actuator 없음
+- 컨테이너 레벨 메트릭으로 대체 (CPU, Memory, Network)
+- HTTP 트래픽은 Nginx 메트릭으로 간접 확인
 
 처음엔 "Actuator 없으면 어떡하지?"라고 걱정했는데, cadvisor로도 충분히 모니터링할 수 있더라구요.
 
@@ -108,15 +108,15 @@ WAS 모니터링은 좀 까다로웠어요. Spring Boot Actuator가 없어서...
 MySQL Exporter 설정하는 게 제일 어려웠어요. 계속 CrashLoopBackOff가 뜨는 거예요...
 
 **주요 패널 (9개):**
-- ✅ MySQL Status (UP/DOWN)
+- MySQL Status (UP/DOWN)
 - 🔗 Current Connections
-- 📊 Query Rate (queries/sec)
+- Query Rate (queries/sec)
 - 🐌 Slow Queries
 - 📈 Query Rate Over Time (그래프)
 - 🔗 Connections Over Time (그래프)
 - 💾 InnoDB Buffer Pool Usage (%)
 - 📖 Table Operations (SELECT/INSERT/UPDATE/DELETE)
-- 📝 MySQL Error Logs (Loki 통합)
+- MySQL Error Logs (Loki 통합)
 
 **기술적 난관 & 해결:**
 
@@ -222,7 +222,7 @@ receivers:
 
 ---
 
-## 🔍 트러블슈팅 가이드
+## 트러블슈팅 가이드
 
 ### 시나리오 1: Pod가 자꾸 재시작됨
 
@@ -321,7 +321,7 @@ kubectl exec -it -n blog-system <mysql-pod> -- mysql -u root -p
 
 ---
 
-## 📚 유용한 PromQL 쿼리 모음
+## 유용한 PromQL 쿼리 모음
 
 ### CPU 사용률 (Pod별)
 ```promql
@@ -354,7 +354,7 @@ increase(kube_pod_container_status_restarts_total{namespace="blog-system"}[1h])
 
 ---
 
-## 📚 유용한 LogQL 쿼리 모음
+## 유용한 LogQL 쿼리 모음
 
 ### 전체 ERROR 로그
 ```logql
@@ -378,7 +378,7 @@ sum(rate({namespace="blog-system"} |= "ERROR" [5m])) by (pod)
 
 ---
 
-## 💡 Dashboard 해석 가이드
+## Dashboard 해석 가이드
 
 ### CPU 사용률 기준
 
@@ -568,7 +568,7 @@ volumes:
 
 ---
 
-## 🚀 다음 구축 계획
+## 다음 구축 계획
 
 ### 1. Slack 알림 통합 (우선순위: 높음)
 - AlertManager Slack Webhook 설정
@@ -599,14 +599,14 @@ volumes:
 
 ---
 
-## 🎉 결론
+## 결론
 
 **달성한 것:**
-- ✅ Datadog 수준의 Full Stack Observability
-- ✅ 4개 Dashboard (WEB/WAS/DB/Overview)
-- ✅ 8개 Alert Rules + AlertManager
-- ✅ 완전한 트러블슈팅 가이드
-- ✅ 100% 무료 오픈소스
+- Datadog 수준의 Full Stack Observability
+- 4개 Dashboard (WEB/WAS/DB/Overview)
+- 8개 Alert Rules + AlertManager
+- 완전한 트러블슈팅 가이드
+- 100% 무료 오픈소스
 
 **소요 시간:** 약 2시간
 

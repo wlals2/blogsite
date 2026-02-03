@@ -19,10 +19,10 @@ Nginx Ingress Controller와 Istio Gateway의 중복 L7 라우팅 레이어를 �
 | **Istio 기능** | 제한적 (Nginx 경유) | 완전 활용 ✅ |
 
 **개선 효과**:
-- ✅ 중복 레이어 제거 (Nginx Ingress 삭제)
-- ✅ 아키텍처 단순화
-- ✅ Istio 기능 완전 활용 (Retry, Timeout, Circuit Breaker)
-- ✅ 관리 복잡도 감소
+- 중복 레이어 제거 (Nginx Ingress 삭제)
+- 아키텍처 단순화
+- Istio 기능 완전 활용 (Retry, Timeout, Circuit Breaker)
+- 관리 복잡도 감소
 
 ---
 
@@ -501,9 +501,9 @@ istio-ingressgateway-xxx    80m    196Mi  # 통합되어 효율적
 ```
 
 **개선**:
-- ✅ Pod 1개 감소 (Nginx Ingress 제거)
-- ✅ 메모리 사용량 128Mi 절감
-- ✅ 관리 포인트 1개 감소
+- Pod 1개 감소 (Nginx Ingress 제거)
+- 메모리 사용량 128Mi 절감
+- 관리 포인트 1개 감소
 
 ---
 
@@ -537,9 +537,9 @@ k8s-manifests/
 ```
 
 **개선**:
-- ✅ Ingress 리소스 제거 (중복 해소)
-- ✅ 설정 파일 구조 단순화
-- ✅ Cross-namespace VirtualService 지원
+- Ingress 리소스 제거 (중복 해소)
+- 설정 파일 구조 단순화
+- Cross-namespace VirtualService 지원
 
 ---
 

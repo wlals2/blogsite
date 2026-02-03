@@ -18,7 +18,7 @@ tocopen: true
 
 ---
 
-## 📋 Quick Summary (30초 읽기)
+## Quick Summary (30초 읽기)
 
 | 항목 | 내용 |
 |------|------|
@@ -29,7 +29,7 @@ tocopen: true
 
 ---
 
-## 🎯 왜 이 프로젝트를?
+## 왜 이 프로젝트를?
 
 ### 문제 상황 (Situation)
 
@@ -184,7 +184,7 @@ Phase 2: Kubernetes 기반
 
 ---
 
-## 🛠️ 기술 선택 (Action)
+## 기술 선택 (Action)
 
 ### 왜 이 기술들인가?
 
@@ -198,7 +198,7 @@ Phase 2: Kubernetes 기반
 
 ---
 
-## 💡 핵심 구현
+## 핵심 구현
 
 ### 구현 1: Kubernetes 클러스터 구축 (kubeadm)
 
@@ -404,7 +404,7 @@ spec:
 
 ---
 
-## 🔥 트러블슈팅
+## 트러블슈팅
 
 ### 문제 1: Pod가 계속 CrashLoopBackOff
 
@@ -556,7 +556,7 @@ $ curl http://petclinic.local/
 
 ---
 
-## 📊 성과 (Result)
+## 성과 (Result)
 
 ### 정량적 성과
 
@@ -679,7 +679,7 @@ $ helm rollback petclinic 3  # Revision 3로 복원
 
 ---
 
-## 📚 참고 자료
+## 참고 자료
 
 - [Kubernetes 공식 문서](https://kubernetes.io/docs/)
 - [Helm 공식 문서](https://helm.sh/docs/)

@@ -18,7 +18,7 @@ Kubernetes 환경에서의 긴 도전 끝에 깨달은 점은,
 나머지 K8s 실습은 숙제로 남겨둔다.
 
 
-## 🎯 목표
+## 목표
 - Docker-compose 기반 **OpenVPN 서버 구축**
 - K8s 구현에 대한 **한계 및 고찰**
 
@@ -108,7 +108,7 @@ openvpn:
 PKI init 을 해야하는데 github에 나와있는 것처럼 비밀번호 없이 pki를 생성했다. \
 이후 **Client.ovpn**을 생성했다.
 
-### ✅   docker run config 설정파일 생성
+### docker run config 설정파일 생성
 
 ```yaml
 # 1) 서버 설정 템플릿 생성

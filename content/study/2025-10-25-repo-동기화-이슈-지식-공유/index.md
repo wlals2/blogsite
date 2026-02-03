@@ -9,7 +9,7 @@ author: "늦찌민"
 ---
 
 ---
-## 🎯 오늘의 이슈
+## 오늘의 이슈
 - 증상: `apt-get update` 중 `Hash Sum mismatch` 발생
 - 영향: APT 인덱스 일부( 특히 `jammy-updates/universe i386 Packages`) 검증 실패 -> 업데이트 중단
 - 시점 시점: (로그 기준) Release file created at: `Fri, 24 Oct 2025 21:48:16 +0000`
@@ -18,7 +18,7 @@ author: "늦찌민"
 > 증거 해시 값들이 달라 내용이 다른 버전과 교차됨 
 `by-hash/SHA256/...` 경로에서 무결성 검증 실패.
 ---
-## ✅ 이해
+## 이해
 - 미러 동기화 레이스: **Release/Packages**가 부분적으로 갱신되는 짧은 구간에 우리가 `apt-get update`를 수행 -> CDN/미러/중간 캐시 어딘가 에서 **신·구 파일이 섞여** 내려오며 해시깨짐 
 
 

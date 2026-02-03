@@ -354,7 +354,7 @@ aws cloudwatch get-metric-statistics \
 
 ## 다른 리전에도 테이블 생성 가능한가?
 
-### ✅ 가능합니다!
+### 가능합니다!
 
 같은 이름의 DynamoDB 테이블을 다른 리전에 생성할 수 있어요.
 

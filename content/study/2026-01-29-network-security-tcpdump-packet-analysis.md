@@ -7,7 +7,7 @@ tags: ["tcpdump", "packet-analysis", "network-security", "wireshark", "security"
 categories: ["study", "Security", "Troubleshooting"]
 ---
 
-## 🎯 학습 목표
+## 학습 목표
 
 > **UTM 경험을 현대 클라우드/K8s 보안으로 확장하기**
 
@@ -18,7 +18,7 @@ categories: ["study", "Security", "Troubleshooting"]
 
 ---
 
-## 📚 배경지식
+## 배경지식
 
 ### UTM vs Cloud Security
 
@@ -48,7 +48,7 @@ tcpdump: "SYN → RST" (방화벽이 막고 있음을 확인!)
 
 ---
 
-## 🔍 실습 1: 기본 tcpdump 사용법
+## 실습 1: 기본 tcpdump 사용법
 
 ### 1-1. 네트워크 인터페이스 확인
 
@@ -99,7 +99,7 @@ curl http://example.com
 
 ---
 
-## 🔍 실습 2: Kubernetes Pod 패킷 캡처
+## 실습 2: Kubernetes Pod 패킷 캡처
 
 ### 2-1. Pod 내부에서 tcpdump 실행
 
@@ -151,7 +151,7 @@ sudo tcpdump -i ens33 'tcp[tcpflags] & (tcp-syn) != 0' -c 100
 
 ---
 
-## 🔍 실습 3: 공격 시나리오 재현
+## 실습 3: 공격 시나리오 재현
 
 ### 3-1. SQL Injection 로그 확인
 
@@ -186,7 +186,7 @@ GET /search?q=<script>alert('XSS')</script>
 
 ---
 
-## 🛠️ 실습 4: Wireshark로 패킷 분석
+## 실습 4: Wireshark로 패킷 분석
 
 ### 4-1. tcpdump로 pcap 파일 생성
 
@@ -215,7 +215,7 @@ ip.src == 192.168.1.100                    # 특정 IP만
 
 ---
 
-## 🎯 실전 트러블슈팅 사례
+## 실전 트러블슈팅 사례
 
 ### 사례 1: Pod 간 통신 실패
 
@@ -259,7 +259,7 @@ kubectl exec -it was-xxxxx -c istio-proxy -- \
 
 ---
 
-## 📊 학습 정리
+## 학습 정리
 
 ### 배운 것
 

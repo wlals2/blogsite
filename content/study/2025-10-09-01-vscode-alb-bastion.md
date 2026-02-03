@@ -7,7 +7,7 @@ categories: ["study", "Troubleshooting"]
 series: ["트러블슈팅"]
 ---
 
-## 💡 개요
+## 개요
 
 오늘 진행한 트러블슈팅 과정을 정리한 기록입니다. VSCode 설정부터 AWS ALB를 통한 Bastion 서버 접속까지의 과정에서 발생한 문제들과 해결 방법을 다룹니다.
 

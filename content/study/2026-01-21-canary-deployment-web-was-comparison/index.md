@@ -16,10 +16,10 @@ categories: ["study", "Kubernetes"]
 | **WAS** | Spring Boot API | 20% → 50% → 80% → 100% (1분 간격) | 안정성 우선, 느린 검증 |
 
 **주요 차이점**:
-- ✅ 가중치: WEB 10% vs WAS 20% 시작
-- ✅ 대기 시간: WEB 30초 vs WAS 1분
-- ✅ Traffic Mirroring: WEB만 사용
-- ✅ Circuit Breaking: WEB만 사용
+- 가중치: WEB 10% vs WAS 20% 시작
+- 대기 시간: WEB 30초 vs WAS 1분
+- Traffic Mirroring: WEB만 사용
+- Circuit Breaking: WEB만 사용
 
 ---
 

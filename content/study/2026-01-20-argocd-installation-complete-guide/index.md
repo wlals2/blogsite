@@ -11,21 +11,21 @@ tocopen: true
 draft: false
 ---
 
-## 🎯 목표
+## 목표
 
 > **Homeserver Kubernetes에 ArgoCD를 설치하고 GitOps 자동 배포 환경 구축**
 
 **달성한 것**:
-- ✅ Helm으로 ArgoCD 설치
-- ✅ Ingress로 로컬 접속
-- ✅ Cloudflare Tunnel DNS 라우팅 추가
-- ✅ 실제 트러블슈팅 경험
+- Helm으로 ArgoCD 설치
+- Ingress로 로컬 접속
+- Cloudflare Tunnel DNS 라우팅 추가
+- 실제 트러블슈팅 경험
 
 ---
 
 ## Part 1: Helm vs kubectl apply 결정
 
-### 🤔 처음엔 kubectl apply만 알고 있었어요
+### 처음엔 kubectl apply만 알고 있었어요
 
 ArgoCD 공식 문서를 보니 이렇게 설치하라고 하더군요:
 
@@ -42,7 +42,7 @@ curl -s https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/inst
 
 ---
 
-### ✅ Helm을 알게 되었어요
+### Helm을 알게 되었어요
 
 그래서 찾아보니 Helm이라는 게 있더라구요. 처음엔 "또 새로운 도구를 배워야 하나" 싶었는데, 알고 보니 정말 편했습니다:
 
@@ -289,7 +289,7 @@ sudo systemctl restart cloudflared
 
 ---
 
-### ⚠️ 트러블슈팅: 설정 미반영 문제
+### 트러블슈팅: 설정 미반영 문제
 
 **문제**: Cloudflared 재시작해도 argocd 설정 반영 안 됨
 
@@ -365,7 +365,7 @@ HTTP/2 404  # DNS는 추가됐으나 Ingress 규칙 미적용
 
 ---
 
-## 📊 학습 포인트
+## 학습 포인트
 
 ### 1. Helm의 가치
 
@@ -500,7 +500,7 @@ cloudflared tunnel route dns home-network argocd.jiminhome.shop
 
 ---
 
-## 🎯 다음 단계
+## 다음 단계
 
 ### 1단계: ArgoCD UI 로그인
 ```bash

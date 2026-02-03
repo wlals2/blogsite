@@ -17,11 +17,11 @@ kubectl 직접 배포에서 완전한 GitOps 파이프라인으로 전환하여 
 | **검증** | 실제 동작 테스트 | 2026-01-20 배포 성공 |
 
 **최종 달성**:
-- ✅ Git = Single Source of Truth (SSOT)
-- ✅ 배포 이력 Git에 자동 기록
-- ✅ 1-Click 롤백 (git revert)
-- ✅ ArgoCD Synced 상태 유지
-- ✅ 배포 시간: ~2분 (자동화)
+- Git = Single Source of Truth (SSOT)
+- 배포 이력 Git에 자동 기록
+- 1-Click 롤백 (git revert)
+- ArgoCD Synced 상태 유지
+- 배포 시간: ~2분 (자동화)
 
 ---
 
@@ -64,7 +64,7 @@ cat k8s-manifests/blog-system/web-rollout.yaml | grep image
 kubectl get rollout web -n blog-system -o jsonpath='{.spec.template.spec.containers[0].image}'
 # ghcr.io/wlals2/blog-web:v12
 
-# ❌ Git ≠ Cluster (OutOfSync)
+# Git ≠ Cluster (OutOfSync)
 ```
 
 ---
@@ -250,7 +250,7 @@ kubectl get application blog-system -n argocd
 # NAME          SYNC STATUS   HEALTH STATUS
 # blog-system   Synced        Healthy  ✅
 
-# ✅ Git = Cluster (SSOT 달성)
+# Git = Cluster (SSOT 달성)
 ```
 
 ### 배포 이력 추적
@@ -350,16 +350,16 @@ Cluster 업데이트 ✅
 ### 정성적 개선
 
 **Before**:
-- ❌ Git Manifest는 참고용 (의미 없음)
-- ❌ kubectl로 수동 배포
-- ❌ 배포 이력 추적 불가
-- ❌ 롤백 시 수동 작업
+- Git Manifest는 참고용 (의미 없음)
+- kubectl로 수동 배포
+- 배포 이력 추적 불가
+- 롤백 시 수동 작업
 
 **After**:
-- ✅ Git = Single Source of Truth
-- ✅ ArgoCD 자동 배포
-- ✅ 모든 배포 이력 Git에 기록
-- ✅ git revert로 1-Click 롤백
+- Git = Single Source of Truth
+- ArgoCD 자동 배포
+- 모든 배포 이력 Git에 기록
+- git revert로 1-Click 롤백
 
 ---
 
@@ -426,9 +426,9 @@ git show f87d821
 ```
 
 **효과**:
-- ✅ 보안 감사 (Security Audit)
-- ✅ 규정 준수 (Compliance)
-- ✅ 사고 조사 (Incident Investigation)
+- 보안 감사 (Security Audit)
+- 규정 준수 (Compliance)
+- 사고 조사 (Incident Investigation)
 
 ---
 

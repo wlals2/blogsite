@@ -39,7 +39,7 @@ WAS Pod 2 (메모리) ─┘
 
 ---
 
-## 🎯 해결 방안: Spring Session + Redis
+## 해결 방안: Spring Session + Redis
 
 ### 왜 Redis인가?
 
@@ -60,7 +60,7 @@ WAS Pod 2 (메모리) ─┘
 
 ---
 
-## 🛠️ 구현 과정
+## 구현 과정
 
 ### Step 1: Redis 설치 (Helm)
 
@@ -262,7 +262,7 @@ spec:
 
 ---
 
-## ✅ 동작 확인
+## 동작 확인
 
 ### 1. Redis Session 저장 확인
 
@@ -308,9 +308,9 @@ curl -b cookies.txt https://www.goupang.shop/petclinic/api/user
 ```
 
 **결과:**
-- ✅ Pod 간 세션 공유 정상
-- ✅ Pod 재시작 후에도 세션 유지
-- ✅ 로그인 풀림 현상 0건
+- Pod 간 세션 공유 정상
+- Pod 재시작 후에도 세션 유지
+- 로그인 풀림 현상 0건
 
 ---
 
@@ -341,7 +341,7 @@ was-hpa    Rollout/was       20%/70%, 30%/80%   2         10        2  ← 스�
 
 ---
 
-## 📊 성과 요약
+## 성과 요약
 
 ### Before (Phase 2) vs After (Phase 3)
 
@@ -463,7 +463,7 @@ Redis Pod 1개 (ap-northeast-2c)
 
 ---
 
-## 📚 관련 문서
+## 관련 문서
 
 - [Spring Session Redis 공식 문서](https://docs.spring.io/spring-session/reference/guides/boot-redis.html)
 - [Redis Session 모니터링 가이드](https://github.com/wlals2/bespin-project/blob/main/docs/monitoring/session-monitoring-guide.md)

@@ -18,12 +18,12 @@ bare metal Kubernetes 클러스터에 Istio Service Mesh를 구축하여 프로�
 | **Phase 4** | 분산 추적 | Jaeger 통합, Trace 시각화 |
 
 **최종 달성**:
-- ✅ mTLS 암호화 (Service ↔ Service)
-- ✅ Canary 배포 (Argo Rollouts 통합)
-- ✅ Circuit Breaking (장애 Pod 자동 격리)
-- ✅ Retry & Timeout (자동 재시도)
-- ✅ Distributed Tracing (Jaeger)
-- ✅ 실시간 모니터링 (Kiali, Prometheus, Grafana)
+- mTLS 암호화 (Service ↔ Service)
+- Canary 배포 (Argo Rollouts 통합)
+- Circuit Breaking (장애 Pod 자동 격리)
+- Retry & Timeout (자동 재시도)
+- Distributed Tracing (Jaeger)
+- 실시간 모니터링 (Kiali, Prometheus, Grafana)
 
 ---
 

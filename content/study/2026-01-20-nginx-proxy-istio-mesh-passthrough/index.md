@@ -18,9 +18,9 @@ web Pod 내부 nginx proxy에서 was-service로 보내는 API 트래픽이 Istio
 | 4 | 502 Bad Gateway | STRICT mTLS + Nginx Ingress 충돌 |
 
 **최종 해결**:
-- ✅ nginx config에서 `Host: was-service` 설정
-- ✅ was-destinationrule.yaml 생성 (mTLS ISTIO_MUTUAL)
-- ✅ PeerAuthentication `PERMISSIVE` 모드 (Nginx Ingress 호환)
+- nginx config에서 `Host: was-service` 설정
+- was-destinationrule.yaml 생성 (mTLS ISTIO_MUTUAL)
+- PeerAuthentication `PERMISSIVE` 모드 (Nginx Ingress 호환)
 
 ---
 
@@ -554,10 +554,10 @@ done
 ```
 
 **확인 사항**:
-- ✅ web → was 연결선 녹색 (mesh 내부)
-- ✅ 🔒 자물쇠 아이콘 (mTLS 활성화)
-- ✅ PassthroughCluster 없음
-- ✅ Canary 배포 트래픽 분산 (90% stable, 10% canary)
+- web → was 연결선 녹색 (mesh 내부)
+- 🔒 자물쇠 아이콘 (mTLS 활성화)
+- PassthroughCluster 없음
+- Canary 배포 트래픽 분산 (90% stable, 10% canary)
 
 ---
 
@@ -653,10 +653,10 @@ upstream_rq_retry: 1  # ✅ 1번 재시도로 성공
 ```
 
 **문제**:
-- ❌ web → was 연결 안 보임
-- ❌ PassthroughCluster
-- ❌ mTLS 없음
-- ❌ Istio 정책 미적용
+- web → was 연결 안 보임
+- PassthroughCluster
+- mTLS 없음
+- Istio 정책 미적용
 
 ---
 
@@ -678,11 +678,11 @@ upstream_rq_retry: 1  # ✅ 1번 재시도로 성공
 ```
 
 **개선**:
-- ✅ Kiali에서 web → was 시각화
-- ✅ PassthroughCluster 제거
-- ✅ mTLS 암호화
-- ✅ DestinationRule 정책 적용 (Retry, Timeout, Circuit Breaker)
-- ✅ Istio 관측성 (Metrics, Logs, Tracing)
+- Kiali에서 web → was 시각화
+- PassthroughCluster 제거
+- mTLS 암호화
+- DestinationRule 정책 적용 (Retry, Timeout, Circuit Breaker)
+- Istio 관측성 (Metrics, Logs, Tracing)
 
 ---
 

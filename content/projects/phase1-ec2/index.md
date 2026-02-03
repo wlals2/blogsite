@@ -49,7 +49,7 @@ cover:
 
 ---
 
-## 🎯 프로젝트 목표
+## 프로젝트 목표
 
 ### 해결하고 싶었던 것
 
@@ -62,7 +62,7 @@ cover:
 
 ---
 
-## 🛠️ 기술 선택: 왜 Terraform인가?
+## 기술 선택: 왜 Terraform인가?
 
 ### 고민했던 IaC 도구들
 
@@ -163,7 +163,7 @@ terraform apply (15분)
 
 ---
 
-## 💻 핵심 구현: Terraform 모듈 구조
+## 핵심 구현: Terraform 모듈 구조
 
 ### 프로젝트 구조
 
@@ -295,7 +295,7 @@ resource "aws_db_instance" "main" {
 
 ---
 
-## 🔥 트러블슈팅: 실제 마주한 문제들
+## 트러블슈팅: 실제 마주한 문제들
 
 ### 문제 1: ALB Health Check 계속 Unhealthy
 
@@ -450,7 +450,7 @@ terraform {
 
 ---
 
-## 📊 성과: Before vs After
+## 성과: Before vs After
 
 ### 정량적 성과
 
@@ -529,7 +529,7 @@ terraform {
 
 ---
 
-## 📚 참고 자료
+## 참고 자료
 
 - [Terraform AWS Provider 공식 문서](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
