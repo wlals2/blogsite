@@ -63,11 +63,31 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 </p>
 
 <div class="profile-section">
-  <h3>핵심 성과</h3>
-  <div class="highlight-box">
-    배포 시간 <span class='metric-badge' data-count='98' data-suffix='% 단축'>0%</span> (30분 → 35초) ·
-    가용성 <span class='metric-badge' data-count='99.9' data-suffix='%'>0%</span> ·
-    무중단 운영 <span class='metric-badge' data-count='62' data-suffix='일'>0일</span>
+  <h3>주요 프로젝트</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+
+    <div class="project-card" style="background: var(--entry); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
+      <h4 style="margin-top: 0;"><a href="/projects/bespin-project/" style="color: var(--primary); text-decoration: none;">AWS EKS 3-Tier + Multi-Cloud DR →</a></h4>
+      <p style="margin: 0.5rem 0; color: var(--secondary); font-size: 0.9rem;">
+        AWS EKS 기반 3-Tier 아키텍처 구축<br>
+        Azure DR 환경 구현 · 99.9% 가용성 달성
+      </p>
+      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--tertiary);">
+        Kubernetes · EKS · Terraform · ArgoCD
+      </div>
+    </div>
+
+    <div class="project-card" style="background: var(--entry); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
+      <h4 style="margin-top: 0;"><a href="/projects/" style="color: var(--primary); text-decoration: none;">Homelab Kubernetes 클러스터 →</a></h4>
+      <p style="margin: 0.5rem 0; color: var(--secondary); font-size: 0.9rem;">
+        베어메탈 3노드 클러스터 직접 구축<br>
+        54일 무중단 운영 · 이 블로그가 증명
+      </p>
+      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--tertiary);">
+        Kubernetes · Cilium · Istio · Longhorn
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -214,10 +234,10 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 """
 
     [[params.profileMode.buttons]]
-      name = "프로젝트 보기"
+      name = "전체 프로젝트 보기"
       url = "/projects/"
     [[params.profileMode.buttons]]
-      name = "소개"
+      name = "About"
       url = "/about/"
 
   # Home Info Mode (alternative - disabled)
