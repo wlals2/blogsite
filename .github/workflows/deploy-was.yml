@@ -113,7 +113,7 @@ jobs:
           echo "📁 Cloning to: $TEMP_DIR"
 
           git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git $TEMP_DIR
-          cd $TEMP_DIR/blog-system
+          cd $TEMP_DIR/services/blog-system
 
           # 2. yq로 이미지 태그 업데이트 (Rollout)
           yq eval ".spec.template.spec.containers[0].image = \"${{ env.IMAGE_NAME }}:v${{ github.run_number }}\"" \
