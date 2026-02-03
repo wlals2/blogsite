@@ -51,9 +51,16 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   # Home Page - Profile Mode
   [params.profileMode]
     enabled = true
-    title = "지민 (Jimin)"
+    title = "집에서 운영하는 Kubernetes 클러스터"
     subtitle = """
-<p style="margin-bottom: 2rem;">클라우드 엔지니어 지망생입니다.</p>
+<p style="margin-bottom: 2rem; font-size: 1.2rem; font-weight: 500;">
+<strong>"클라우드를 배우고 싶어서, 집에 직접 만들었습니다."</strong>
+</p>
+<p style="margin-bottom: 2rem;">
+베어메탈 서버 3대로 시작한 Kubernetes 클러스터는<br>
+54일째 무중단으로 운영되고 있으며,<br>
+지금 보시는 이 블로그도 그 위에서 돌아가고 있습니다.
+</p>
 
 <div class="profile-section">
   <h3>핵심 성과</h3>
@@ -195,10 +202,13 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 </div>
 
 <div class="profile-section">
-  <h3>블로그 소개</h3>
+  <h3>왜 이 블로그를 만들었나요?</h3>
   <div class="goal-box">
-    클라우드 엔지니어로 성장하며 겪은 경험과 배움을 기록합니다.<br>
-    실패와 해결 과정, 그리고 그 안에서 얻은 인사이트를 나눕니다.
+    <em>"Kubernetes 책을 10권 읽는 것보다,<br>
+    직접 클러스터를 구축하고 3일간 안 되는 네트워크를 디버깅하는 것이<br>
+    10배는 더 많은 걸 가르쳐줍니다."</em><br><br>
+    이 블로그는 그런 경험을 기록하고,<br>
+    같은 문제로 고민하는 누군가에게 도움이 되기를 바라며 운영합니다.
   </div>
 </div>
 """
