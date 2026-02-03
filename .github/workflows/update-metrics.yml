@@ -43,34 +43,34 @@ jobs:
           echo "blog_pods=$BLOG_PODS" >> $GITHUB_OUTPUT
           echo "📦 blog-system Pod: $BLOG_PODS개"
 
-      - name: Update config.toml
+      - name: Update metrics.yaml
         run: |
           UPTIME_DAYS=${{ steps.uptime.outputs.days }}
           TOTAL_PODS=${{ steps.cluster.outputs.pods }}
           TOTAL_NODES=${{ steps.cluster.outputs.nodes }}
+          BLOG_PODS=${{ steps.cluster.outputs.blog_pods }}
+          CURRENT_TIME=$(date -Iseconds)
 
-          # 운영 일수 업데이트
-          sed -i "s/data-count='[0-9]*' data-suffix='일'/data-count='$UPTIME_DAYS' data-suffix='일'/g" config.toml
+          # yq로 YAML 업데이트
+          yq eval ".homelab.uptime_days = $UPTIME_DAYS" -i data/metrics.yaml
+          yq eval ".homelab.total_pods = $TOTAL_PODS" -i data/metrics.yaml
+          yq eval ".homelab.total_nodes = $TOTAL_NODES" -i data/metrics.yaml
+          yq eval ".homelab.blog_pods = $BLOG_PODS" -i data/metrics.yaml
+          yq eval ".homelab.updated_at = \"$CURRENT_TIME\"" -i data/metrics.yaml
 
-          # Pod 개수 업데이트
-          sed -i "s/data-count='[0-9]*' data-suffix='개 Pod'/data-count='$TOTAL_PODS' data-suffix='개 Pod'/g" config.toml
-
-          # 노드 정보 업데이트 (4노드 부분)
-          sed -i "s/규모: [0-9]노드/규모: ${TOTAL_NODES}노드/g" config.toml
-          sed -i "s/베어메탈 K8s 클러스터 직접 구축 ([0-9]노드/베어메탈 K8s 클러스터 직접 구축 (${TOTAL_NODES}노드/g" config.toml
-
-          echo "✅ config.toml 업데이트 완료"
+          echo "✅ data/metrics.yaml 업데이트 완료"
+          cat data/metrics.yaml
 
       - name: Check if changes exist
         id: check_changes
         run: |
-          if git diff --quiet config.toml; then
+          if git diff --quiet data/metrics.yaml; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "ℹ️ 변경사항 없음 (이미 최신 상태)"
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "📝 변경사항 감지됨"
-            git diff config.toml
+            git diff data/metrics.yaml
           fi
 
       - name: Commit and push
@@ -79,14 +79,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add config.toml
-          git commit -m "chore: Auto-update homepage metrics
-
-운영 일수: ${{ steps.uptime.outputs.days }}일
-전체 Pod: ${{ steps.cluster.outputs.pods }}개
-노드: ${{ steps.cluster.outputs.nodes }}개
-
-Co-Authored-By: GitHub Actions Bot <github-actions[bot]@users.noreply.github.com>"
+          git add data/metrics.yaml
+          git commit -m "chore: Auto-update homepage metrics" \
+            -m "운영 일수: ${{ steps.uptime.outputs.days }}일" \
+            -m "전체 Pod: ${{ steps.cluster.outputs.pods }}개" \
+            -m "노드: ${{ steps.cluster.outputs.nodes }}개" \
+            -m "blog-system Pod: ${{ steps.cluster.outputs.blog_pods }}개" \
+            -m "" \
+            -m "Co-Authored-By: GitHub Actions Bot <github-actions[bot]@users.noreply.github.com>"
 
           git push origin main
 

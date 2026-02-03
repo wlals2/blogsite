@@ -43,7 +43,7 @@
         </p>
         <p style="margin-bottom: 2rem;">
             베어메탈 서버 3대로 시작한 Kubernetes 클러스터는<br>
-            54일째 무중단으로 운영되고 있으며,<br>
+            {{ site.Data.metrics.homelab.uptime_days }}일째 무중단으로 운영되고 있으며,<br>
             지금 보시는 이 블로그도 그 위에서 돌아가고 있습니다.
         </p>
 
@@ -65,9 +65,9 @@
                 <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                     <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/local-k8s-blog/" style="color: var(--primary); text-decoration: none;">베어메탈 K8s 제로트러스트 고가용성 아키텍처 →</a></h3>
                     <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
-                        <strong>베어메탈 4노드 클러스터</strong> 직접 구축 및 운영<br>
+                        <strong>베어메탈 {{ site.Data.metrics.homelab.total_nodes }}노드 클러스터</strong> 직접 구축 및 운영<br>
                         Istio mTLS · Cilium eBPF · Falco Runtime Security<br>
-                        <strong>58일 무중단 운영</strong> · 이 블로그가 바로 그 위에서 실행
+                        <strong>{{ site.Data.metrics.homelab.uptime_days }}일 무중단 운영</strong> · 이 블로그가 바로 그 위에서 실행
                     </p>
                     <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
                         Kubernetes · Istio · Cilium · Longhorn · ArgoCD
@@ -81,7 +81,7 @@
             <div class="highlight-box" style="background: linear-gradient(135deg, var(--entry) 0%, var(--code-bg) 100%);">
                 <strong>Homelab Kubernetes 클러스터</strong><br><br>
                 <img src="/images/local-k8s-architecture.png" alt="Homelab Kubernetes Architecture" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><br>
-                • 규모: 4노드 (1 CP + 3 Worker), <span class='metric-badge' data-count='115' data-suffix='개 Pod'>0개 Pod</span><br>
+                • 규모: {{ site.Data.metrics.homelab.total_nodes }}노드 ({{ site.Data.metrics.homelab.control_plane }} CP + {{ site.Data.metrics.homelab.workers }} Worker), <span class='metric-badge'>{{ site.Data.metrics.homelab.total_pods }}개 Pod</span><br>
                 • 네트워킹: Cilium CNI (eBPF), Istio Service Mesh<br>
                 • 보안: Falco 런타임 보안, mTLS 100%<br>
                 • 스토리지: Longhorn 3-replica HA<br>
