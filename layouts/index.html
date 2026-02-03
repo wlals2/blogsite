@@ -37,8 +37,185 @@
         {{- /* Title */ -}}
         <h1>{{ .title | default site.Title | markdownify }}</h1>
 
-        {{- /* Subtitle from config.toml */ -}}
-        {{ .subtitle | safeHTML }}
+        {{- /* Profile Content - 직접 작성 (Source of Truth) */ -}}
+        <p style="margin-bottom: 2rem; font-size: 1.2rem; font-weight: 500;">
+            <strong>"클라우드를 배우고 싶어서, 집에 직접 만들었습니다."</strong>
+        </p>
+        <p style="margin-bottom: 2rem;">
+            베어메탈 서버 3대로 시작한 Kubernetes 클러스터는<br>
+            54일째 무중단으로 운영되고 있으며,<br>
+            지금 보시는 이 블로그도 그 위에서 돌아가고 있습니다.
+        </p>
+
+        <div class="profile-section">
+            <h3>주요 프로젝트</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
+                <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/bespin-project/" style="color: var(--primary); text-decoration: none;">멀티클라우드 고가용성 DR 아키텍처 →</a></h3>
+                    <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
+                        <strong>AWS EKS + Azure AKS</strong> 기반 Multi-Cloud DR 환경<br>
+                        Route53 Failover · CloudFront Origin Group<br>
+                        <strong>99.9% 가용성 달성</strong> · Terraform IaC
+                    </p>
+                    <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
+                        Kubernetes · EKS · Terraform · ArgoCD · Jenkins
+                    </div>
+                </div>
+
+                <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/local-k8s-blog/" style="color: var(--primary); text-decoration: none;">베어메탈 K8s 제로트러스트 고가용성 아키텍처 →</a></h3>
+                    <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
+                        <strong>베어메탈 4노드 클러스터</strong> 직접 구축 및 운영<br>
+                        Istio mTLS · Cilium eBPF · Falco Runtime Security<br>
+                        <strong>58일 무중단 운영</strong> · 이 블로그가 바로 그 위에서 실행
+                    </p>
+                    <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
+                        Kubernetes · Istio · Cilium · Longhorn · ArgoCD
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>현재 운영 환경</h3>
+            <div class="highlight-box" style="background: linear-gradient(135deg, var(--entry) 0%, var(--code-bg) 100%);">
+                <strong>Homelab Kubernetes 클러스터</strong><br><br>
+                <img src="/images/local-k8s-architecture.png" alt="Homelab Kubernetes Architecture" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><br>
+                • 규모: 4노드 (1 CP + 3 Worker), <span class='metric-badge' data-count='115' data-suffix='개 Pod'>0개 Pod</span><br>
+                • 네트워킹: Cilium CNI (eBPF), Istio Service Mesh<br>
+                • 보안: Falco 런타임 보안, mTLS 100%<br>
+                • 스토리지: Longhorn 3-replica HA<br>
+                • 배포: ArgoCD GitOps, Argo Rollouts Canary<br>
+                • 모니터링: Prometheus + Loki + Grafana + Tempo<br><br>
+                <a href="/study/2026-01-25-local-k8s-architecture/" style="color: var(--primary); text-decoration: underline;">아키텍처 상세 보기 →</a>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>프로젝트 타임라인</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">2024.11 ~ 현재</div>
+                    <div class="timeline-content">
+                        <strong>Homelab Kubernetes 프로젝트</strong><br>
+                        베어메탈 클러스터 구축 및 운영 · Service Mesh · GitOps 파이프라인<br>
+                        <small style="color: var(--secondary);">Kubernetes, Cilium, Istio, ArgoCD, Argo Rollouts</small>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2026.01</div>
+                    <div class="timeline-content">
+                        <strong>Istio Service Mesh 구축 완료</strong><br>
+                        mTLS 보안 통신 · L7 Traffic Management · Distributed Tracing<br>
+                        <small style="color: var(--secondary);">Istio Gateway, VirtualService, DestinationRule, Kiali</small>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2025.12</div>
+                    <div class="timeline-content">
+                        <strong>보안 & 관측성 강화</strong><br>
+                        Falco 런타임 보안 · PLG Stack · OpenTelemetry Tracing<br>
+                        <small style="color: var(--secondary);">Falco, Prometheus, Loki, Grafana, Tempo</small>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-date">2025.11</div>
+                    <div class="timeline-content">
+                        <strong>AWS EKS Multi-Cloud DR (과거 프로젝트)</strong><br>
+                        AWS + Azure 하이브리드 DR · CloudFront Origin Group<br>
+                        <small style="color: var(--secondary);">EKS, Terraform, Route53, Azure AKS</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>기술 스택</h3>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span><strong>Kubernetes & Orchestration</strong></span>
+                        <span>90%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-bar-fill" data-percentage="90"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span><strong>Service Mesh & Networking</strong></span>
+                        <span>85%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-bar-fill" data-percentage="85"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span><strong>GitOps & CI/CD</strong></span>
+                        <span>85%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-bar-fill" data-percentage="85"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span><strong>Observability & Security</strong></span>
+                        <span>80%</span>
+                    </div>
+                    <div class="skill-bar">
+                        <div class="skill-bar-fill" data-percentage="80"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="tech-grid">
+                <div>
+                    <strong>Infrastructure</strong><br>
+                    Kubernetes · Cilium CNI · Istio · Longhorn · ArgoCD
+                </div>
+                <div>
+                    <strong>Security & Monitoring</strong><br>
+                    Falco · Prometheus · Grafana · Loki · Tempo
+                </div>
+                <div>
+                    <strong>CI/CD & Application</strong><br>
+                    GitHub Actions · Spring Boot · MySQL · nginx
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>구축 완료</h3>
+            <div class="interest-box">
+                Service Mesh - Istio 기반 mTLS 보안 통신, L7 트래픽 관리<br>
+                <img src="/images/istio-config.png" alt="Istio Service Mesh Configuration" style="width: 100%; max-width: 600px; border-radius: 8px; margin: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><br>
+                런타임 보안 - Falco eBPF 기반 실시간 위협 탐지<br>
+                Observability - 메트릭/로그/트레이스 통합 모니터링<br>
+                GitOps - ArgoCD Auto-Sync, Self-Heal (3초 이내 반영)<br>
+                Canary 배포 - Argo Rollouts 점진적 배포 및 자동 롤백
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>다음 목표</h3>
+            <div class="interest-box">
+                Cost 최적화 - 리소스 사용량 분석 및 효율화<br>
+                Chaos Engineering - Litmus 기반 장애 시뮬레이션<br>
+                Multi-Cluster - Cluster Federation, Service Mesh 확장
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>왜 이 블로그를 만들었나요?</h3>
+            <div class="goal-box">
+                <em>"Kubernetes 책을 10권 읽는 것보다,<br>
+                직접 클러스터를 구축하고 3일간 안 되는 네트워크를 디버깅하는 것이<br>
+                10배는 더 많은 걸 가르쳐줍니다."</em><br><br>
+                이 블로그는 그런 경험을 기록하고,<br>
+                같은 문제로 고민하는 누군가에게 도움이 되기를 바라며 운영합니다.
+            </div>
+        </div>
 
         {{- /* Social Icons */ -}}
         {{- partial "social_icons.html" . -}}
