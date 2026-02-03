@@ -48,6 +48,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           tags: |
             ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
             ${{ env.IMAGE_NAME }}:latest

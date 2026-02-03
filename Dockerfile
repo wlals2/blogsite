@@ -14,6 +14,10 @@
 # ==============================================================================
 FROM alpine:latest AS builder
 
+# Git commit SHA를 받아서 캐시 무효화
+ARG GIT_COMMIT=unknown
+RUN echo "Building from commit: $GIT_COMMIT"
+
 # Hugo 설치 + timezone 데이터
 RUN apk add --no-cache hugo tzdata
 
