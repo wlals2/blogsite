@@ -73,7 +73,7 @@ AWS 튜토리얼을 따라하는 것과,
 
 ---
 
-## 🏠 현재 운영 중
+## 현재 운영 중
 
 ### Homelab Infrastructure
 
@@ -94,9 +94,9 @@ AWS 튜토리얼을 따라하는 것과,
 
 ---
 
-## 📝 이 블로그에서 다루는 것
+## 이 블로그에서 다루는 것
 
-### ✅ 실전 트러블슈팅
+### 실전 트러블슈팅
 
 "왜 안되지?"에서 시작해서 "이래서 안됐구나!"까지의 여정
 
@@ -105,12 +105,12 @@ AWS 튜토리얼을 따라하는 것과,
 - MySQL JDBC 연결 timeout → Istio Envoy Proxy 충돌 해결
 - /auth 경로 403 Forbidden → L3/L4와 L7 중복 제어 문제
 
-### ✅ 아키텍처 결정 과정
+### 아키텍처 결정 과정
 
 Cilium vs Istio, Local vs Cluster, mTLS vs Plain TCP
 선택의 순간마다 고민한 트레이드오프를 공유합니다.
 
-### ✅ 운영 경험 공유
+### 운영 경험 공유
 
 54일간의 무중단 운영에서 배운 것들
 (물론 중단된 적도 많았습니다...)
@@ -120,7 +120,7 @@ Cilium vs Istio, Local vs Cluster, mTLS vs Plain TCP
 
 ---
 
-## ❌ 다루지 않는 것
+## 다루지 않는 것
 
 - "5분 만에 따라하기" 튜토리얼
 - 에러 없이 한 번에 성공한 척하기
@@ -128,7 +128,7 @@ Cilium vs Istio, Local vs Cluster, mTLS vs Plain TCP
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### 직접 구축하고 운영 중
 
@@ -156,7 +156,7 @@ Cilium vs Istio, Local vs Cluster, mTLS vs Plain TCP
 
 ---
 
-## 💭 이 블로그를 만든 이유
+## 이 블로그를 만든 이유
 
 > "Kubernetes 책을 10권 읽는 것보다,
 > 직접 클러스터를 구축하고 3일간 안 되는 네트워크를 디버깅하는 것이
@@ -167,12 +167,12 @@ Cilium vs Istio, Local vs Cluster, mTLS vs Plain TCP
 
 ---
 
-## 📫 Contact
+## Contact
 
-- 📧 Email: wlals2@naver.com
-- 💻 GitHub: [@wlals2](https://github.com/wlals2)
-- 🏠 Blog: [blog.jiminhome.shop](https://blog.jiminhome.shop)
-- 📐 Architecture: [전체 아키텍처 문서](/architecture/)
+- Email: wlals2@naver.com
+- GitHub: [@wlals2](https://github.com/wlals2)
+- Blog: [blog.jiminhome.shop](https://blog.jiminhome.shop)
+- Architecture: [전체 아키텍처 문서](/architecture/)
 
 ---
 
