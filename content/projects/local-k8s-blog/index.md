@@ -1,5 +1,5 @@
 ---
-title: "Local K8s Blog - Homeserver Kubernetes 운영 실전 🏠"
+title: "Local K8s Blog - Homeserver Kubernetes 운영 실전"
 date: 2026-01-23
 summary: "베어메탈 Kubernetes에서 Hugo 블로그 58일 운영: Istio + Cilium + Falco + GitOps 완전 자동화"
 tags: ["kubernetes", "bare-metal", "hugo", "istio", "cilium", "falco", "argocd", "gitops", "devsecops", "homelab"]
@@ -11,7 +11,7 @@ tocopen: true
 draft: false
 ---
 
-## 📌 프로젝트 개요
+## 프로젝트 개요
 
 > **상태**: ✅ **Production 운영 중** (58일, 2024.11.28 시작)
 > **환경**: 베어메탈 Kubernetes 클러스터 (홈서버 4대)
@@ -41,7 +41,7 @@ draft: false
 
 ---
 
-## 🏗️ 전체 아키텍처
+## 전체 아키텍처
 
 ![Local K8s Architecture](../../../image/localk8s%20아키텍처.png)
 
@@ -155,7 +155,7 @@ draft: false
 
 ---
 
-## 🔧 주요 트러블슈팅
+## 주요 트러블슈팅
 
 58일간 운영하면서 만난 문제들과 해결 과정을 정리했습니다.
 
@@ -243,15 +243,15 @@ draft: false
 
 ---
 
-## 🔮 다음 단계
+## 다음 단계
 
-### ⏳ 빨리 할 것들 (30분 내)
+### 빨리 할 것들 (30분 내)
 
 1. **Loki Retention 설정** (5분) - 로그 7일로 제한
 2. **Longhorn 스냅샷 정책** (15분) - 매일 3AM 자동 스냅샷
 3. **Prometheus Alert → Slack** (10분) - 알림 자동화
 
-### 🔜 나중에 해볼 것들 (1시간+)
+### 나중에 해볼 것들 (1시간+)
 
 4. **Cilium kube-proxy 대체** (1시간) - 성능 30% 향상 예상
 5. **Istio Gateway 직접 노출** (1시간) - Let's Encrypt 인증서
@@ -277,7 +277,7 @@ draft: false
 
 ---
 
-## 🔗 관련 문서
+## 관련 문서
 
 ### 핵심 아키텍처
 - [전체 아키텍처 가이드](/study/2026-01-25-local-k8s-architecture/)

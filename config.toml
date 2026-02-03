@@ -63,28 +63,30 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 </p>
 
 <div class="profile-section">
-  <h3>프로젝트 경험</h3>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+  <h3>주요 프로젝트</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
 
-    <div class="project-card" style="background: var(--entry); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
-      <h4 style="margin-top: 0;"><a href="/projects/bespin-project/" style="color: var(--primary); text-decoration: none;">AWS EKS 3-Tier + Multi-Cloud DR →</a></h4>
-      <p style="margin: 0.5rem 0; color: var(--secondary); font-size: 0.9rem;">
-        AWS EKS 기반 3-Tier 아키텍처 구축<br>
-        Azure DR 환경 구현 · 99.9% 가용성 달성
+    <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/bespin-project/" style="color: var(--primary); text-decoration: none;">멀티클라우드 고가용성 DR 아키텍처 →</a></h3>
+      <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
+        <strong>AWS EKS + Azure AKS</strong> 기반 Multi-Cloud DR 환경<br>
+        Route53 Failover · CloudFront Origin Group<br>
+        <strong>99.9% 가용성 달성</strong> · Terraform IaC
       </p>
-      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--tertiary);">
-        Kubernetes · EKS · Terraform · ArgoCD
+      <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
+        Kubernetes · EKS · Terraform · ArgoCD · Jenkins
       </div>
     </div>
 
-    <div class="project-card" style="background: var(--entry); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
-      <h4 style="margin-top: 0;"><a href="/projects/" style="color: var(--primary); text-decoration: none;">Homelab Kubernetes 클러스터 →</a></h4>
-      <p style="margin: 0.5rem 0; color: var(--secondary); font-size: 0.9rem;">
-        베어메탈 3노드 클러스터 직접 구축<br>
-        54일 무중단 운영 · 이 블로그가 증명
+    <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/local-k8s-blog/" style="color: var(--primary); text-decoration: none;">베어메탈 K8s 제로트러스트 고가용성 아키텍처 →</a></h3>
+      <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
+        <strong>베어메탈 4노드 클러스터</strong> 직접 구축 및 운영<br>
+        Istio mTLS · Cilium eBPF · Falco Runtime Security<br>
+        <strong>58일 무중단 운영</strong> · 이 블로그가 바로 그 위에서 실행
       </p>
-      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--tertiary);">
-        Kubernetes · Cilium · Istio · Longhorn
+      <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
+        Kubernetes · Istio · Cilium · Longhorn · ArgoCD
       </div>
     </div>
 
