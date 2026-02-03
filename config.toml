@@ -63,7 +63,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
 </p>
 
 <div class="profile-section">
-  <h3>주요 프로젝트</h3>
+  <h3>프로젝트 경험</h3>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
 
     <div class="project-card" style="background: var(--entry); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary);">
