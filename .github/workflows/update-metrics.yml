@@ -8,6 +8,8 @@ on:
 jobs:
   update-metrics:
     runs-on: self-hosted  # 홈서버에서 실행 (kubectl 접근 가능)
+    permissions:
+      contents: write  # Git push 권한 필요
 
     steps:
       - name: Checkout code
