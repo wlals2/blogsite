@@ -1,6 +1,6 @@
 ---
 title: "ArgoCD 설치 완전 가이드: Helm vs kubectl, Ingress, Cloudflare Tunnel"
-date: 2026-01-20
+date: 2026-01-20T10:00:00+09:00
 summary: "Homeserver K8s에 ArgoCD를 Helm으로 설치하고 Ingress + Cloudflare Tunnel로 외부 접속 구성 (실제 트러블슈팅 포함)"
 tags: ["argocd", "helm", "gitops", "kubernetes", "cloudflare-tunnel"]
 categories: ["study", "Kubernetes"]
