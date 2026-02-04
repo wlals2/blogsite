@@ -3,7 +3,7 @@ title: "Kubernetes Secret 관리의 새로운 패러다임: Sealed Secrets로 Gi
 date: 2026-02-04T01:00:00+09:00
 author: "늦찌민"
 slug: "sealed-secrets-gitops-kubernetes"
-categories: ["Security"]
+categories: ["study", "Security"]
 tags: ["kubernetes", "gitops", "sealed-secrets", "secret-management", "argocd", "security", "rsa-encryption"]
 draft: false
 ---
