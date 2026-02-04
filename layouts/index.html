@@ -51,26 +51,32 @@
             <h3>주요 프로젝트</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; margin-top: 1.5rem;">
                 <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/bespin-project/" style="color: var(--primary); text-decoration: none;">멀티클라우드 고가용성 DR 아키텍처 →</a></h3>
+                    <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/bespin-project/" style="color: var(--primary); text-decoration: none;">멀티 클라우드 DR & 비용 혁신 아키텍처 →</a></h3>
+                    <p style="margin: 0.5rem 0 1rem 0; color: var(--primary); font-size: 0.95rem; font-style: italic;">
+                        "단일 클라우드의 한계를 넘다. 월 $10로 완성한 고가용성 전략"
+                    </p>
                     <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
-                        <strong>AWS EKS + Azure AKS</strong> 기반 Multi-Cloud DR 환경<br>
-                        Route53 Failover · CloudFront Origin Group<br>
-                        <strong>99.9% 가용성 달성</strong> · Terraform IaC
+                        AWS-Azure 이기종 클라우드 간 <strong>RTO 28분</strong> 자동 복구 구현<br>
+                        Route53 Health Check + CloudFront Origin Group 기반 <strong>99.9% 가용성</strong> 달성<br>
+                        Terraform IaC 기반의 Cold Standby 전략으로 <strong>비용 98% 절감</strong>
                     </p>
                     <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
-                        Kubernetes · EKS · Terraform · ArgoCD · Jenkins
+                        AWS EKS · Azure AKS · Terraform · ArgoCD
                     </div>
                 </div>
 
                 <div class="project-card" style="background: var(--entry); padding: 2rem; border-radius: 12px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/local-k8s-blog/" style="color: var(--primary); text-decoration: none;">베어메탈 K8s 제로트러스트 고가용성 아키텍처 →</a></h3>
+                    <h3 style="margin-top: 0; font-size: 1.3rem;"><a href="/projects/local-k8s-blog/" style="color: var(--primary); text-decoration: none;">베어메탈 K8s & 제로 트러스트 보안 →</a></h3>
+                    <p style="margin: 0.5rem 0 1rem 0; color: var(--primary); font-size: 0.95rem; font-style: italic;">
+                        "리눅스 커널부터 잠그는 보안. eBPF 기반 심층 방어(Defense in Depth)"
+                    </p>
                     <p style="margin: 1rem 0; color: var(--secondary); font-size: 1rem; line-height: 1.6;">
-                        <strong>베어메탈 {{ site.Data.metrics.homelab.total_nodes }}노드 클러스터</strong> 직접 구축 및 운영<br>
-                        Istio mTLS · Cilium eBPF · Falco Runtime Security<br>
+                        Cilium(eBPF) 도입으로 iptables 병목 제거 및 <strong>고성능 네트워크</strong> 구현<br>
+                        Falco 런타임 보안과 Istio mTLS를 결합한 <strong>Full-Stack 보안 체계</strong><br>
                         <strong>{{ site.Data.metrics.homelab.uptime_days }}일 무중단 운영</strong> · 이 블로그가 바로 그 위에서 실행
                     </p>
                     <div style="margin-top: 1.2rem; font-size: 0.9rem; color: var(--tertiary); font-weight: 500;">
-                        Kubernetes · Istio · Cilium · Longhorn · ArgoCD
+                        Kubernetes(Bare-metal) · Cilium · Falco · Istio
                     </div>
                 </div>
             </div>
