@@ -1,6 +1,6 @@
 ---
 title: "Kustomize commonLabels와 Deployment Selector 충돌: 엔지니어링 의사결정 과정"
-date: 2026-02-05T14:30:00+09:00
+date: 2026-02-05T14:00:00+09:00
 draft: false
 categories:
   - study
