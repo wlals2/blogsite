@@ -1,6 +1,6 @@
 ---
 title: "Hugo 블로그 배포 트러블슈팅: Source of Truth 우선순위 문제"
-date: 2026-02-03
+date: 2026-02-03T05:00:00+09:00
 summary: "config.toml vs layouts 충돌로 OLD 콘텐츠가 표시된 문제를 해결한 과정. 우선순위가 명확하지 않으면 오류가 발생한다."
 tags: ["hugo", "troubleshooting", "docker", "gitops", "kubernetes"]
 categories: ["study"]
