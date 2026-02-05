@@ -79,7 +79,7 @@
 </div>
 {{- end }}
 
-{{- $pages := union .RegularPages .Sections }}
+{{- $pages := (union .RegularPages .Sections).ByDate.Reverse }}
 {{- $paginator := .Paginate $pages }}
 
 {{- range $index, $page := $paginator.Pages }}
