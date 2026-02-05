@@ -1,6 +1,6 @@
 ---
 title: "Cloudflare 캐시 퍼지 실패 문제"
-date: 2026-01-23
+date: 2026-01-23T10:00:00+09:00
 description: "GitHub Actions에서 Cloudflare API 호출 시 Zone ID 누락 문제 해결"
 tags: ["cloudflare", "github-actions", "cache", "troubleshooting"]
 categories: ["study", "Troubleshooting"]

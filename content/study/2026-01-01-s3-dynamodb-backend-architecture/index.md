@@ -1,6 +1,6 @@
 ---
 title: "Terraform Backend: S3와 DynamoDB의 완벽한 조합"
-date: 2026-01-01
+date: 2026-01-01T10:00:00+09:00
 tags: ["Terraform", "AWS", "S3", "DynamoDB", "Backend", "State Management"]
 categories: ["study", "Cloud & Terraform"]
 description: "Terraform State를 S3에 저장하고 DynamoDB로 Lock을 관리하는 Backend 아키텍처를 깊이 있게 탐구합니다."

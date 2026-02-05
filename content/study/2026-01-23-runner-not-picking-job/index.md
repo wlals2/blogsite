@@ -1,6 +1,6 @@
 ---
 title: "GitHub Actions Runner가 Job을 가져가지 않는 문제"
-date: 2026-01-23
+date: 2026-01-23T10:00:00+09:00
 description: "Self-hosted Runner가 잘못된 저장소에 등록되어 Job을 인식 못하는 문제 해결"
 tags: ["github-actions", "self-hosted-runner", "troubleshooting"]
 categories: ["study", "Troubleshooting"]

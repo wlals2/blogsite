@@ -1,6 +1,6 @@
 ---
 title: "ArgoCD 트러블슈팅 모음"
-date: 2026-01-23
+date: 2026-01-23T10:00:00+09:00
 description: "ArgoCD 설치 및 운영 중 발생한 문제들 해결 기록"
 tags: ["argocd", "kubernetes", "gitops", "cloudflare-tunnel", "troubleshooting"]
 categories: ["study", "Troubleshooting"]

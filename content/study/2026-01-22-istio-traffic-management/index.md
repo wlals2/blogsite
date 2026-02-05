@@ -1,6 +1,6 @@
 ---
 title: "Istio Traffic Management 실전 가이드"
-date: 2026-01-22
+date: 2026-01-22T10:00:00+09:00
 description: "VirtualService와 DestinationRule을 활용한 Retry, Timeout, Circuit Breaking, Traffic Mirroring 구현"
 tags: ["istio", "kubernetes", "traffic-management", "circuit-breaking", "canary"]
 categories: ["study", "Service Mesh"]

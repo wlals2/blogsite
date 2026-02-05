@@ -1,6 +1,6 @@
 ---
 title: "kubectl이 HTML을 반환하는 문제"
-date: 2026-01-23
+date: 2026-01-23T10:00:00+09:00
 description: "kubeconfig 설정 오류로 Jenkins 로그인 페이지가 나오는 문제 해결"
 tags: ["kubernetes", "kubectl", "kubeconfig", "troubleshooting"]
 categories: ["study", "Kubernetes", "Troubleshooting"]

@@ -1,6 +1,6 @@
 ---
 title: "집에서 굴리는 Kubernetes 클러스터 아키텍처"
-date: 2026-01-25
+date: 2026-01-25T10:00:00+09:00
 tags: ["kubernetes", "architecture", "istio", "cilium", "argocd", "monitoring", "security"]
 categories: ["study", "Kubernetes"]
 summary: "4대의 서버로 만든 홈랩 Kubernetes - 58일간 운영하면서 배운 것들"

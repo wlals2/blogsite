@@ -1,6 +1,6 @@
 ---
 title: "AWS-Azure DR 실전 Failover 테스트 가이드"
-date: 2026-01-04
+date: 2026-01-04T10:00:00+09:00
 tags: ["Disaster Recovery", "AWS", "Azure", "Multi-Cloud", "High Availability"]
 categories: ["study", "Cloud & Terraform"]
 series: ["멀티 클라우드 DR 구축기"]
