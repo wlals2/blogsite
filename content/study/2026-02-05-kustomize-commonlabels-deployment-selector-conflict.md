@@ -2,7 +2,9 @@
 title: "Kustomize commonLabels와 Deployment Selector 충돌: 엔지니어링 의사결정 과정"
 date: 2026-02-05T14:30:00+09:00
 draft: false
-categories: ["Troubleshooting"]
+categories:
+  - study
+  - Troubleshooting
 tags: ["kubernetes", "kustomize", "cilium", "networkpolicy", "gitops", "argocd", "mysql", "prometheus"]
 description: "Kustomize commonLabels 도입 시 Deployment selector 불변성 충돌 문제와 NetworkPolicy 문법 오류를 해결하는 과정. 기술적 가능성보다 엔지니어링적 올바름을 우선하는 의사결정 사례."
 ---
