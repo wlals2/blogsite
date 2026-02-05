@@ -1,6 +1,6 @@
 ---
 title: "ArgoCD ignoreDifferences로 GitOps 동적 필드 관리하기"
-date: 2026-02-05T20:00:00+09:00
+date: 2026-02-05T13:00:00+09:00
 draft: false
 categories:
   - study
