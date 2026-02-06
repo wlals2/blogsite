@@ -517,7 +517,7 @@ spec:
 
 ---
 
-### 문제 5: ServiceMonitor 미인식 (라벨 불일치)
+### 문제 5: ServiceMonitor 미인식 (라벨 불일치 + Helm deep merge)
 
 **증상**:
 ```bash
@@ -526,21 +526,62 @@ kubectl exec prometheus-0 -- wget http://localhost:9090/api/v1/targets
 # → mysql-exporter가 Target 목록에 없음
 ```
 
-**원인**: Prometheus의 `serviceMonitorSelector`와 ServiceMonitor 라벨 불일치
+**원인 1**: Prometheus의 `serviceMonitorSelector`와 ServiceMonitor 라벨 불일치
 
 ```bash
 # Prometheus의 실제 Selector 확인
 kubectl get prometheus -n monitoring -o yaml | grep -A 3 serviceMonitorSelector
 # matchLabels:
-#   prometheus: kube-prometheus  ← Prometheus가 찾는 라벨
+#   prometheus: kube-prometheus  ← Helm Chart 기본값 (Upstream)
+#   release: kube-prometheus-stack  ← 우리가 추가한 커스텀 라벨
 
 # ServiceMonitor의 라벨 확인
 kubectl get servicemonitor mysql-exporter -n monitoring -o yaml | grep -A 3 'metadata:'
 # labels:
-#   release: kube-prometheus-stack  ← 불일치!
+#   prometheus: kube-prometheus  ← 하나만 있음!
 ```
 
-**해결**: ServiceMonitor 라벨을 `prometheus: kube-prometheus`로 변경
+**원인 2**: Helm deep merge로 인한 AND 조건 발생
+
+values.yaml에서 selector를 변경하면 Helm이 **기존 값과 병합**합니다:
+
+```yaml
+# Helm Chart 기본값 (Upstream)
+serviceMonitorSelector:
+  matchLabels:
+    prometheus: kube-prometheus
+
+# values.yaml에서 변경 시도
+serviceMonitorSelector:
+  matchLabels:
+    release: kube-prometheus-stack
+
+# 결과 (Helm deep merge)
+serviceMonitorSelector:
+  matchLabels:
+    prometheus: kube-prometheus    # ← Upstream 유지
+    release: kube-prometheus-stack  # ← 추가됨 (AND 조건!)
+```
+
+이제 ServiceMonitor는 **두 라벨 모두** 필요하게 됩니다!
+
+**해결 방법 2가지**:
+
+1. ❌ **임시방편**: ServiceMonitor에 두 라벨 모두 추가
+   ```yaml
+   labels:
+     prometheus: kube-prometheus
+     release: kube-prometheus-stack
+   ```
+
+2. ✅ **근본 해결 (Platform Conformity)**: values.yaml을 Upstream 표준으로 복원
+   ```yaml
+   serviceMonitorSelector:
+     matchLabels:
+       prometheus: kube-prometheus  # Helm Chart 기본값 유지
+   ```
+
+**권장**: 옵션 2 (Helm Chart 표준 준수)
 
 ---
 
@@ -638,7 +679,70 @@ kubectl exec prometheus-0 -- cat /etc/prometheus/config_out/prometheus.env.yaml
 
 ---
 
-## 7. Security Considerations
+## 7. Platform Conformity (플랫폼 순응성)
+
+### 핵심 원칙: Helm Chart 표준을 따른다
+
+Prometheus Operator를 구축하면서 배운 **가장 중요한 교훈**은 "플랫폼이 정한 표준을 따라야 한다"는 것입니다.
+
+### 우리가 한 실수
+
+처음에는 ServiceMonitor selector를 더 명확하게 만들려고 했습니다:
+
+```yaml
+# values.yaml (우리가 변경 시도)
+serviceMonitorSelector:
+  matchLabels:
+    release: kube-prometheus-stack  # "더 명확해 보이니까 바꾸자"
+```
+
+**결과**: Helm deep merge로 인해 **두 라벨 모두 필요**하게 되었습니다:
+
+```yaml
+# 실제 Prometheus CRD (Helm이 병합한 결과)
+serviceMonitorSelector:
+  matchLabels:
+    prometheus: kube-prometheus    # Upstream 기본값
+    release: kube-prometheus-stack  # 우리가 추가 (AND 조건!)
+```
+
+### 왜 플랫폼 표준을 따라야 하는가?
+
+| 항목 | 커스텀 라벨 사용 | Upstream 표준 사용 |
+|------|-----------------|-------------------|
+| **Helm 업데이트** | ❌ 충돌 가능 | ✅ 원활 |
+| **커뮤니티 예제** | ❌ 호환 안 됨 | ✅ 그대로 적용 |
+| **라벨 관리** | ❌ 두 개 필요 (AND) | ✅ 하나만 필요 |
+| **복잡도** | ❌ 증가 | ✅ 단순 |
+
+### 올바른 접근
+
+**✅ Helm Chart 기본값을 그대로 사용**:
+
+```yaml
+# values.yaml (Upstream 표준 유지)
+serviceMonitorSelector:
+  matchLabels:
+    prometheus: kube-prometheus  # Helm Chart 기본값
+
+# ServiceMonitor (플랫폼 표준 라벨)
+metadata:
+  labels:
+    prometheus: kube-prometheus  # 단일 라벨만 필요
+```
+
+### 교훈
+
+1. **플랫폼이 정한 Convention을 존중**: Helm Chart, Operator 등 외부 도구 사용 시
+2. **"더 명확해 보인다"는 이유로 변경하지 말 것**: 호환성이 깨짐
+3. **Upstream 표준 확인**: `helm show values`로 기본값 확인
+4. **커뮤니티 Best Practice 준수**: 다른 사용자들과 공통 언어 유지
+
+**핵심**: "우리 입맛대로 바꾸면 호환성이 깨진다"
+
+---
+
+## 8. Security Considerations
 
 ### Prometheus Operator가 보호하는 것
 
@@ -666,7 +770,7 @@ kubectl exec prometheus-0 -- cat /etc/prometheus/config_out/prometheus.env.yaml
 
 ---
 
-## 8. 결론
+## 9. 결론
 
 ### 핵심 메시지
 
@@ -674,13 +778,24 @@ Prometheus 모니터링을 Raw ConfigMap 방식에서 CRD 기반(Prometheus Oper
 
 ### 배운 점
 
-1. **Wrapper Chart는 dependency name prefix 필수**: `kube-prometheus-stack:` 아래로 모든 설정 들여쓰기
-2. **ArgoCD directory.recurse: true 필수**: subdirectory (servicemonitors/, prometheusrules/)를 읽으려면
-3. **라벨 일치 확인 필수**: Prometheus의 `serviceMonitorSelector`와 ServiceMonitor 라벨이 정확히 일치해야 함
-4. **storageClassName 필드 제거**: null 대신 필드 자체를 생략하면 기본 SC 자동 사용
-5. **Operator는 시간이 필요**: Pod 재시작 후 2-3분 대기 필요 (설정 자동 업데이트)
-6. **GitOps 환경에서는 CRD 기반이 필수**: Raw ConfigMap은 runtime 수정으로 OutOfSync 발생
-7. **에러 격리의 중요성**: 하나의 ServiceMonitor 오류가 다른 것에 영향 없음
+1. **Platform Conformity (가장 중요!)**: Helm Chart 기본값을 그대로 사용해야 호환성 유지
+   - "더 명확해 보인다"는 이유로 라벨을 변경하면 Helm deep merge로 AND 조건 발생
+   - Upstream 표준(`prometheus: kube-prometheus`)을 따라야 커뮤니티 예제와 호환
+   - `helm show values`로 기본값 확인 필수
+
+2. **Wrapper Chart는 dependency name prefix 필수**: `kube-prometheus-stack:` 아래로 모든 설정 들여쓰기
+
+3. **ArgoCD directory.recurse: true 필수**: subdirectory (servicemonitors/, prometheusrules/)를 읽으려면
+
+4. **라벨 일치 확인 필수**: Prometheus의 `serviceMonitorSelector`와 ServiceMonitor 라벨이 정확히 일치해야 함
+
+5. **storageClassName 필드 제거**: null 대신 필드 자체를 생략하면 기본 SC 자동 사용
+
+6. **Operator는 시간이 필요**: Pod 재시작 후 2-3분 대기 필요 (설정 자동 업데이트)
+
+7. **GitOps 환경에서는 CRD 기반이 필수**: Raw ConfigMap은 runtime 수정으로 OutOfSync 발생
+
+8. **에러 격리의 중요성**: 하나의 ServiceMonitor 오류가 다른 것에 영향 없음
 
 ### 다음 단계
 
