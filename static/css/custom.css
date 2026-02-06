@@ -934,3 +934,143 @@ table a:hover {
 .dark .category-btn:hover {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* ========================================
+   📊 Mermaid 다이어그램 스타일
+   ======================================== */
+
+/* Mermaid 컨테이너 */
+.mermaid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--code-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+/* Mermaid SVG */
+.mermaid svg {
+    max-width: 100%;
+    height: auto;
+    min-height: 300px;
+}
+
+/* Mermaid 텍스트 가독성 향상 */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+    stroke-width: 2px;
+    fill: var(--entry) !important;
+    stroke: var(--primary) !important;
+}
+
+/* Mermaid 텍스트 스타일 */
+.mermaid .nodeLabel,
+.mermaid .node text,
+.mermaid text {
+    fill: var(--content) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    font-family: inherit !important;
+}
+
+/* Mermaid 라벨 박스 크기 조정 (한글 대응) */
+.mermaid .label {
+    fill: var(--content) !important;
+    font-size: 14px !important;
+}
+
+/* Mermaid 연결선 */
+.mermaid .edgePath .path {
+    stroke: var(--border) !important;
+    stroke-width: 2px;
+}
+
+/* Mermaid 화살표 */
+.mermaid .edgePath .arrowheadPath {
+    fill: var(--border) !important;
+}
+
+/* Mermaid 클러스터/서브그래프 */
+.mermaid .cluster rect {
+    fill: var(--code-bg) !important;
+    stroke: var(--border) !important;
+    stroke-width: 2px;
+}
+
+/* Sequence Diagram 스타일 */
+.mermaid .actor {
+    fill: var(--entry) !important;
+    stroke: var(--primary) !important;
+}
+
+.mermaid .actor-line {
+    stroke: var(--border) !important;
+}
+
+.mermaid .messageLine0,
+.mermaid .messageLine1 {
+    stroke: var(--primary) !important;
+    stroke-width: 2px;
+}
+
+.mermaid .messageText {
+    fill: var(--content) !important;
+    font-size: 13px !important;
+}
+
+.mermaid .note {
+    fill: var(--code-bg) !important;
+    stroke: var(--border) !important;
+}
+
+.mermaid .noteText {
+    fill: var(--content) !important;
+    font-size: 12px !important;
+}
+
+/* Flowchart 스타일 */
+.mermaid .flowchart-link {
+    stroke: var(--border) !important;
+    stroke-width: 2px;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .mermaid {
+        padding: 15px;
+        font-size: 12px;
+    }
+
+    .mermaid svg {
+        min-height: 250px;
+    }
+
+    .mermaid .nodeLabel,
+    .mermaid text {
+        font-size: 12px !important;
+    }
+}
+
+/* 다크모드 최적화 */
+.dark .mermaid {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mermaid 로딩 상태 */
+.mermaid:empty::before {
+    content: "Loading diagram...";
+    color: var(--secondary);
+    font-size: 14px;
+    font-style: italic;
+}
