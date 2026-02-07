@@ -75,20 +75,7 @@ Service의 `.spec.selector`와 Pod의 `.metadata.labels`가 **정확히 일치**
 
 ### Label Selector 동작 방식
 
-```mermaid
-graph LR
-    S[Service<br/>selector: app=mysql] -->|Label 매칭| P1[Pod 1<br/>label: app=mysql]
-    S -->|Label 매칭| P2[Pod 2<br/>label: app=mysql]
-    S -->|Label 매칭| P3[Pod 3<br/>label: app=mysql]
-
-    P4[Pod 4<br/>label: app=nginx] -.->|매칭 안됨| S
-
-    style S fill:#e1f5ff
-    style P1 fill:#d4edda
-    style P2 fill:#d4edda
-    style P3 fill:#d4edda
-    style P4 fill:#f8d7da
-```
+![Service의 Label Selector가 Pod를 찾는 방식 - app=mysql 레이블을 가진 Pod만 연결됨](mermaid-1.png)
 
 **확인 방법**:
 
@@ -112,20 +99,7 @@ Prometheus Target이 잡히지 않았던 이유는 ServiceMonitor의 `selector.m
 
 많은 사람들이 Service가 Pod로 직접 연결된다고 생각하지만, 실제로는 중간에 **Endpoints**라는 객체가 있다.
 
-```mermaid
-flowchart LR
-    C[Client] --> S[Service<br/>ClusterIP: 10.99.1.1]
-    S --> E[Endpoints<br/>IP 목록]
-    E --> P1[Pod 1<br/>10.0.1.5]
-    E --> P2[Pod 2<br/>10.0.1.8]
-    E --> P3[Pod 3<br/>10.0.2.3]
-
-    style S fill:#e1f5ff
-    style E fill:#fff3cd
-    style P1 fill:#d4edda
-    style P2 fill:#d4edda
-    style P3 fill:#d4edda
-```
+![Service-Endpoints-Pod 연결 구조 - Service는 Endpoints를 통해 실제 Pod IP 목록을 참조함](mermaid-2.png)
 
 ### Endpoints란 무엇인가
 
@@ -160,20 +134,7 @@ subsets:
 
 Pod가 추가되거나 삭제될 때마다 Endpoints 객체가 자동으로 업데이트된다. Service는 이 Endpoints를 참조하여 현재 살아있는 Pod 목록을 알 수 있다.
 
-```mermaid
-sequenceDiagram
-    participant P as Pod (app=mysql)
-    participant K as Kubernetes API
-    participant E as Endpoints Controller
-    participant EP as Endpoints Object
-
-    P->>K: Pod 생성 (Label: app=mysql)
-    K->>E: Pod 이벤트 전달
-    E->>K: Service Selector 조회<br/>(app=mysql)
-    E->>EP: Endpoints 업데이트<br/>(Pod IP 추가)
-
-    Note over EP: 10.0.1.5:3306<br/>10.0.1.8:3306<br/>10.0.2.3:3306
-```
+![Endpoints Controller의 동작 과정 - Pod 생성 시 Label을 확인하여 Endpoints 객체를 자동 업데이트함](mermaid-3.png)
 
 **확인 방법**:
 
@@ -209,24 +170,7 @@ kubectl get service mysql-service
 
 Kube-proxy는 각 노드에서 실행되며, Service와 Endpoints 정보를 기반으로 **iptables 규칙**을 생성한다.
 
-```mermaid
-sequenceDiagram
-    participant C as Client Pod
-    participant D as CoreDNS
-    participant I as iptables (Kube-proxy)
-    participant P as Pod
-
-    C->>D: DNS 조회<br/>mysql-service
-    D->>C: 10.99.1.1 (ClusterIP)
-
-    C->>I: 패킷 전송<br/>dest: 10.99.1.1:3306
-
-    Note over I: iptables NAT 규칙 적용<br/>DNAT: 10.99.1.1 → 10.0.1.5
-
-    I->>P: 패킷 전달<br/>dest: 10.0.1.5:3306
-    P->>I: 응답
-    I->>C: 응답 (SNAT)
-```
+![Kube-proxy의 DNS 및 NAT 처리 과정 - ClusterIP가 iptables에 의해 실제 Pod IP로 변환됨](mermaid-4.png)
 
 ### iptables 규칙 확인
 
@@ -242,22 +186,7 @@ Kube-proxy는 Endpoints에 등록된 Pod IP 중 하나를 선택하여 NAT (주�
 
 ### 패킷 흐름 전체 과정
 
-```mermaid
-flowchart TD
-    C[Client Pod] -->|1. DNS 조회| D[CoreDNS]
-    D -->|2. ClusterIP 반환<br/>10.99.1.1| C
-    C -->|3. 패킷 전송<br/>dest=10.99.1.1:3306| K[Kube-proxy<br/>iptables]
-    K -->|4. Endpoints 조회| E[Endpoints<br/>10.0.1.5, 10.0.1.8, 10.0.2.3]
-    K -->|5. DNAT 적용<br/>10.99.1.1 → 10.0.1.5| P1[Pod 1<br/>10.0.1.5]
-    P1 -->|6. 응답| K
-    K -->|7. SNAT 적용<br/>src=10.99.1.1| C
-
-    style C fill:#e1f5ff
-    style D fill:#d4edda
-    style K fill:#fff3cd
-    style E fill:#fff3cd
-    style P1 fill:#d4edda
-```
+![Service 트래픽 전체 흐름도 - DNS 조회부터 DNAT, 패킷 전달, SNAT 응답까지의 7단계](mermaid-5.png)
 
 ---
 
@@ -303,25 +232,7 @@ kubectl get endpoints mysql-service -o json | jq '.subsets[].addresses[].ip'
 
 ### 왜 Prometheus는 Service를 안 쓰는가
 
-```mermaid
-flowchart LR
-    subgraph "일반 트래픽 (DNS)"
-        C1[Client] -->|DNS| S1[Service]
-        S1 -->|Load Balance| P1[Pod 1 정상]
-        S1 -.->|연결 안됨| P2[Pod 2 장애]
-    end
-
-    subgraph "모니터링 (API)"
-        P3[Prometheus] -->|API| K[K8s API]
-        K -->|Endpoints 목록| P3
-        P3 -->|직접 접속| P4[Pod 1 정상 ✅]
-        P3 -->|직접 접속| P5[Pod 2 장애 ❌]
-    end
-
-    style P2 fill:#f8d7da
-    style P4 fill:#d4edda
-    style P5 fill:#f8d7da
-```
+![DNS 방식 vs API 방식 비교 - 일반 트래픽은 Load Balance, 모니터링은 모든 Pod에 직접 접속하여 상태 확인](mermaid-6.png)
 
 Service는 하나의 Pod로만 연결되므로, 장애가 발생한 Pod 2의 메트릭을 수집할 수 없다. Prometheus는 API를 통해 모든 Pod를 열거하고 각각 접속하여 상태를 확인한다.
 
