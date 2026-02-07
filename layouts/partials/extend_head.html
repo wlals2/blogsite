@@ -12,7 +12,43 @@
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
       securityLevel: 'loose',
-      fontFamily: 'inherit'
+      fontFamily: 'inherit',
+      // 크기 및 레이아웃 설정 (한글 텍스트 대응)
+      flowchart: {
+        useMaxWidth: false,     // 최대 너비 제한 해제
+        htmlLabels: true,        // HTML 라벨 사용 (한글 지원)
+        curve: 'basis',          // 부드러운 곡선
+        padding: 20,             // 여백
+        nodeSpacing: 80,         // 노드 간격 (기본값보다 넓게)
+        rankSpacing: 100,        // 레벨 간격
+        diagramPadding: 20,      // 다이어그램 여백
+        wrappingWidth: 200       // 텍스트 줄바꿈 너비
+      },
+      sequence: {
+        useMaxWidth: false,
+        diagramMarginX: 50,
+        diagramMarginY: 30,
+        actorMargin: 80,
+        width: 200,
+        height: 65,
+        boxMargin: 20,
+        messageMargin: 50,
+        boxTextMargin: 10,
+        noteMargin: 20,
+        messageAlign: 'center',
+        mirrorActors: true,
+        wrap: true,
+        wrapPadding: 20
+      },
+      er: {
+        useMaxWidth: false,
+        diagramPadding: 30,
+        layoutDirection: 'LR',
+        minEntityWidth: 120,
+        minEntityHeight: 80,
+        entityPadding: 20,
+        fontSize: 14
+      }
     });
 
     // 모든 .mermaid 요소 렌더링

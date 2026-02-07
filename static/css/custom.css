@@ -958,9 +958,13 @@ table a:hover {
 
 /* Mermaid SVG */
 .mermaid svg {
-    max-width: 100%;
-    height: auto;
-    min-height: 300px;
+    width: 100% !important;
+    min-width: 800px;        /* 최소 너비 설정 (작게 뭉치는 것 방지) */
+    max-width: 1400px;       /* 최대 너비 설정 */
+    height: auto !important;
+    min-height: 400px;       /* 최소 높이 증가 */
+    display: block;
+    margin: 0 auto;
 }
 
 /* Mermaid 텍스트 가독성 향상 */
@@ -978,9 +982,10 @@ table a:hover {
 .mermaid .node text,
 .mermaid text {
     fill: var(--content) !important;
-    font-size: 14px !important;
+    font-size: 16px !important;          /* 14px → 16px (가독성 향상) */
     font-weight: 500 !important;
     font-family: inherit !important;
+    line-height: 1.6 !important;         /* 줄 간격 추가 */
 }
 
 /* Mermaid 라벨 박스 크기 조정 (한글 대응) */
