@@ -1,6 +1,7 @@
 ---
 title: "Blackbox Exporter 대시보드 복구: 메트릭이 수집되지 않는 문제"
 date: 2026-02-10T09:30:00+09:00
+draft: false
 categories:
   - study
   - Troubleshooting
