@@ -862,12 +862,439 @@ kubectl get <resource> -o yaml | grep "app.kubernetes.io/managed-by"
 
 ---
 
+## 10단계: Syslog 연동 실패 - 프로토콜 호환성 이슈
+
+### Falcosidekick → Wazuh Syslog 전송 시도
+
+Wrapper Chart 문제를 해결하고 Falcosidekick 설정이 반영되었으나, Wazuh Manager에서 Falco 이벤트를 수신하지 못했다.
+
+**Falcosidekick 로그**:
+```bash
+kubectl logs -n falco deployment/falco-falcosidekick --tail=50
+```
+
+```
+2026/02/12 10:20:53 [INFO]  : Enabled Outputs: [Loki WebUI Talon Syslog]
+# ❌ Syslog POST 로그 없음!
+```
+
+Loki/WebUI/Talon은 정상 전송되지만, **Syslog만 전송 로그가 없었다**.
+
+### 근본 원인: 프로토콜 호환성 문제
+
+**Falcosidekick가 전송하는 형식**:
+```
+Pure JSON (RFC Syslog 헤더 없음)
+{"output":"...", "priority":"Warning", "rule":"..."}
+```
+
+**Wazuh가 기대하는 형식**:
+```
+RFC 3164/5424 Syslog
+<PRI>TIMESTAMP HOSTNAME PROGRAM: {"output":"...", "priority":"Warning"}
+```
+
+**문제**:
+- Falcosidekick Syslog 출력은 JSON만 전송 (Syslog 헤더 없음)
+- Wazuh wazuh-remoted는 RFC 표준 Syslog 파싱
+- 형식 불일치로 Wazuh가 패킷 drop
+
+### 실패한 시도들
+
+**시도 1: Wazuh Syslog 수신 포트 추가**
+```xml
+<!-- worker.conf -->
+<remote>
+  <connection>syslog</connection>
+  <port>515</port>
+  <protocol>tcp</protocol>
+</remote>
+```
+
+**결과**: 포트는 열렸지만 여전히 수신 안 됨.
+
+**시도 2: logall 활성화**
+```xml
+<global>
+  <logall>yes</logall>
+  <logall_json>yes</logall_json>
+</global>
+```
+
+**결과**: Wazuh가 수신한 로그를 모두 기록하도록 했지만, 애초에 수신 자체가 안 됨.
+
+**시도 3: 수동 Syslog 전송 테스트**
+```bash
+kubectl exec -n falco deployment/falco-falcosidekick -- \
+  sh -c 'echo "<14>Feb 12 10:30:00 falco: {\"test\":\"message\"}" | nc wazuh.security.svc.cluster.local 515'
+```
+
+**결과**: 연결은 성공했지만 Wazuh가 파싱하지 못함 (형식 문제).
+
+---
+
+## 11단계: Cloud Native Pull 아키텍처로 전환
+
+### 아키텍처 재설계 결정
+
+Syslog (Push) 방식은 근본적으로 프로토콜 호환성 문제가 있다고 판단하여, **Cloud Native Pull 패턴**으로 전환하기로 결정했다.
+
+**Push 방식 (실패)**:
+```
+Falco → Falcosidekick → Syslog (port 515) → Wazuh Manager
+                          ↑
+                      프로토콜 불일치
+```
+
+**Pull 방식 (성공)**:
+```
+Falco → stdout (JSON)
+  → Containerd/Docker
+  → /var/log/containers/falco-*.log
+  → Wazuh Agent DaemonSet (tail)
+  → Wazuh Manager (port 1514, TLS)
+```
+
+### Wazuh Agent DaemonSet 구현
+
+**1. Agent 설정 파일 (ossec.conf)**:
+```xml
+<ossec_config>
+  <client>
+    <server>
+      <address>wazuh-manager-master-0.wazuh-cluster.security.svc.cluster.local</address>
+      <port>1514</port>
+      <protocol>tcp</protocol>
+    </server>
+    <enrollment>
+      <enabled>yes</enabled>
+    </enrollment>
+  </client>
+
+  <!-- Falco 로그 수집 -->
+  <localfile>
+    <!-- Docker/Containerd 로그 형식 지원 -->
+    <log_format>syslog</log_format>
+    <location>/var/log/containers/falco-*.log</location>
+  </localfile>
+</ossec_config>
+```
+
+**2. DaemonSet YAML**:
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: wazuh-agent
+  namespace: security
+spec:
+  template:
+    spec:
+      # Control Plane 포함 모든 노드에 배포
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+
+      # 호스트 네트워크 사용 (노드 로그 접근)
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      containers:
+        - name: wazuh-agent
+          image: wazuh/wazuh-agent:4.14.2
+          env:
+            - name: WAZUH_MANAGER
+              value: "wazuh-manager-master-0.wazuh-cluster.security.svc.cluster.local"
+            - name: WAZUH_REGISTRATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wazuh-authd-pass
+                  key: authd.pass
+            - name: WAZUH_AGENT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+
+          securityContext:
+            privileged: true  # 호스트 파일 시스템 접근
+
+          volumeMounts:
+            # Kubernetes 컨테이너 로그
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            # Docker 컨테이너 메타데이터
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            # Wazuh Agent 설정
+            - name: wazuh-agent-config
+              mountPath: /var/ossec/etc/ossec.conf
+              subPath: ossec.conf
+              readOnly: true
+
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+            type: Directory
+        - name: wazuh-agent-config
+          configMap:
+            name: wazuh-agent-conf
+```
+
+**3. Kustomize 통합**:
+```yaml
+# kustomization.yml
+configMapGenerator:
+  - name: wazuh-agent-conf
+    files:
+      - wazuh_agents/wazuh-agent-conf/ossec.conf
+
+resources:
+  - wazuh_agents/wazuh-agent-daemonset.yaml
+```
+
+### 배포 및 검증
+
+```bash
+# Git commit & push
+git add apps/security/wazuh/
+git commit -m "feat(wazuh): Add Wazuh Agent DaemonSet for Falco integration"
+git push origin main
+
+# ArgoCD Sync 대기
+kubectl get pods -n security -l app=wazuh-agent
+# NAME                READY   STATUS    RESTARTS   AGE
+# wazuh-agent-kbrl4   1/1     Running   0          1m
+# wazuh-agent-lctsb   1/1     Running   0          1m
+# wazuh-agent-s8wlw   1/1     Running   0          1m
+```
+
+**Agent 등록 확인**:
+```bash
+kubectl exec -n security wazuh-manager-master-0 -c wazuh-manager -- \
+  /var/ossec/bin/agent_control -l
+```
+
+```
+Wazuh agent_control. List of available agents:
+   ID: 000, Name: wazuh-manager-master-0 (server), IP: 127.0.0.1, Active/Local
+   ID: 004, Name: k8s-worker1, IP: any, Active
+   ID: 005, Name: k8s-cp, IP: any, Active
+   ID: 006, Name: k8s-worker3, IP: any, Active
+```
+
+✅ 3개 노드에 Agent 배포 및 등록 성공!
+
+**Agent 로그 수집 확인**:
+```bash
+kubectl logs -n security wazuh-agent-kbrl4 | grep "Analyzing file"
+```
+
+```
+2026/02/12 11:18:14 wazuh-logcollector: INFO: Analyzing file: '/var/log/containers/falco-vt275_falco_falco-*.log'
+2026/02/12 11:18:31 wazuh-agentd: INFO: Connected to the server ([wazuh-manager-master-0]:1514/tcp)
+```
+
+✅ Agent가 Falco 로그 파일을 분석하고 Manager에 연결 완료!
+
+---
+
+## 최종 아키텍처
+
+### 전체 파이프라인
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Kubernetes Cluster                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  ┌─────────────────┐                                                │
+│  │ Falco (eBPF)    │  Custom Rules:                                 │
+│  │ DaemonSet       │  - Java Process Spawning Shell (RCE)           │
+│  │ (4 nodes)       │  - Package Manager in Container                │
+│  └────────┬────────┘  - Write to Binary Dir                         │
+│           │           - Unexpected Outbound Connection              │
+│           │ JSON Events                                             │
+│           ↓                                                          │
+│  ┌─────────────────┐                                                │
+│  │ stdout          │                                                │
+│  │ (Container Log) │                                                │
+│  └────────┬────────┘                                                │
+│           │                                                          │
+│           ↓                                                          │
+│  ┌─────────────────────────────────────┐                           │
+│  │ Containerd/Docker                    │                           │
+│  │ /var/log/containers/falco-*.log     │                           │
+│  └────────┬────────────────────────────┘                           │
+│           │                                                          │
+│           │                                                          │
+│  ┌────────┴───────────────────────────────────┐                    │
+│  │                                              │                    │
+│  ↓ tail (DaemonSet)                           ↓ HTTP POST          │
+│  ┌──────────────────┐                  ┌────────────────┐         │
+│  │ Wazuh Agent      │                  │ Falcosidekick  │         │
+│  │ DaemonSet        │                  │ (Event Router) │         │
+│  │ (3/4 nodes)      │                  └────────┬───────┘         │
+│  └────────┬─────────┘                           │                  │
+│           │ TLS (port 1514)                     │                  │
+│           ↓                                     ↓                  │
+│  ┌──────────────────┐                  ┌─────────────┐            │
+│  │ Wazuh Manager    │                  │ Loki        │            │
+│  │ StatefulSet      │                  │ (Logs)      │            │
+│  │ - Master (1)     │                  └─────────────┘            │
+│  │ - Worker (2)     │                                              │
+│  └────────┬─────────┘                  ┌─────────────┐            │
+│           │                             │ Falco Talon │            │
+│           ↓                             │ (Response)  │            │
+│  ┌──────────────────┐                  └─────────────┘            │
+│  │ Wazuh Indexer    │                                              │
+│  │ (Elasticsearch)  │                  ┌─────────────┐            │
+│  └────────┬─────────┘                  │ WebUI       │            │
+│           │                             │ (Dashboard) │            │
+│           ↓                             └─────────────┘            │
+│  ┌──────────────────┐                                              │
+│  │ Wazuh Dashboard  │                                              │
+│  │ (OpenSearch)     │                                              │
+│  └──────────────────┘                                              │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 컴포넌트별 역할
+
+| 컴포넌트 | 역할 | 배포 형태 | 노드 수 |
+|---------|------|----------|---------|
+| **Falco** | eBPF 기반 런타임 보안 모니터링 | DaemonSet | 4/4 (전체) |
+| **Falcosidekick** | 이벤트 라우터 (Loki/Talon/WebUI) | Deployment | 2 replicas |
+| **Wazuh Agent** | Falco 로그 수집 및 전송 | DaemonSet | 3/4 (CPU 부족 1개) |
+| **Wazuh Manager** | SIEM 중앙 처리 | StatefulSet | Master 1 + Worker 2 |
+| **Wazuh Indexer** | 로그 저장 (Elasticsearch) | StatefulSet | 3 replicas |
+| **Wazuh Dashboard** | 시각화 및 분석 | Deployment | 1 replica |
+
+---
+
+## ADR: Syslog Push → Cloud Native Pull 전환
+
+### 문제 정의
+
+Falcosidekick Syslog 출력을 사용하여 Wazuh Manager로 이벤트를 전송하려 했으나, 프로토콜 호환성 문제로 실패했다.
+
+### 고려한 옵션
+
+**옵션 1: Syslog Push (시도했으나 실패)**
+- **장점**: 간단한 설정, Falcosidekick 내장 기능
+- **단점**:
+  - Falcosidekick는 Pure JSON 전송 (RFC Syslog 헤더 없음)
+  - Wazuh는 RFC 3164/5424 표준 Syslog 기대
+  - 프로토콜 불일치로 파싱 실패
+- **결과**: ❌ 근본적으로 불가능
+
+**옵션 2: Falcosidekick Syslog → Fluentd → Wazuh**
+- **장점**: Fluentd가 중간에서 형식 변환 가능
+- **단점**:
+  - 추가 컴포넌트 필요 (복잡도 증가)
+  - 리소스 오버헤드 (CPU/메모리)
+  - 단일 장애 지점 추가
+- **결과**: ⚠️ 과도하게 복잡함
+
+**옵션 3: Cloud Native Pull (선택)**
+- **장점**:
+  - Kubernetes 표준 패턴 (DaemonSet)
+  - Falco 로그를 파일로 직접 읽음 (프로토콜 무관)
+  - 안정성 향상 (로컬 버퍼링, 재시도)
+  - TLS 암호화 (보안 강화)
+  - Wazuh Agent 기능 활용 (FIM, Rootcheck 등)
+- **단점**:
+  - DaemonSet 배포 필요 (리소스 사용)
+  - 설정 복잡도 (hostPath, privileged)
+- **결과**: ✅ 선택
+
+### 의사 결정
+
+**옵션 3 (Cloud Native Pull)을 선택한 이유**:
+
+1. **프로토콜 독립성**: Falco JSON 로그를 직접 tail하므로 Syslog 형식 불일치 문제 없음
+2. **Kubernetes 표준**: DaemonSet은 Kubernetes의 표준 워크로드, 운영 팀에게 익숙함
+3. **안정성**: 로컬 버퍼링으로 네트워크 장애 시에도 데이터 유실 없음
+4. **보안**: Wazuh Agent ↔ Manager 간 TLS 암호화 통신
+5. **확장성**: 향후 Wazuh Agent의 다른 기능 (FIM, Rootcheck) 활용 가능
+
+### Trade-offs
+
+| 항목 | Push (Syslog) | Pull (Agent DaemonSet) |
+|------|---------------|------------------------|
+| **복잡도** | 낮음 (설정만) | 높음 (DaemonSet + ConfigMap) |
+| **리소스** | 없음 | 150Mi * 3 = 450Mi 메모리 |
+| **안정성** | 낮음 (네트워크 장애 시 유실) | 높음 (로컬 버퍼링) |
+| **보안** | Plain TCP | TLS 암호화 |
+| **프로토콜** | RFC Syslog 필수 | 파일 기반 (형식 무관) |
+| **디버깅** | 어려움 (전송 실패 원인 불명확) | 쉬움 (Agent 로그 확인 가능) |
+
+**결론**: 초기 복잡도는 높지만, **안정성과 확장성**을 위해 Cloud Native Pull 패턴을 선택했다.
+
+---
+
+## 최종 성과 (업데이트)
+
+### 완료된 작업
+
+| 항목 | 상태 | 비고 |
+|------|------|------|
+| **Wazuh 배포** | ✅ | Kustomize + Sealed Secrets |
+| **Falco Wrapper Chart 문제 해결** | ✅ | Subchart values 형식 수정 |
+| **Falco → Falcosidekick** | ✅ | HTTP 전송 (http_output.enabled: true) |
+| **Falcosidekick → Loki** | ✅ | POST OK (204) |
+| **Falcosidekick → WebUI** | ✅ | POST OK (200) |
+| **Falcosidekick → Talon** | ✅ | POST OK (200) |
+| **Syslog 연동 시도 및 실패 분석** | ✅ | 프로토콜 호환성 이슈 확인 |
+| **Wazuh Agent DaemonSet 구현** | ✅ | Cloud Native Pull 패턴 |
+| **Falco → Wazuh 최종 연동** | ✅ | 3/4 노드 Agent 배포 |
+
+### 아키텍처 성과
+
+**Before (목표했던 구조)**:
+```
+Falco → Falcosidekick → Syslog → Wazuh SIEM
+```
+
+**After (실제 구현된 구조)**:
+```
+Falco → stdout → /var/log/containers/
+  ├─→ Wazuh Agent DaemonSet → Wazuh Manager (SIEM)
+  └─→ Falcosidekick → Loki/WebUI/Talon
+```
+
+**결과**:
+- ✅ Falco 이벤트를 **2개 경로**로 동시 전송
+- ✅ Wazuh SIEM 중앙 집중식 보안 모니터링
+- ✅ Loki 로그 저장 및 Grafana 시각화
+- ✅ Falco Talon 자동 대응
+
+---
+
 ## 결론
 
-4시간의 트러블슈팅 끝에 얻은 가장 중요한 교훈:
+**총 소요 시간**: 약 8시간
+- Wrapper Chart 문제 해결: 4시간
+- Syslog 연동 시도 및 실패: 2시간
+- Cloud Native Pull 아키텍처 구현: 2시간
 
-> **Chart 버그를 의심하기 전에, 내 설정 형식이 올바른지 먼저 확인하자.**
+**핵심 교훈**:
 
-오늘의 문제는 Falco Chart 7.2.1도, 8.0.0도 아닌, **Helm Wrapper Chart의 Subchart values 전달 규칙**을 잘못 이해한 설정 오류였다. Chart를 업그레이드하고, ArgoCD와 싸우고, 수동 패치를 시도한 모든 시간이 결국 "values.yaml 첫 줄에 `falco:`를 추가하는 것"으로 해결되었다.
+1. **Helm Wrapper Chart**: Subchart values는 반드시 `<subchart-name>:` 키 아래에 작성
+2. **프로토콜 호환성**: 통합 전 양쪽 시스템의 프로토콜 형식 확인 필수
+3. **Cloud Native 패턴**: Kubernetes에서는 Pull 패턴이 Push보다 안정적
+4. **GitOps 원칙**: 클러스터 직접 수정 금지, Git이 Single Source of Truth
+
+**가장 중요한 교훈**:
+
+> **"동작하지 않을 때, 복잡한 솔루션(Fluentd, 커스텀 파서)을 추가하기 전에 근본 원인(프로토콜 불일치)을 먼저 파악하자. 그리고 Kubernetes 표준 패턴(DaemonSet)으로 해결할 수 있는지 먼저 검토하자."**
 
 실수는 반복하지 않기 위해 이 글을 남긴다.
