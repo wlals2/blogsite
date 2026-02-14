@@ -276,21 +276,7 @@ kubectl wait --for=condition=Ready pod/wazuh-indexer-0 -n security
 
 **노드별 CPU Requests 사용률 비교 (Before/After)**:
 
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ff6b6b','secondaryColor':'#4ecdc4'}}}%%
----
-config:
-  themeVariables:
-    xyChart:
-      backgroundColor: "transparent"
----
-xychart-beta
-    title "노드별 CPU Requests 사용률 (Before/After)"
-    x-axis [k8s-cp, worker1, worker2, worker3]
-    y-axis "CPU Requests (%)" 0 --> 100
-    bar [11, 54, 73, 99]
-    bar [9, 40, 59, 53]
-```
+![노드별 CPU Requests 사용률 Before/After](chart-before-after.png)
 
 **테이블 상세**:
 
