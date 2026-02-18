@@ -27,8 +27,11 @@
 		<url/>
 	</scm>
 	<properties>
-		<!-- Why: 정책(Section 17)에서 JDK 21 LTS 사용 결정 -->
-		<java.version>21</java.version>
+		<java.version>17</java.version>
+		<!-- Why: 로컬 빌드 서버에 JRE만 있어 release 옵션 비활성화. CI/CD(Dockerfile)에서 JDK 21 사용 -->
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.release></maven.compiler.release>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -55,6 +58,13 @@
 			<version>2.3.0</version>
 		</dependency>
 
+		<!-- Why: RSS/Atom 피드를 Java 객체로 자동 파싱 (뉴스 수집용) -->
+		<dependency>
+			<groupId>com.rometools</groupId>
+			<artifactId>rome</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
@@ -77,11 +87,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<!-- Why: Maven 3.6.x 호환을 위해 plugin 버전 고정 (3.14.0은 Maven 4.x 전용) -->
+				<version>3.11.0</version>
 				<configuration>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
+							<version>1.18.38</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
