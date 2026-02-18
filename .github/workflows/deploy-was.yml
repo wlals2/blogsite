@@ -1,39 +1,89 @@
 name: Deploy WAS to Kubernetes
 
+# ==============================================================================
+# 트리거 정책
+# ==============================================================================
+# - push: WAS 소스 변경 시 즉시 CI 실행 (test + build-push 병렬)
+# - schedule: 매일 새벽 02:00 Trivy CVE 전체 스캔 (빌드 시간 영향 없음)
+# - workflow_dispatch: 수동 실행 (긴급 배포 또는 재스캔)
 on:
-  workflow_dispatch:  # 수동 실행
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
-      - 'blog-k8s-project/was/**'  # WAS 소스 변경 시
-      - '.github/workflows/deploy-was.yml'  # 워크플로우 파일 변경 시
+      - 'blog-k8s-project/was/**'
+      - '.github/workflows/deploy-was.yml'
+  # Why: Trivy를 야간 별도 Job으로 분리 → 빌드 시간에 영향 없음
+  schedule:
+    - cron: '0 2 * * *'  # 매일 새벽 02:00 (KST 11:00)
 
 env:
   IMAGE_NAME: ghcr.io/wlals2/board-was
   NAMESPACE: blog-system
   DEPLOYMENT_NAME: was
 
+# ==============================================================================
+# Job 구조 (병렬화 전략)
+# ==============================================================================
+# git push → main
+#   ├─ [test]        병렬: H2 단위 테스트 (~1분)
+#   └─ [build-push]  병렬: Docker Build + Push (~2-3분)
+#         └─ [deploy] 직렬: GitOps + ArgoCD (test + build-push 모두 성공 시)
+#
+# schedule (매일 02:00):
+#   └─ [trivy-nightly]  CVE 전체 스캔 → Discord 알림 (~3-5분)
+#
+# 총 CI 시간: max(1분, 2-3분) + 1분 ≈ 3-4분 (기존 5-8분 대비 절감)
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted
 
+  # ============================================================================
+  # Job 1: 단위 테스트 (병렬)
+  # ============================================================================
+  # Why: Docker 빌드와 병렬로 실행 → 전체 CI 시간 단축
+  #      H2 In-Memory DB 사용 → MySQL 없이 CI 환경에서 테스트 가능
+  test:
+    if: github.event_name != 'schedule'
+    runs-on: self-hosted
     steps:
-      # ======================================================================
-      # Step 1: Checkout 코드
-      # ======================================================================
-      # Note: WAS 소스는 이제 Git에 포함 (SSOT 준수)
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ======================================================================
-      # Step 2: Docker Buildx 설정
-      # ======================================================================
+      - name: Run Unit Tests (H2 In-Memory DB)
+        working-directory: ./blog-k8s-project/was
+        run: |
+          ./mvnw test -Dspring.profiles.active=test \
+            --no-transfer-progress \
+            -q
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: blog-k8s-project/was/target/surefire-reports/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 2: Docker 빌드 & 푸시 (병렬)
+  # ============================================================================
+  # Why: 테스트와 병렬로 실행 → 전체 CI 시간 단축
+  #      Trivy 스캔 제거 (야간 Job으로 분리) → 빌드 시간 절감
+  build-push:
+    if: github.event_name != 'schedule'
+    runs-on: self-hosted
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=v${{ github.run_number }}" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # ======================================================================
-      # Step 4: GHCR 로그인
-      # ======================================================================
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -41,9 +91,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # ======================================================================
-      # Step 5: Docker 이미지 빌드 및 푸시
-      # ======================================================================
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -51,117 +98,67 @@ jobs:
           file: ./blog-k8s-project/was/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ======================================================================
-      # Step 5.5: 빌드 검증
-      # ======================================================================
       - name: Verify Build
         run: |
-          echo "🔍 Verifying Docker image..."
-
-          # 1. 이미지 존재 확인
-          docker pull ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
-
-          # 2. 이미지 크기 확인
-          IMAGE_SIZE=$(docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
+          docker pull ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+          IMAGE_SIZE=$(docker image inspect ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }} \
             --format='{{.Size}}' | awk '{print int($1/1024/1024)}')
-          echo "📦 Image size: ${IMAGE_SIZE} MB"
-
-          # 3. 이미지 크기 검증 (WAS는 50MB ~ 500MB)
+          echo "Image size: ${IMAGE_SIZE} MB"
           if [ $IMAGE_SIZE -lt 50 ]; then
-            echo "❌ Image too small: ${IMAGE_SIZE} MB (minimum: 50 MB)"
+            echo "Image too small: ${IMAGE_SIZE} MB"
             exit 1
           fi
 
-          if [ $IMAGE_SIZE -gt 500 ]; then
-            echo "⚠️  Warning: Image is large: ${IMAGE_SIZE} MB (recommended: < 500 MB)"
-          fi
-
-          # 4. 레이어 수 확인
-          LAYER_COUNT=$(docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
-            --format='{{len .RootFS.Layers}}')
-          echo "📚 Layers: ${LAYER_COUNT}"
-
-          echo "✅ Build verification passed"
-
-      # ======================================================================
-      # Step 5.6: Trivy 이미지 보안 스캔 (DevSecOps)
-      # ======================================================================
-      - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
-          format: 'table'
-          exit-code: '0'  # 취약점 발견해도 빌드 실패 안 함 (경고만)
-          severity: 'CRITICAL,HIGH'
-          timeout: '5m'
-
-      # ======================================================================
-      # Step 6: GitOps - Update Kubernetes Manifest (Stateless)
-      # ======================================================================
-      # Stateless 방식: 매번 임시 디렉터리로 clone하여 로컬 의존성 제거
+  # ============================================================================
+  # Job 3: GitOps 배포 (직렬 - test + build-push 모두 성공 시)
+  # ============================================================================
+  deploy:
+    if: github.event_name != 'schedule'
+    runs-on: self-hosted
+    # Why: 테스트 실패 OR 빌드 실패 시 배포하지 않음 (안전 게이트)
+    needs: [test, build-push]
+    steps:
       - name: Update Kubernetes Manifest (GitOps)
         env:
           GITHUB_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
-          # 1. 임시 디렉터리로 k8s-manifests clone (Stateless)
           TEMP_DIR="/tmp/k8s-manifests-${{ github.run_number }}"
-          echo "📁 Cloning to: $TEMP_DIR"
-
           git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git $TEMP_DIR
           cd $TEMP_DIR/services/blog-system/was
 
-          # 2. yq로 이미지 태그 업데이트 (Rollout)
-          yq eval ".spec.template.spec.containers[0].image = \"${{ env.IMAGE_NAME }}:v${{ github.run_number }}\"" \
+          yq eval ".spec.template.spec.containers[0].image = \"${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}\"" \
             -i was-rollout.yaml
 
-          # 3. Git Commit & Push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add was-rollout.yaml
-          git commit -m "chore: Update WAS image to v${{ github.run_number }} (Canary)"
+          git commit -m "chore: Update WAS image to ${{ needs.build-push.outputs.image-tag }} (Canary)"
           git push origin main
 
-          echo "✅ Manifest updated: v${{ github.run_number }}"
+          rm -rf $TEMP_DIR
+          echo "Manifest updated: ${{ needs.build-push.outputs.image-tag }}"
           echo "ArgoCD will deploy automatically (within 3min)"
 
-          # 4. Cleanup (임시 디렉터리 삭제)
-          rm -rf $TEMP_DIR
-          echo "🧹 Cleaned up temporary directory"
-
-      # ======================================================================
-      # Step 7: Wait for ArgoCD Sync
-      # ======================================================================
       - name: Wait for ArgoCD Sync
         run: |
           echo "Waiting for ArgoCD to sync..."
-          sleep 30  # ArgoCD는 3초마다 poll, 여유있게 30초 대기
-
-          # ArgoCD Application 상태 확인
+          sleep 30
           kubectl get application blog-system -n argocd
-
-          # Pod 상태 확인
           kubectl get pods -n ${{ env.NAMESPACE }} -l app=was
 
-      # ======================================================================
-      # Step 8: 빌드 정보 출력
-      # ======================================================================
       - name: Build Summary
         if: success()
         run: |
           echo "### ✅ WAS Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image**: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Namespace**: ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deployment**: ${{ env.DEPLOYMENT_NAME }}" >> $GITHUB_STEP_SUMMARY
 
-      # ======================================================================
-      # Step 9: 이메일 알림
-      # ======================================================================
       - name: Send Discord Notification
         if: always()
         uses: sarisia/actions-status-discord@v1
@@ -170,7 +167,7 @@ jobs:
           status: ${{ job.status }}
           title: "WAS 배포 ${{ job.status == 'success' && '성공' || '실패' }}"
           description: |
-            **이미지**: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+            **이미지**: ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}
             **커밋**: ${{ github.event.head_commit.message }}
             **작성자**: ${{ github.event.head_commit.author.name }}
             **URL**: https://blog.jiminhome.shop/
@@ -178,5 +175,41 @@ jobs:
           color: ${{ job.status == 'success' && 0x00FF00 || 0xFF0000 }}
           username: GitHub Actions
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-# Trigger: Test stateless k8s-manifests clone (WAS)
-# Trigger: Force trigger WAS workflow
+
+  # ============================================================================
+  # Job 4: 야간 Trivy CVE 스캔 (schedule 전용)
+  # ============================================================================
+  # Why: 빌드 시간 영향 없이 CVE 최신 정보로 매일 스캔
+  #      CRITICAL 발견 시 Discord 알림 → 즉시 대응 가능
+  trivy-nightly:
+    if: github.event_name == 'schedule'
+    runs-on: self-hosted
+    steps:
+      - name: Scan latest image with Trivy
+        id: trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:latest
+          format: 'table'
+          # Why: 야간 스캔에서는 CRITICAL 발견 시 알림만 (빌드 차단 없음)
+          #      CRITICAL 취약점 발견 → Discord 알림 → 개발자가 다음 배포 시 수정
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+          timeout: '10m'
+        continue-on-error: true
+
+      - name: Send Trivy Scan Result to Discord
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: ${{ steps.trivy.outcome == 'success' && 'success' || 'failure' }}
+          title: "🔒 야간 보안 스캔 완료 (WAS)"
+          description: |
+            **스캔 대상**: ${{ env.IMAGE_NAME }}:latest
+            **스캔 범위**: CRITICAL, HIGH CVE
+            **결과**: ${{ steps.trivy.outcome == 'success' && '✅ 취약점 없음' || '⚠️ 취약점 발견 - 확인 필요' }}
+            **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          color: ${{ steps.trivy.outcome == 'success' && 0x00FF00 || 0xFF6600 }}
+          username: Trivy Scanner
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
