@@ -1,6 +1,8 @@
 package com.jimin.board.controller;
 
-import com.jimin.board.entity.Post;
+import com.jimin.board.dto.PostCreateRequest;
+import com.jimin.board.dto.PostResponse;
+import com.jimin.board.dto.PostUpdateRequest;
 import com.jimin.board.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -64,7 +66,7 @@ public class PostController {
      */
     @GetMapping
     @Operation(summary = "게시글 목록 조회", description = "페이징을 지원하는 게시글 목록 조회 API")
-    public ResponseEntity<Page<Post>> getAllPosts(
+    public ResponseEntity<Page<PostResponse>> getAllPosts(
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지당 항목 수", example = "10")
@@ -73,7 +75,7 @@ public class PostController {
         // Pageable 객체 생성: page, size, 정렬(최신순)
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Post> posts = postService.getAllPostsPaged(pageable);
+        Page<PostResponse> posts = postService.getAllPostsPaged(pageable);
         return ResponseEntity.ok(posts);  // 200 OK
     }
 
@@ -99,8 +101,8 @@ public class PostController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "게시글 상세 조회", description = "게시글 조회 시 조회수가 자동으로 1 증가합니다")
-    public ResponseEntity<Post> getPostById(@PathVariable Long id) {
-        Post post = postService.getPostByIdWithView(id);  // 조회수 증가
+    public ResponseEntity<PostResponse> getPostById(@PathVariable Long id) {
+        PostResponse post = postService.getPostByIdWithView(id);  // 조회수 증가
         return ResponseEntity.ok(post);  // 200 OK
     }
 
@@ -130,8 +132,14 @@ public class PostController {
      * }
      */
     @PostMapping
-    public ResponseEntity<Post> createPost(@Valid @RequestBody Post post) {
-        Post savedPost = postService.createPost(post);
+    public ResponseEntity<PostResponse> createPost(
+            @Valid @RequestBody PostCreateRequest request) {
+        // @Valid: PostCreateRequest의 @NotBlank, @Size 검증 실행
+        // @RequestBody: JSON → PostCreateRequest로 변환 (Jackson)
+        //
+        // 이제 사용자가 {"id": 1, "viewCount": 999}를 보내도
+        // PostCreateRequest에는 해당 필드가 없으므로 무시됨 (안전!)
+        PostResponse savedPost = postService.createPost(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);  // 201 Created
     }
 
@@ -162,8 +170,10 @@ public class PostController {
      * 에러 처리: GlobalExceptionHandler가 자동 처리
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post post) {
-        Post updatedPost = postService.updatePost(id, post);
+    public ResponseEntity<PostResponse> updatePost(
+            @PathVariable Long id,
+            @Valid @RequestBody PostUpdateRequest request) {
+        PostResponse updatedPost = postService.updatePost(id, request);
         return ResponseEntity.ok(updatedPost);  // 200 OK
     }
 
@@ -205,8 +215,8 @@ public class PostController {
      * ]
      */
     @GetMapping("/search")
-    public ResponseEntity<List<Post>> searchPosts(@RequestParam String keyword) {
-        List<Post> posts = postService.searchPosts(keyword);
+    public ResponseEntity<List<PostResponse>> searchPosts(@RequestParam String keyword) {
+        List<PostResponse> posts = postService.searchPosts(keyword);
         return ResponseEntity.ok(posts);  // 200 OK
     }
 }

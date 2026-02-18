@@ -4,15 +4,15 @@
 # 목적: Spring Boot 애플리케이션을 컨테이너 이미지로 빌드
 #
 # Multi-stage Build:
-# - Stage 1 (builder): Maven으로 JAR 빌드 (JDK 17)
-# - Stage 2 (runtime): JAR 실행만 (JRE 17)
+# - Stage 1 (builder): Maven으로 JAR 빌드 (JDK 21)
+# - Stage 2 (runtime): JAR 실행만 (JRE 21)
 # - 이미지 크기: ~150MB (JDK 포함 시 ~400MB)
 # ==============================================================================
 
 # ==============================================================================
 # Stage 1: Builder - Maven 빌드
 # ==============================================================================
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -36,7 +36,7 @@ RUN ./mvnw clean package -DskipTests
 # ==============================================================================
 # Stage 2: Runtime - JAR 실행
 # ==============================================================================
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # Non-Root User 생성 (보안 강화)
 # - 컨테이너 탈출 시 호스트 root 접근 방지

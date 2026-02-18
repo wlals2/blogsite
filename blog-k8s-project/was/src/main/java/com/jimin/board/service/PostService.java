@@ -1,5 +1,8 @@
 package com.jimin.board.service;
 
+import com.jimin.board.dto.PostCreateRequest;
+import com.jimin.board.dto.PostResponse;
+import com.jimin.board.dto.PostUpdateRequest;
 import com.jimin.board.entity.Post;
 import com.jimin.board.exception.PostNotFoundException;
 import com.jimin.board.repository.PostRepository;
@@ -57,8 +60,15 @@ public class PostService {
      *   "last": false
      * }
      */
-    public Page<Post> getAllPostsPaged(Pageable pageable) {
-        return postRepository.findAll(pageable);
+    public Page<PostResponse> getAllPostsPaged(Pageable pageable) {
+        // postRepository.findAll() → Page<Post> (Entity 목록)
+        // .map(PostResponse::from) → Page<PostResponse> (DTO 목록)
+        //
+        // PostResponse::from 은 메서드 참조(Method Reference)
+        // 풀어쓰면: .map(post -> PostResponse.from(post))
+        // 뜻: "각 Post를 PostResponse로 변환해라"
+        return postRepository.findAll(pageable)
+                .map(PostResponse::from);
     }
 
     /**
@@ -89,7 +99,7 @@ public class PostService {
      * @return 게시글 (조회수 증가됨)
      */
     @Transactional  // 쓰기 트랜잭션 (조회수 업데이트)
-    public Post getPostByIdWithView(Long id) {
+    public PostResponse getPostByIdWithView(Long id) {
         // 1. 원자적 조회수 증가 (DB 레벨)
         int updated = postRepository.incrementViewCount(id);
 
@@ -98,9 +108,12 @@ public class PostService {
             throw new PostNotFoundException(id);
         }
 
-        // 3. 최신 데이터 조회 후 반환
-        return postRepository.findById(id)
+        // 3. 최신 데이터 조회
+        Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
+
+        // 4. Entity → DTO 변환 후 반환
+        return PostResponse.from(post);
     }
 
     /**
@@ -111,18 +124,24 @@ public class PostService {
      * @return 저장된 게시글 (ID 포함)
      */
     @Transactional  // 쓰기 트랜잭션 (readOnly = false)
-    public Post createPost(Post post) {
-        // 비즈니스 로직: 제목이 비어있으면 기본값 설정
-        if (post.getTitle() == null || post.getTitle().trim().isEmpty()) {
-            post.setTitle("제목 없음");
-        }
+    public PostResponse createPost(PostCreateRequest request) {
+        // 1. DTO → Entity 변환
+        //    request에는 title, content, author만 있음
+        //    id, viewCount, createdAt은 자동 설정됨
+        Post post = new Post();
+        post.setTitle(request.title());     // record의 getter는 title() (get 없음)
+        post.setContent(request.content());
+        post.setAuthor(request.author());
 
-        // 비즈니스 로직: 작성자가 비어있으면 기본값 설정
+        // 2. 비즈니스 로직: 작성자가 비어있으면 기본값 설정
+        //    제목은 @NotBlank로 검증되므로 여기서 체크 불필요
         if (post.getAuthor() == null || post.getAuthor().trim().isEmpty()) {
             post.setAuthor("익명");
         }
 
-        return postRepository.save(post);
+        // 3. DB 저장 → Entity → DTO 변환 후 반환
+        Post savedPost = postRepository.save(post);
+        return PostResponse.from(savedPost);
     }
 
     /**
@@ -132,23 +151,26 @@ public class PostService {
      * @return 수정된 게시글
      */
     @Transactional
-    public Post updatePost(Long id, Post updatedPost) {
+    public PostResponse updatePost(Long id, PostUpdateRequest request) {
         // 1. 기존 게시글 조회
         Post existingPost = getPostById(id);
 
-        // 2. 수정할 필드만 업데이트 (Partial Update)
-        if (updatedPost.getTitle() != null) {
-            existingPost.setTitle(updatedPost.getTitle());
+        // 2. Partial Update (부분 수정)
+        //    null인 필드는 건너뜀 → 기존 값 유지
+        //    예: {"title": "새 제목"} → title만 변경, content와 author는 그대로
+        if (request.title() != null) {
+            existingPost.setTitle(request.title());
         }
-        if (updatedPost.getContent() != null) {
-            existingPost.setContent(updatedPost.getContent());
+        if (request.content() != null) {
+            existingPost.setContent(request.content());
         }
-        if (updatedPost.getAuthor() != null) {
-            existingPost.setAuthor(updatedPost.getAuthor());
+        if (request.author() != null) {
+            existingPost.setAuthor(request.author());
         }
 
-        // 3. 저장 (UPDATE 쿼리 실행)
-        return postRepository.save(existingPost);
+        // 3. 저장 → Entity → DTO 변환 후 반환
+        Post savedPost = postRepository.save(existingPost);
+        return PostResponse.from(savedPost);
     }
 
     /**
@@ -169,7 +191,14 @@ public class PostService {
      * @param keyword 검색 키워드
      * @return 검색 결과 리스트
      */
-    public List<Post> searchPosts(String keyword) {
-        return postRepository.findByTitleContaining(keyword);
+    public List<PostResponse> searchPosts(String keyword) {
+        // postRepository.findByTitleContaining() → List<Post>
+        // .stream() → 목록을 하나씩 처리할 수 있는 "스트림"으로 변환
+        // .map(PostResponse::from) → 각 Post를 PostResponse로 변환
+        // .toList() → 다시 List로 모음
+        return postRepository.findByTitleContaining(keyword)
+                .stream()
+                .map(PostResponse::from)
+                .toList();
     }
 }
