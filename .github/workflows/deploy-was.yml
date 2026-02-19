@@ -21,34 +21,31 @@ env:
   IMAGE_NAME: ghcr.io/wlals2/board-was
   NAMESPACE: blog-system
   DEPLOYMENT_NAME: was
-  # Why: OWASP DC의 NVD CVE DB 캐시 경로 통일 → 매번 다운로드 방지
-  NVD_CACHE_DIR: ~/.m2/nvd-cache
 
 # ==============================================================================
-# Job 구조 (병렬 + 최적화 전략)
+# Job 구조
 # ==============================================================================
 #
 # git push → main
-#   ├─[병렬] secrets-scan   ~30초   GitLeaks Secrets 탐지
-#   ├─[병렬] test            ~30-60초 단위 테스트 (Maven 캐싱)
-#   ├─[병렬] sca             ~1-2분  OWASP 의존성 CVE 스캔 (NVD 캐싱)
+#   ├─[병렬] secrets-scan   ~30초   GitLeaks: Git 히스토리 전체 Secrets 탐지
+#   ├─[병렬] test            ~30-60초 H2 단위 테스트 (Maven 캐싱)
 #   └─[병렬] build-push      ~1-2분  Docker Build + Push (레이어 캐싱)
 #           │
-#           └─(4개 Job 모두 성공 시) deploy  ~1분
+#           └─(3개 Job 모두 성공 시) deploy  ~1분
 #
 # schedule (매일 02:00):
-#   └─ trivy-nightly  이미지 CVE 전체 스캔 → Discord 알림
+#   └─ trivy-nightly  OS 패키지 + Java 라이브러리 CVE 스캔 → Discord 알림
+#                     (매일 새로 발표되는 CVE도 다음날 새벽 탐지)
 #
-# 총 Push CI 시간: max(30초, 1분, 2분, 2분) + 1분 ≈ 2-3분
-# 캐싱 적용 후: max(30초, 30초, 1분, 1분) + 1분 ≈ 2분
+# 총 Push CI 시간: max(30초, 1분, 2분) + 1분 ≈ 2-3분
 jobs:
 
   # ============================================================================
   # Job 1: Secrets 스캔 (병렬)
   # ============================================================================
-  # Why: Secrets가 GitHub에 push되기 전에 차단하는 것이 핵심
-  #      GitLeaks는 Git 히스토리 전체에서 API 키, 비밀번호, 토큰 패턴 탐지
-  #      탐지 예시: DISCORD_TOKEN, DB_PASSWORD, AWS_ACCESS_KEY 하드코딩
+  # Why: Trivy/SonarQube 모두 Git 히스토리 전체 순회 불가
+  #      GitLeaks만 "이전 커밋에서 지운 Secrets"까지 탐지 가능
+  #      탐지 예시: DISCORD_TOKEN, DB_PASSWORD 하드코딩 후 삭제해도 히스토리에 남음
   secrets-scan:
     if: github.event_name != 'schedule'
     runs-on: self-hosted
@@ -56,14 +53,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # Why: 전체 Git 히스토리 스캔 (기본값 depth=1이면 과거 커밋 놓침)
+          # Why: 전체 Git 히스토리 스캔 (depth=1이면 과거 커밋 놓침)
           fetch-depth: 0
 
       - name: Scan for secrets with GitLeaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Why: Public repo는 라이선스 없어도 동작 (GITLEAKS_LICENSE 불필요)
           GITLEAKS_ENABLE_SUMMARY: true
 
   # ============================================================================
@@ -78,8 +74,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Why: pom.xml이 변경되지 않으면 캐시에서 의존성 로드 → 다운로드 생략
-      #      효과: Maven 의존성 다운로드 2-3분 → 0초 (캐시 히트 시)
+      # Why: pom.xml 변경 없으면 캐시에서 의존성 로드 → 다운로드 2-3분 → 0초
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -104,57 +99,7 @@ jobs:
           retention-days: 7
 
   # ============================================================================
-  # Job 3: SCA - 의존성 취약점 스캔 (병렬)
-  # ============================================================================
-  # Why: Trivy는 이미지 레벨(OS 패키지), OWASP DC는 소스 의존성 레벨 → 보완 관계
-  #      pom.xml의 rome, springdoc, mysql-connector 등의 CVE 탐지
-  #      NVD DB 캐싱으로 첫 실행 이후 속도 대폭 단축
-  sca:
-    if: github.event_name != 'schedule'
-    runs-on: self-hosted
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: maven-${{ hashFiles('blog-k8s-project/was/pom.xml') }}
-          restore-keys: |
-            maven-
-
-      # Why: NVD CVE DB는 ~500MB, 매번 다운로드 시 1-2분 소요
-      #      캐싱하면 다음 실행부터 수초로 단축
-      - name: Cache NVD CVE Database
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.NVD_CACHE_DIR }}
-          key: nvd-${{ github.run_number }}
-          restore-keys: |
-            nvd-
-
-      - name: Run OWASP Dependency Check
-        working-directory: ./blog-k8s-project/was
-        run: |
-          ./mvnw org.owasp:dependency-check-maven:check \
-            -DdataDirectory=${{ env.NVD_CACHE_DIR }} \
-            --no-transfer-progress \
-            -q
-        # Why: SCA는 경고 목적 (빌드 차단 시 false positive로 배포 막힐 수 있음)
-        #      pom.xml failBuildOnCVSS=7 설정은 HIGH+ 발견 시 exit-code 1 반환
-        continue-on-error: true
-
-      - name: Upload OWASP DC Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: owasp-dc-report
-          path: blog-k8s-project/was/target/dependency-check/
-          retention-days: 14
-
-  # ============================================================================
-  # Job 4: Docker 빌드 & 푸시 (병렬)
+  # Job 3: Docker 빌드 & 푸시 (병렬)
   # ============================================================================
   # Why: 테스트/스캔과 병렬로 실행 → 전체 CI 시간 단축
   build-push:
@@ -189,8 +134,7 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE_NAME }}:latest
-          # Why: GitHub Actions 캐시로 Docker 레이어 재사용
-          #      Dockerfile의 dependency:go-offline 레이어가 캐시 → 빌드 단축
+          # Why: Docker 레이어 캐싱 → pom.xml 변경 없으면 의존성 레이어 재사용
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -206,13 +150,13 @@ jobs:
           fi
 
   # ============================================================================
-  # Job 5: GitOps 배포 (직렬 - 4개 Job 모두 성공 시)
+  # Job 4: GitOps 배포 (직렬 - 3개 Job 모두 성공 시)
   # ============================================================================
   deploy:
     if: github.event_name != 'schedule'
     runs-on: self-hosted
-    # Why: secrets, 테스트, SCA, 빌드 모두 통과해야 배포 (4중 안전 게이트)
-    needs: [secrets-scan, test, sca, build-push]
+    # Why: Secrets 탐지 + 테스트 + 빌드 모두 통과해야 배포 (3중 안전 게이트)
+    needs: [secrets-scan, test, build-push]
     steps:
       - name: Update Kubernetes Manifest (GitOps)
         env:
@@ -248,7 +192,7 @@ jobs:
           echo "### ✅ WAS Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Image**: ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Security Gates**: Secrets ✅ | Tests ✅ | SCA ✅ | Build ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Gates**: Secrets ✅ | Tests ✅ | Build ✅" >> $GITHUB_STEP_SUMMARY
           echo "- **Namespace**: ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Send Discord Notification
@@ -262,7 +206,7 @@ jobs:
             **이미지**: ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}
             **커밋**: ${{ github.event.head_commit.message }}
             **작성자**: ${{ github.event.head_commit.author.name }}
-            **보안 게이트**: Secrets ✅ | Tests ✅ | SCA ✅ | Build ✅
+            **보안 게이트**: Secrets ✅ | Tests ✅ | Build ✅
             **URL**: https://blog.jiminhome.shop/
             **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           color: ${{ job.status == 'success' && 0x00FF00 || 0xFF0000 }}
@@ -270,10 +214,11 @@ jobs:
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 
   # ============================================================================
-  # Job 6: 야간 Trivy CVE 스캔 (schedule 전용)
+  # Job 5: 야간 Trivy CVE 스캔 (schedule 전용)
   # ============================================================================
-  # Why: Push 빌드 시간 영향 없이 CVE 최신 정보로 매일 스캔
-  #      매일 새벽 새로운 CVE가 발표되므로 정기 스캔 필수
+  # Why: OS 패키지(alpine libssl 등) + Java 라이브러리 CVE 통합 스캔
+  #      매일 새벽 최신 CVE DB로 스캔 → 오늘 발표된 CVE도 내일 새벽 탐지
+  #      Push 시 실행하지 않아 빌드 시간 영향 없음
   trivy-nightly:
     if: github.event_name == 'schedule'
     runs-on: self-hosted
@@ -298,7 +243,7 @@ jobs:
           title: "🔒 야간 보안 스캔 완료 (WAS)"
           description: |
             **스캔 대상**: ${{ env.IMAGE_NAME }}:latest
-            **스캔 범위**: CRITICAL, HIGH CVE
+            **스캔 범위**: CRITICAL, HIGH CVE (OS 패키지 + Java 라이브러리)
             **결과**: ${{ steps.trivy.outcome == 'success' && '✅ 취약점 없음' || '⚠️ 취약점 발견 - 확인 필요' }}
             **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           color: ${{ steps.trivy.outcome == 'success' && 0x00FF00 || 0xFF6600 }}
