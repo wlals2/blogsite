@@ -1,0 +1,615 @@
+{{- define "main" }}
+
+<style>
+/* ── News Page Layout ─────────────────────────────── */
+.news-hero {
+  text-align: center;
+  padding: 2.5rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.news-hero h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 0.5rem;
+}
+.news-hero p {
+  color: var(--secondary);
+  font-size: 0.95rem;
+  margin: 0 0 1.25rem;
+}
+.news-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: var(--secondary);
+}
+.news-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2ecc71;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Filter Tabs ───────────────────────────────────── */
+.news-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+.news-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.news-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.news-filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--theme);
+  font-weight: 600;
+}
+.news-filter-count {
+  background: rgba(128,128,128,0.2);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 0.75rem;
+}
+.news-filter-btn.active .news-filter-count {
+  background: rgba(0,0,0,0.2);
+}
+
+/* ── Stats Bar ─────────────────────────────────────── */
+.news-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  font-size: 0.8rem;
+  color: var(--secondary);
+}
+.news-stats-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.news-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Grid ──────────────────────────────────────────── */
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Card ──────────────────────────────────────────── */
+.news-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--entry);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.news-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.news-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border-color: var(--primary);
+  text-decoration: none;
+}
+.news-card:hover::before {
+  opacity: 1;
+}
+
+/* top accent line per source */
+.news-card[data-source="The Hacker News"]::before  { background: #2ecc71; }
+.news-card[data-source="BleepingComputer"]::before  { background: #3498db; }
+.news-card[data-source="Krebs on Security"]::before { background: #e74c3c; }
+.news-card[data-source="The Verge AI"]::before      { background: #9b59b6; }
+.news-card[data-source="MIT Technology Review"]::before { background: #e67e22; }
+
+/* ── Card Header ───────────────────────────────────── */
+.news-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.news-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.news-source-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.badge-thn    { background: #2ecc71; }
+.badge-bc     { background: #3498db; }
+.badge-krebs  { background: #e74c3c; }
+.badge-verge  { background: #9b59b6; }
+.badge-mit    { background: #e67e22; }
+.badge-other  { background: #7f8c8d; }
+
+.news-category-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  background: var(--code-bg);
+  color: var(--secondary);
+}
+.news-external-icon {
+  color: var(--secondary);
+  opacity: 0.5;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.news-card:hover .news-external-icon {
+  opacity: 1;
+  color: var(--primary);
+}
+
+/* ── Card Title ────────────────────────────────────── */
+.news-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--primary);
+  margin-bottom: 0.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+/* ── Card Summary ──────────────────────────────────── */
+.news-card-summary {
+  font-size: 0.82rem;
+  color: var(--secondary);
+  line-height: 1.55;
+  margin-bottom: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex-grow: 1;
+}
+.news-ai-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  margin-right: 4px;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
+
+/* ── Card Footer ───────────────────────────────────── */
+.news-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--secondary);
+  margin-top: auto;
+}
+.news-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.news-dot-sep {
+  opacity: 0.4;
+}
+
+/* ── Loading / Error / Empty ───────────────────────── */
+.news-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--secondary);
+}
+.news-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.news-error-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+.news-retry-btn {
+  margin-top: 1rem;
+  padding: 6px 18px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.news-retry-btn:hover {
+  background: var(--primary);
+  color: var(--theme);
+  border-color: var(--primary);
+}
+
+/* ── Load More ─────────────────────────────────────── */
+.news-load-more-wrap {
+  text-align: center;
+  margin-top: 2rem;
+}
+.news-load-more-btn {
+  padding: 10px 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.news-load-more-btn:hover {
+  background: var(--entry);
+  border-color: var(--primary);
+}
+.news-load-more-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Divider ───────────────────────────────────────── */
+.news-section-label {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--secondary);
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+  margin: 0.5rem 0 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .news-grid {
+    grid-template-columns: 1fr;
+  }
+  .news-hero h1 {
+    font-size: 1.5rem;
+  }
+  .news-stats-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+</style>
+
+<!-- Hero -->
+<div class="news-hero">
+  <h1>Security &amp; AI News</h1>
+  <p>보안과 AI 분야의 최신 뉴스를 자동으로 수집합니다</p>
+  <span class="news-live-badge">
+    <span class="news-live-dot"></span>
+    매시간 자동 업데이트
+  </span>
+</div>
+
+<!-- Filter Tabs -->
+<div class="news-filters">
+  <button class="news-filter-btn active" data-cat="all">
+    전체 <span class="news-filter-count" id="count-all">–</span>
+  </button>
+  <button class="news-filter-btn" data-cat="security">
+    🔒 Security <span class="news-filter-count" id="count-security">–</span>
+  </button>
+  <button class="news-filter-btn" data-cat="ai">
+    🤖 AI <span class="news-filter-count" id="count-ai">–</span>
+  </button>
+</div>
+
+<!-- Stats Bar -->
+<div class="news-stats-bar">
+  <div class="news-stats-left">
+    <span class="news-stat-item" id="stats-total">
+      <span>불러오는 중...</span>
+    </span>
+  </div>
+  <span id="stats-updated"></span>
+</div>
+
+<!-- Grid -->
+<div class="news-grid" id="news-grid">
+  <div class="news-state">
+    <div class="news-spinner"></div>
+    <p>뉴스를 불러오는 중입니다</p>
+  </div>
+</div>
+
+<!-- Load More -->
+<div class="news-load-more-wrap" id="load-more-wrap" style="display:none">
+  <button class="news-load-more-btn" id="load-more-btn">
+    더 보기 <span id="load-more-remaining"></span>
+  </button>
+</div>
+
+<script>
+(function () {
+  const SOURCE_CONFIG = {
+    'The Hacker News':      { abbr: 'THN',   cls: 'badge-thn'   },
+    'BleepingComputer':     { abbr: 'BC',    cls: 'badge-bc'    },
+    'Krebs on Security':    { abbr: 'Krebs', cls: 'badge-krebs' },
+    'The Verge AI':         { abbr: 'Verge', cls: 'badge-verge' },
+    'MIT Technology Review':{ abbr: 'MIT',   cls: 'badge-mit'   },
+  };
+
+  const PAGE_SIZE = 20;
+  let currentCat = 'all';
+  let currentPage = 0;
+  let totalElements = 0;
+  let totalPages = 0;
+  let isLoading = false;
+  let counts = { all: 0, security: 0, ai: 0 };
+
+  // ── Date formatter ──────────────────────────────────
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHr  = Math.floor(diffMs / 3600000);
+    const diffDay = Math.floor(diffMs / 86400000);
+    if (diffMin < 60)  return diffMin <= 1 ? '방금 전' : `${diffMin}분 전`;
+    if (diffHr  < 24)  return `${diffHr}시간 전`;
+    if (diffDay < 7)   return `${diffDay}일 전`;
+    return d.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+  }
+
+  // ── Source badge ────────────────────────────────────
+  function sourceBadge(name) {
+    const cfg = SOURCE_CONFIG[name] || { abbr: name.slice(0,4), cls: 'badge-other' };
+    return `<span class="news-source-badge ${cfg.cls}">${cfg.abbr}</span>`;
+  }
+
+  // ── Category tag ────────────────────────────────────
+  function categoryTag(cat) {
+    const label = cat === 'security' ? '🔒 Security' : '🤖 AI';
+    return `<span class="news-category-tag">${label}</span>`;
+  }
+
+  // ── Build a single card ─────────────────────────────
+  function buildCard(article) {
+    const summary = article.aiSummary || article.description || '';
+    const aiBadge = article.aiSummary ? '<span class="news-ai-badge">AI</span>' : '';
+    const date    = formatDate(article.publishedAt);
+    const src     = article.sourceName || '';
+
+    return `
+      <a class="news-card"
+         href="${escHtml(article.link)}"
+         target="_blank"
+         rel="noopener noreferrer"
+         data-source="${escHtml(src)}">
+        <div class="news-card-header">
+          <div class="news-card-badges">
+            ${sourceBadge(src)}
+            ${categoryTag(article.sourceCategory)}
+          </div>
+          <span class="news-external-icon">↗</span>
+        </div>
+        <div class="news-card-title">${escHtml(article.title)}</div>
+        <div class="news-card-summary">${aiBadge}${escHtml(summary)}</div>
+        <div class="news-card-footer">
+          <div class="news-card-meta">
+            <span>${date}</span>
+            <span class="news-dot-sep">·</span>
+            <span>${escHtml(src)}</span>
+          </div>
+        </div>
+      </a>`;
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── API fetch ───────────────────────────────────────
+  async function fetchNews(cat, page) {
+    const base = cat === 'all'
+      ? `/api/news?page=${page}&size=${PAGE_SIZE}`
+      : `/api/news/category/${cat}?page=${page}&size=${PAGE_SIZE}`;
+    const resp = await fetch(base);
+    if (!resp.ok) throw Object.assign(new Error('fetch failed'), { status: resp.status });
+    return resp.json();
+  }
+
+  // ── Render articles into grid ───────────────────────
+  function renderArticles(articles, append) {
+    const grid = document.getElementById('news-grid');
+    if (!append) grid.innerHTML = '';
+    if (!articles.length && !append) {
+      grid.innerHTML = `<div class="news-state"><div class="news-error-icon">📭</div><p>아직 수집된 뉴스가 없습니다</p></div>`;
+      return;
+    }
+    grid.insertAdjacentHTML('beforeend', articles.map(buildCard).join(''));
+  }
+
+  // ── Show error ──────────────────────────────────────
+  function showError(status) {
+    const grid = document.getElementById('news-grid');
+    const msg  = status === 403
+      ? '내부 네트워크(192.168.1.0/24)에서만 접근 가능합니다'
+      : '뉴스를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.';
+    const retry = status !== 403
+      ? `<button class="news-retry-btn" onclick="location.reload()">다시 시도</button>` : '';
+    grid.innerHTML = `<div class="news-state"><div class="news-error-icon">⚠️</div><p>${msg}</p>${retry}</div>`;
+  }
+
+  // ── Update stats bar ────────────────────────────────
+  function updateStats() {
+    document.getElementById('stats-total').innerHTML =
+      `<span>총 <strong>${totalElements}</strong>건의 기사</span>`;
+    document.getElementById('count-all').textContent      = counts.all      || '–';
+    document.getElementById('count-security').textContent = counts.security || '–';
+    document.getElementById('count-ai').textContent       = counts.ai       || '–';
+    const now = new Date();
+    document.getElementById('stats-updated').textContent  =
+      `마지막 확인: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  // ── Update Load More button ─────────────────────────
+  function updateLoadMore() {
+    const wrap = document.getElementById('load-more-wrap');
+    const btn  = document.getElementById('load-more-btn');
+    const rem  = document.getElementById('load-more-remaining');
+    const loaded = (currentPage + 1) * PAGE_SIZE;
+    const remaining = Math.max(0, totalElements - loaded);
+    if (currentPage + 1 >= totalPages || totalElements === 0) {
+      wrap.style.display = 'none';
+    } else {
+      wrap.style.display = 'block';
+      rem.textContent = `(${remaining}건 남음)`;
+    }
+    btn.disabled = isLoading;
+  }
+
+  // ── Load page ───────────────────────────────────────
+  async function load(cat, page, append) {
+    if (isLoading) return;
+    isLoading = true;
+    const btn = document.getElementById('load-more-btn');
+    if (btn) btn.textContent = '불러오는 중...';
+
+    try {
+      const data = await fetchNews(cat, page);
+      totalElements = data.totalElements || 0;
+      totalPages    = data.totalPages    || 0;
+      renderArticles(data.content || [], append);
+      updateStats();
+      updateLoadMore();
+    } catch (e) {
+      if (!append) showError(e.status);
+    } finally {
+      isLoading = false;
+      if (btn) {
+        const rem = document.getElementById('load-more-remaining');
+        btn.innerHTML = `더 보기 <span id="load-more-remaining">${rem ? rem.textContent : ''}</span>`;
+      }
+    }
+  }
+
+  // ── Fetch counts for badges ─────────────────────────
+  async function fetchCounts() {
+    try {
+      const [all, sec, ai] = await Promise.all([
+        fetch('/api/news?page=0&size=1').then(r => r.json()),
+        fetch('/api/news/category/security?page=0&size=1').then(r => r.json()),
+        fetch('/api/news/category/ai?page=0&size=1').then(r => r.json()),
+      ]);
+      counts.all      = all.totalElements      || 0;
+      counts.security = sec.totalElements      || 0;
+      counts.ai       = ai.totalElements       || 0;
+      updateStats();
+    } catch (_) {}
+  }
+
+  // ── Filter buttons ──────────────────────────────────
+  document.querySelectorAll('.news-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.news-filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentCat  = this.dataset.cat;
+      currentPage = 0;
+      totalElements = 0;
+      document.getElementById('news-grid').innerHTML =
+        `<div class="news-state"><div class="news-spinner"></div><p>불러오는 중...</p></div>`;
+      document.getElementById('load-more-wrap').style.display = 'none';
+      load(currentCat, currentPage, false);
+    });
+  });
+
+  // ── Load More ───────────────────────────────────────
+  document.getElementById('load-more-btn').addEventListener('click', function () {
+    currentPage++;
+    load(currentCat, currentPage, true);
+  });
+
+  // ── Init ────────────────────────────────────────────
+  load('all', 0, false);
+  fetchCounts();
+})();
+</script>
+
+{{- end }}
