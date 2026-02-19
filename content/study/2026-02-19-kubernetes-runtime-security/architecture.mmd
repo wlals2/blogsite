@@ -1,0 +1,33 @@
+graph LR
+    subgraph cluster["Kubernetes Cluster"]
+        subgraph falco_ns["falco namespace"]
+            F["🔍 Falco\n(DaemonSet)\neBPF syscall 감시"]
+            FS["📡 Falcosidekick\n(라우팅 허브)"]
+            T["⚔️ Talon\n(IPS)"]
+        end
+
+        subgraph monitoring_ns["monitoring namespace"]
+            L["📦 Loki\n(로그 보관)"]
+            G["📊 Grafana\n(시각화)"]
+        end
+
+        subgraph blog_ns["blog-system namespace"]
+            P["☕ Spring Boot\n(공격 대상)"]
+            NP["🚫 NetworkPolicy\n(격리)"]
+        end
+    end
+
+    ATTACK["🔴 공격자\n(RCE 시도)"] -->|"execve(/bin/bash)"| P
+    P -->|"syscall 발생"| F
+    F -->|"CRITICAL Alert"| FS
+    FS -->|"Alert 전송"| T
+    FS -->|"로그 전송"| L
+    L --> G
+    T -->|"kubernetes:label"| P
+    T -->|"NetworkPolicy 생성"| NP
+    NP -->|"트래픽 전면 차단"| P
+
+    style ATTACK fill:#ff4444,color:#fff
+    style T fill:#ff8800,color:#fff
+    style F fill:#0066cc,color:#fff
+    style NP fill:#cc0000,color:#fff
