@@ -54,7 +54,7 @@ IDS만으로는 부족하다. 탐지하고 알림을 보내도, 사람이 확인
 
 ### SIEM (Wazuh)
 
-Wazuh는 단순한 로그 모니터링 도구가 아닌 **SIEM(Security Information and Event Management)**이다. 차이는 **상관 분석(Correlation)**에 있다.
+Wazuh는 단순한 로그 모니터링 도구가 아닌 SIEM(Security Information and Event Management)이다. 차이는 **상관 분석(Correlation)**에 있다.
 
 단순 모니터링은 개별 이벤트를 본다. SIEM은 여러 이벤트를 연결해 패턴을 찾는다. 같은 IP가 며칠에 걸쳐 SSH 브루트포스 → 웹 스캔 → 침입 시도를 반복한다면, 각 도구는 각자의 알림만 낸다. SIEM은 이것을 하나의 공격 캠페인으로 식별한다.
 
