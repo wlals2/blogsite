@@ -1,8 +1,8 @@
 ---
-title: "Local K8s Blog - Homeserver Kubernetes 운영 실전"
-date: 2026-01-23
-summary: "베어메탈 Kubernetes에서 Hugo 블로그 58일 운영: Istio + Cilium + Falco + GitOps 완전 자동화"
-tags: ["kubernetes", "bare-metal", "hugo", "istio", "cilium", "falco", "argocd", "gitops", "devsecops", "homelab"]
+title: "Local K8s Blog - 베어메탈 Kubernetes 실전 운영"
+date: 2026-02-19
+summary: "베어메탈 Kubernetes 448일 운영: DevSecOps 파이프라인으로 개발·운영·보안이 하나의 흐름으로"
+tags: ["kubernetes", "bare-metal", "devsecops", "gitops", "istio", "cilium", "falco", "wazuh", "argocd", "homelab"]
 categories: ["projects"]
 series: ["Infrastructure Learning Journey"]
 weight: 4
@@ -13,31 +13,28 @@ draft: false
 
 ## 프로젝트 개요
 
-> **상태**: ✅ **Production 운영 중** (58일, 2024.11.28 시작)
+> **상태**: ✅ **Production 운영 중** (448일, 2024.11.28 시작)
 > **환경**: 베어메탈 Kubernetes 클러스터 (홈서버 4대)
-> **목표**: 이 블로그를 Kubernetes Pod로 배포하고 GitOps 자동화 구현
+> **핵심 철학**: 개발(Dev) · 보안(Sec) · 운영(Ops)이 별개의 단계가 아닌 **하나의 흐름**
+
+이 블로그를 보고 있다면, 지금 이 순간에도 이 인프라가 돌아가고 있는 것입니다.
 
 ---
 
-## 왜 이 프로젝트?
+## 왜 DevSecOps인가
 
-"Kubernetes 전문가"라고 블로그에 소개하는데, 정작 내 블로그는 Netlify/Cloudflare에서 실행?
+많은 팀에서 보안은 "배포 전에 한 번 확인하는 것"으로 취급됩니다. 개발자는 코드를 작성하고, 운영자는 배포하고, 보안 담당자는 사후에 감사합니다. 이 구조의 문제는 **피드백 루프가 너무 길다**는 것입니다.
 
-**Phase 3 (EKS)와의 차이점:**
+이 프로젝트에서 목표한 것은 달랐습니다.
 
-| 항목 | Phase 3 (EKS) | Phase 4 (Homeserver K8s) |
-|------|--------------|--------------------------|
-| **환경** | AWS EKS (클라우드) | 베어메탈 Kubernetes (홈서버) |
-| **목적** | 프로덕션급 HA + DR | 블로그 자가 호스팅 + 학습 |
-| **WEB** | nginx (정적 파일) | **Hugo 블로그 (이 블로그!)** |
-| **WAS** | PetClinic (샘플) | Spring Boot Board (게시판) |
-| **DB** | AWS RDS (Multi-AZ) | MySQL Pod (Longhorn PVC 5Gi) |
-| **CI/CD** | Jenkins + ArgoCD | **GitHub Actions + ArgoCD** |
-| **배포 전략** | Blue-Green | **Argo Rollouts Canary** |
-| **모니터링** | CloudWatch | **PLG Stack (58일 운영)** |
-| **HPA** | 미적용 | **WAS 2-10, WEB 2-5** |
-| **비용** | $258/월 | **무료** ✅ |
-| **실사용** | 샘플 앱 | **매일 사용 (58일)** ✅ |
+```
+코드 Push
+  → (즉시) Secrets 스캔 + 취약점 분석 + 단위 테스트  ← 개발 단계에서 보안 게이트
+  → (3분 내) Canary 배포 + 이상 감지 알림            ← 배포가 곧 운영 모니터링
+  → (실시간) 런타임 이상 행위 탐지 + 자동 대응        ← 운영이 곧 보안
+```
+
+보안이 파이프라인의 별도 단계가 아니라 **각 단계에 내장**됩니다.
 
 ---
 
@@ -45,265 +42,245 @@ draft: false
 
 ![Local K8s Architecture](../../../image/localk8s%20아키텍처.png)
 
-### 핵심 아키텍처
+### 9개 계층 구조
 
-**8개 계층으로 구성:**
-
-| 계층 | 기술 | 역할 | 상세 가이드 |
-|------|------|------|-------------|
-| **1. Ingress** | Cloudflare + Nginx | CDN 캐시, SSL/TLS 종료 | [아키텍처 상세](/study/2026-01-25-local-k8s-architecture/) |
-| **2. Service Mesh** | Istio (mTLS PERMISSIVE) | Pod 간 암호화 통신 | [Istio Service Mesh](/study/2026-01-22-istio-service-mesh-architecture/) |
-| **3. Application** | WEB (Hugo) + WAS (Spring Boot) + MySQL | 블로그 + 게시판 + DB | [Canary 배포 비교](/study/2026-01-21-canary-deployment-web-was-comparison/) |
-| **4. Storage** | Longhorn (15Gi) + Local-path (75Gi) | 복제 스토리지 + 로컬 스토리지 | [MySQL HA 전략](/study/2026-01-25-longhorn-mysql-ha-strategy/) |
-| **5. CNI** | Cilium eBPF + Hubble | 네트워크 정책 + 플로우 시각화 | [Cilium eBPF 네트워킹](/study/2026-01-14-cilium-ebpf-networking/) |
-| **6. GitOps** | ArgoCD (Auto-Sync) | Git Push 후 3초 내 자동 배포 | [GitOps CI/CD](/study/2026-01-20-gitops-cicd-pipeline/) |
-| **7. Monitoring** | PLG Stack (Prometheus + Loki + Grafana) | 15일 메트릭, 7일 로그 | [PLG Stack 구축](#) |
-| **8. Security** | Falco IDS + IPS | eBPF syscall 탐지, 자동 격리 | [Falco 런타임 보안](/study/2026-01-25-falco-ebpf-runtime-security-architecture/) |
-
-> 📖 **[전체 아키텍처 상세 가이드](/study/2026-01-25-local-k8s-architecture/)** - 각 계층별 설계 결정, 트레이드오프, 성능 지표
+| 계층 | 기술 | 역할 |
+|------|------|------|
+| **1. Ingress** | Cloudflare + Istio Gateway | CDN 캐시, SSL/TLS 종료, DDoS 방어 |
+| **2. Service Mesh** | Istio (mTLS) | Pod 간 암호화 통신, L7 트래픽 제어 |
+| **3. Application** | WEB (Hugo) + WAS (Spring Boot) + MySQL | 블로그 + API + DB |
+| **4. Storage** | Longhorn (3-replica) + Local-path | HA 분산 스토리지 |
+| **5. CNI** | Cilium eBPF + Hubble | 네트워크 정책, 플로우 시각화 |
+| **6. GitOps** | ArgoCD + Argo Rollouts | Git Push → 3초 내 자동 Canary 배포 |
+| **7. Observability** | Prometheus + Loki + Grafana + Tempo | 메트릭 · 로그 · 트레이싱 통합 |
+| **8. Runtime Security** | Falco + Falcosidekick + Talon | syscall 탐지 → 자동 격리 |
+| **9. SIEM** | Wazuh | 보안 이벤트 중앙화, 규정 준수 |
 
 ---
 
-## 주요 성과
+## DevSecOps 파이프라인
 
-### 운영 성과 (58일)
+개발·보안·운영이 하나의 흐름으로 연결되는 방식입니다.
+
+### CI 파이프라인 (코드 Push 시)
+
+```
+git push
+    │
+    ├─[병렬] GitLeaks        Git 히스토리 전체 Secrets 탐지
+    │        └─ 평문 토큰, 비밀번호 커밋 이력까지 검출
+    │
+    ├─[병렬] 단위 테스트      H2 In-Memory DB → MySQL 없이 검증
+    │        └─ 테스트 리포트 아티팩트 자동 저장
+    │
+    └─[병렬] Docker 빌드     멀티스테이지 빌드 → GHCR 푸시
+             └─ 빌드 검증 (이미지 크기 50MB 이상 확인)
+                        │
+             [3개 게이트 모두 통과 시]
+                        │
+                       CD → k8s-manifests 이미지 태그 업데이트
+                          → ArgoCD Auto-Sync (3초 내)
+                          → Argo Rollouts Canary 배포
+                          → Discord 알림
+```
+
+**야간 보안 스캔 (매일 02:00 KST)**:
+```
+Trivy 야간 CVE 스캔
+  → OS 패키지 + Java 라이브러리 통합
+  → 매일 최신 CVE DB 기준 (어제 발표된 CVE도 탐지)
+  → CRITICAL/HIGH 발견 시 Discord 알림
+```
+
+### CD 파이프라인 (Canary 전략)
+
+```
+WAS 배포: 20% → 50% → 80% → 100% (각 단계 1분 대기)
+WEB 배포: 10% → 50% → 90% → 100% (각 단계 30초 대기)
+
+이상 감지 시: 즉시 Rollback (10초)
+정상 완료: 이전 버전 자동 삭제
+```
+
+### Runtime Security (배포 후 실시간)
+
+```
+애플리케이션 실행 중
+    │
+    Falco (eBPF syscall 감시)
+    ├─ 이상 행위 탐지 (파일 접근, 권한 상승, 네트워크 이상)
+    │
+    Falcosidekick (이벤트 라우팅)
+    ├─ → Loki (로그 저장)
+    ├─ → Discord (즉시 알림)
+    ├─ → Wazuh (SIEM 보안 이벤트 기록)
+    └─ → Falco Talon (자동 대응)
+              └─ CiliumNetworkPolicy 생성 → Pod 자동 격리
+```
+
+### SIEM 통합 (Wazuh)
+
+```
+이벤트 소스들
+  Falco (런타임 이상 행위)
+  Kubernetes Audit Log (API 접근 기록)
+  OS Syslog (시스템 이벤트)
+      │
+      Wazuh Manager (룰 엔진 + 상관 분석)
+      └─ Wazuh Dashboard (보안 이벤트 시각화)
+```
+
+Wazuh는 단순 로그 수집이 아닙니다. 여러 소스의 이벤트를 **상관 분석**해서 단독 이벤트로는 보이지 않던 패턴을 찾아냅니다.
+
+---
+
+## 운영 현황 (448일)
 
 | 지표 | 수치 | 비고 |
 |------|------|------|
-| **운영 기간** | 58일 | 2024-11-28 ~ 현재 |
-| **다운타임** | 0분 | 100% 가동률 |
-| **배포 횟수** | 47회 | GitOps 자동화 |
-| **배포 시간** | 35초 | Hugo 빌드 → 배포 완료 |
-| **Canary 배포** | WEB 1.5분, WAS 3분 | 단계적 트래픽 전환 |
-| **Rollback** | 10초 | Argo Rollouts abort |
-
-### 리소스 최적화
-
-| 항목 | Before | After | 절약 |
-|------|--------|-------|------|
-| **스토리지** | 120Gi (Nextcloud 포함) | 90Gi | 30Gi (25%) |
-| **PVC 수** | 8개 | 5개 | 3개 정리 |
-| **Pod 수** | 100개 | 98개 | 불필요 제거 |
-
-### 클러스터 리소스 사용률
-
-| 노드 | CPU | Memory | Storage |
-|------|-----|--------|---------|
-| k8s-cp (Control Plane) | 7% | 30% | 20Gi |
-| k8s-worker1 | 16% | 72% | 45Gi |
-| k8s-worker2 | 15% | 39% | 25Gi |
-| k8s-worker3 | 12% | 35% | 20Gi |
+| **운영 기간** | 448일 | 2024-11-28 ~ 현재 |
+| **다운타임** | 계획 외 0 | 노드 장애 시 자동 복구 |
+| **WAS 배포** | 327회 | Argo Rollouts 누적 generation |
+| **WEB 배포** | 174회 | Hugo 빌드 포함 |
+| **Canary 배포 시간** | WAS 3분, WEB 1.5분 | 단계적 트래픽 전환 |
+| **Rollback** | 10초 | `argo rollouts abort` |
+| **CI 게이트** | 3중 (Secrets + 테스트 + 빌드) | 모두 통과해야 배포 |
+| **야간 보안 스캔** | 매일 02:00 | Trivy CVE |
+| **런타임 보안** | 24/7 | Falco eBPF 상시 감시 |
 
 ---
 
 ## 기술 스택
 
-### Kubernetes 기본
+### Platform
 
-| 컴포넌트 | 버전/상태 | 역할 |
-|---------|----------|------|
-| **Kubernetes** | v1.31.13 | 베어메탈 4노드 클러스터 |
-| **Container Runtime** | containerd | Pod 실행 환경 |
-| **CNI** | Cilium eBPF | 네트워크 플러그인 |
-| **Storage** | Longhorn (15Gi) + Local-path (75Gi) | 영구 볼륨 |
+| 컴포넌트 | 버전 | 역할 |
+|---------|------|------|
+| Kubernetes | v1.31.13 | 베어메탈 4노드 클러스터 |
+| containerd | v2.1.5 | 컨테이너 런타임 |
+| Cilium CNI | - | eBPF 기반 네트워크 |
+| Longhorn | - | 3-replica 분산 스토리지 |
 
-### Service Mesh & Networking
+### DevSecOps
 
-| 컴포넌트 | 역할 | 상세 가이드 |
-|---------|------|-------------|
-| **Istio** | Service Mesh (mTLS PERMISSIVE) | [Istio 아키텍처](/study/2026-01-22-istio-service-mesh-architecture/) |
-| **Cilium** | CNI (eBPF 기반) | [Cilium eBPF](/study/2026-01-14-cilium-ebpf-networking/) |
-| **Hubble** | 네트워크 플로우 시각화 | [Hubble 관측성](/study/2026-01-22-cilium-hubble-observability/) |
-| **Cloudflare** | CDN + DDoS 방어 | - |
+| 컴포넌트 | 단계 | 역할 |
+|---------|------|------|
+| **GitLeaks** | CI (Push 즉시) | Git 히스토리 Secrets 스캔 |
+| **단위 테스트** | CI (Push 즉시) | H2 In-Memory 기능 검증 |
+| **Trivy** | CI 야간 스케줄 | OS + Java 라이브러리 CVE |
+| **SealedSecrets** | 빌드 | Git에 암호화된 Secret 저장 |
+| **Falco** | 런타임 | eBPF syscall 이상 행위 탐지 |
+| **Falco Talon** | 런타임 | 탐지 → CiliumNetworkPolicy 자동 생성 |
+| **Wazuh** | 운영 | SIEM, 보안 이벤트 상관 분석 |
+| **Istio AuthorizationPolicy** | 운영 | L7 API 접근 제어 |
+| **CiliumNetworkPolicy** | 운영 | L3/L4 Pod 간 트래픽 제어 |
 
-### CI/CD & GitOps
-
-| 컴포넌트 | 역할 | 상세 가이드 |
-|---------|------|-------------|
-| **GitHub Actions** | CI (빌드 + 이미지 푸시) | [GitOps CI/CD](/study/2026-01-20-gitops-cicd-pipeline/) |
-| **ArgoCD** | CD (GitOps 자동 배포) | [ArgoCD 트러블슈팅](/study/2026-01-23-argocd-troubleshooting/) |
-| **Argo Rollouts** | Canary 배포 전략 | [Canary 배포 비교](/study/2026-01-21-canary-deployment-web-was-comparison/) |
-| **GHCR** | Private Container Registry | - |
-
-### Monitoring & Observability
+### Observability
 
 | 컴포넌트 | 역할 | Retention |
 |---------|------|-----------|
-| **Prometheus** | 메트릭 수집 | 15일 |
-| **Loki** | 로그 중앙화 | 7일 |
-| **Grafana** | 시각화 (4 대시보드) | - |
-| **Pushgateway** | Batch Job 메트릭 | - |
+| Prometheus | 메트릭 수집 | 15일 |
+| Loki | 로그 중앙화 | 7일 |
+| Grafana | 시각화 | - |
+| Tempo | 분산 트레이싱 | - |
+| OpenTelemetry | WAS → Tempo 트레이싱 자동 수집 | - |
 
-### Security (DevSecOps)
+### Application
 
-| 컴포넌트 | 역할 | 상세 가이드 |
-|---------|------|-------------|
-| **Trivy** | 이미지 취약점 스캔 (CI) | - |
-| **Falco** | 런타임 보안 (IDS + IPS) | [Falco 런타임 보안](/study/2026-01-25-falco-ebpf-runtime-security-architecture/) |
-| **Falcosidekick** | 알림 라우팅 (Loki, Slack) | [Falco 트러블슈팅](/study/2026-01-23-falco-runtime-security-troubleshooting/) |
-| **Falco Talon** | 자동 대응 (NetworkPolicy 생성) | [Falco 아키텍처](/study/2026-01-25-falco-ebpf-runtime-security-architecture/) |
-| **CiliumNetworkPolicy** | Pod 간 트래픽 제어 | - |
-
-### Storage & Database
-
-| 컴포넌트 | 용량 | 역할 | 상세 가이드 |
-|---------|------|------|-------------|
-| **Longhorn** | 15Gi (3 replicas) | 분산 스토리지 (MySQL, Loki) | [Longhorn & MySQL HA](/study/2026-01-25-longhorn-mysql-ha-strategy/) |
-| **Local-path** | 75Gi | 로컬 스토리지 (Prometheus, Grafana) | - |
-| **MySQL** | 5Gi (Longhorn PVC) | 게시판 DB | [MySQL HA 전략](/study/2026-01-25-longhorn-mysql-ha-strategy/) |
-| **MySQL Backup** | 일일 CronJob (NFS 백업) | 자동 백업 | [MySQL 백업 트러블슈팅](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
+| 컴포넌트 | 기술 | 역할 |
+|---------|------|------|
+| WEB | Hugo + Nginx | 정적 블로그 |
+| WAS | Spring Boot (JDK 21) | REST API, RSS 뉴스 수집 |
+| DB | MySQL 8.0 | 게시판 + 뉴스 데이터 |
+| Registry | GHCR (ghcr.io) | Private 컨테이너 이미지 |
 
 ---
 
-## 주요 트러블슈팅
+## Phase 3 (EKS)와 비교
 
-58일간 운영하면서 만난 문제들과 해결 과정을 정리했습니다.
-
-### Kubernetes & GitOps
-
-| 문제 | 해결 방법 | 상세 가이드 |
-|------|----------|-------------|
-| kubectl Connection Refused (Self-hosted Runner) | kubeconfig 권한 + 소유자 변경 | [Connection Refused](/study/2026-01-23-kubectl-connection-refused/) |
-| kubectl이 HTML을 반환 | API Server 인증서 재발급 | [HTML 반환 문제](/study/2026-01-23-kubectl-returns-html/) |
-| ArgoCD 동기화 실패 | 다양한 시나리오별 해결법 | [ArgoCD 트러블슈팅](/study/2026-01-23-argocd-troubleshooting/) |
-| Canary Pod Pending | TopologySpread와 Canary 충돌 | [Topology Spread 충돌](/study/2026-01-23-canary-topology-spread/) |
-
-### CI/CD & Runner
-
-| 문제 | 해결 방법 | 상세 가이드 |
-|------|----------|-------------|
-| Runner가 Job을 안 가져감 | curl로 연결 테스트 + labels 확인 | [Runner Job 미실행](/study/2026-01-23-runner-not-picking-job/) |
-| WAS Docker 빌드 경로 오류 | GitHub Actions context 경로 수정 | [Docker 빌드 오류](/study/2026-01-23-was-docker-build-path-error/) |
-| Cloudflare 캐시 퍼지 실패 | API 토큰 권한 확인 | [캐시 퍼지 실패](/study/2026-01-23-cloudflare-cache-purge-fail/) |
-
-### Storage & Database
-
-| 문제 | 해결 방법 | 상세 가이드 |
-|------|----------|-------------|
-| Longhorn CSI CrashLoopBackOff | iscsi-initiator-utils 설치 | [Longhorn CSI 오류](/study/2026-01-23-longhorn-csi-crashloopbackoff/) |
-| MySQL 백업 CronJob 실패 | Cilium + Istio 환경 DNS 설정 | [MySQL 백업 오류](/study/2026-01-23-mysql-backup-cronjob-troubleshooting/) |
-
-### Service Mesh
-
-| 문제 | 해결 방법 | 상세 가이드 |
-|------|----------|-------------|
-| Nginx Ingress → Istio Gateway 전환 | mTLS PERMISSIVE + nginx proxy | [Ingress → Gateway 전환](/study/2026-01-24-nginx-ingress-to-istio-gateway/) |
+| 항목 | Phase 3 (EKS) | 현재 (Homelab K8s) |
+|------|--------------|-------------------|
+| **환경** | AWS EKS (매니지드) | 베어메탈 kubeadm |
+| **비용** | $258/월 | $0 |
+| **보안 파이프라인** | 없음 | GitLeaks + Trivy + Falco + Wazuh |
+| **배포 전략** | Blue-Green | Canary (Argo Rollouts) |
+| **서비스 메시** | 없음 | Istio mTLS |
+| **네트워크** | AWS VPC CNI | Cilium eBPF |
+| **SIEM** | 없음 | Wazuh |
+| **트레이싱** | 없음 | OpenTelemetry + Tempo |
+| **실사용** | 샘플 앱 (PetClinic) | 실제 블로그 (매일 사용) |
 
 ---
 
 ## 핵심 학습 포인트
 
-### 1. 베어메탈 Kubernetes 운영 경험
+### 보안은 파이프라인에 내장된다
 
-- **kubeadm**으로 클러스터 직접 구축 (AWS EKS 추상화 벗어남)
-- Worker 노드 추가/제거 실습
-- 노드 장애 시 Pod 재스케줄링 경험
+보안을 "나중에"로 미루면 복잡도만 높아집니다. 이 프로젝트에서 확인한 것은, CI 단계에 GitLeaks와 Trivy를 붙이는 것이 생각보다 어렵지 않다는 것입니다. 어렵게 느껴지는 이유는 대부분 "어디서부터 시작해야 하는가"를 몰라서입니다.
 
-### 2. GitOps 완전 자동화
+```
+시작점: GitHub Actions에 gitleaks-action 한 줄 추가
+→ 즉시 Git 히스토리 전체 Secrets 탐지
+→ 비용: 0원, 추가 인프라: 없음
+```
 
-- Git Push → ArgoCD Auto-Sync (3초) → Canary 배포 → Cloudflare 캐시 퍼지
-- kubectl 사용 금지 (Git = Single Source of Truth)
-- SelfHeal로 수동 변경 자동 되돌림
+### 런타임 보안은 배포 후에도 필요하다
 
-### 3. Canary 배포 전략
+이미지 스캔과 테스트를 통과한 코드도, 실행 중에 예상치 못한 방식으로 동작할 수 있습니다. Falco는 **syscall 레벨**에서 감시하므로, 애플리케이션 코드의 취약점이 실제로 악용되는 순간을 잡을 수 있습니다.
 
-- WEB (10%→50%→90%, 30초 간격): 빠른 배포
-- WAS (20%→50%→80%, 1분 간격): 신중한 배포
-- Istio Traffic Management로 트래픽 제어
+```
+예시: /etc/shadow 파일 읽기 시도
+  → 정상 앱에서는 발생하지 않음
+  → Falco가 즉시 감지 → Discord 알림 → Talon이 Pod 격리
+  → 피해 범위가 해당 Pod로 제한됨
+```
 
-### 4. Service Mesh 실전 적용
+### GitOps는 감사 로그를 자동으로 만든다
 
-- Istio mTLS PERMISSIVE (평문 + mTLS 공존)
-- VirtualService로 Path-based 라우팅 (`/` → WEB, `/api` → WAS)
-- MySQL은 Istio Sidecar 제외 (JDBC 호환성)
+`kubectl edit`으로 수동 변경하면 누가 언제 무엇을 바꿨는지 추적이 어렵습니다. Git을 Single Source of Truth로 사용하면 모든 변경이 커밋 히스토리로 남습니다.
 
-### 5. eBPF 기반 네트워킹 & 보안
+```
+Git commit history = 인프라 변경 감사 로그
+```
 
-- Cilium CNI로 kube-proxy 대체 가능 (성능 30% 향상)
-- Hubble UI로 네트워크 플로우 시각화
-- Falco로 런타임 syscall 탐지 + NetworkPolicy 자동 격리
+### 베어메탈은 추상화가 없다
 
-### 6. HPA 자동 스케일링
-
-- WAS: 2-10 replicas (CPU 70%)
-- WEB: 2-5 replicas (CPU 70%)
-- Canary + HPA 동시 동작 (dynamicStableScale)
-
-### 7. PLG Stack 모니터링 (58일 운영)
-
-- Prometheus: 15일 메트릭, 8개 Alert Rules
-- Loki: 7일 로그 (모든 Pod 중앙화)
-- Grafana: 4개 대시보드
-
-### 8. 리소스 최적화
-
-- Nextcloud 제거 (30Gi 절약)
-- Longhorn vs Local-path 혼용 (리소스 효율)
-- JVM 튜닝 (`-Xms256m -Xmx512m -XX:+UseG1GC`)
+EKS에서는 노드 장애가 나도 AWS가 대부분 처리합니다. 베어메탈에서는 VMware 네트워크 끊김, Longhorn 볼륨 affinity, kubelet 타임아웃까지 직접 마주칩니다. 불편하지만, 이것이 실제로 Kubernetes가 어떻게 동작하는지를 이해하는 방법입니다.
 
 ---
 
-## 다음 단계
+## 주요 트러블슈팅
 
-### 빨리 할 것들 (30분 내)
-
-1. **Loki Retention 설정** (5분) - 로그 7일로 제한
-2. **Longhorn 스냅샷 정책** (15분) - 매일 3AM 자동 스냅샷
-3. **Prometheus Alert → Slack** (10분) - 알림 자동화
-
-### 나중에 해볼 것들 (1시간+)
-
-4. **Cilium kube-proxy 대체** (1시간) - 성능 30% 향상 예상
-5. **Istio Gateway 직접 노출** (1시간) - Let's Encrypt 인증서
-6. **Falco IPS Phase 2** (30분) - WARNING 레벨 자동 격리
+| 문제 | 원인 | 해결 |
+|------|------|------|
+| 뉴스 API 403 | Istio AuthorizationPolicy에 OPTIONS 메서드 누락 | `methods: ["GET", "OPTIONS"]` 추가 |
+| 뉴스 미표시 | Spring Boot CORS 헤더 없음 | `WebMvcConfigurer` CORS 전역 설정 추가 |
+| WAS CrashLoopBackOff | Cilium Egress가 RSS 외부 HTTPS 차단 | `toEntities: world` + port 443으로 변경 |
+| Worker NotReady | VMware 네트워크 어댑터 간헐적 끊김 | 네트워크 어댑터 절전 비활성화 |
+| Longhorn FailedAttachVolume | 볼륨 replicas가 SchedulingDisabled 노드에만 존재 | `kubectl uncordon` |
+| Wazuh Dashboard 접근 불가 | Config 파일보다 환경 변수가 낮은 우선순위 | `opensearch_dashboards.yml` 직접 수정 |
 
 ---
 
-## 왜 베어메탈 Kubernetes인가?
+## 관련 글
 
-### Phase 3 (EKS)의 한계
-
-- 샘플 앱 (PetClinic)만 배포 → 실사용 경험 부족
-- AWS 추상화 → 내부 동작 이해 어려움
-- 비용 $258/월 → 지속 운영 불가
-
-### Homeserver K8s의 장점
-
-- 매일 사용 (58일) → 진짜 운영 경험
-- 무료 운영 → 장기 실험 가능
-- 베어메탈 경험 → kubeadm, CNI, CSI 직접 구축
-- 트러블슈팅 → 실전 문제 해결 능력
-- 지속 개선 → GitOps로 안전하게 실험
-
----
-
-## 관련 문서
-
-### 핵심 아키텍처
 - [전체 아키텍처 가이드](/study/2026-01-25-local-k8s-architecture/)
-- [Istio Service Mesh](/study/2026-01-22-istio-service-mesh-architecture/)
-- [Cilium eBPF 네트워킹](/study/2026-01-14-cilium-ebpf-networking/)
-- [GitOps CI/CD 파이프라인](/study/2026-01-20-gitops-cicd-pipeline/)
-
-### 배포 전략
-- [Canary 배포 전략 비교 (WEB vs WAS)](/study/2026-01-21-canary-deployment-web-was-comparison/)
-
-### Storage & Database
+- [Wazuh 실전 보안 모니터링](/study/2026-02-16-wazuh-실전-보안-모니터링/)
+- [Falco → Wazuh 연동 (Helm Wrapper Chart)](/study/2026-02-12-falco-wazuh-helm-wrapper-chart/)
+- [Wazuh Dashboard HTTP 트러블슈팅](/study/2026-02-12-wazuh-dashboard-http-troubleshooting/)
+- [Cilium Hubble 관측성](/study/2026-01-22-cilium-hubble-observability/)
+- [Canary 배포 전략 비교](/study/2026-01-21-canary-deployment-web-was-comparison/)
 - [Longhorn & MySQL HA 전략](/study/2026-01-25-longhorn-mysql-ha-strategy/)
-
-### Monitoring & Security
-- [Falco eBPF 런타임 보안](/study/2026-01-25-falco-ebpf-runtime-security-architecture/)
 
 ---
 
 ## 업데이트 로그
 
-| 날짜 | 업데이트 내용 |
-|------|-------------|
-| 2026-01-25 | 전체 아키텍처 가이드 작성, 프로젝트 페이지 간소화 |
+| 날짜 | 내용 |
+|------|------|
+| 2026-02-19 | Wazuh SIEM, DevSecOps 파이프라인, 운영 448일 반영하여 전면 개편 |
+| 2026-01-25 | 전체 아키텍처 가이드 작성 |
 | 2026-01-23 | Falco Runtime Security 구축 완료 |
-| 2026-01-22 | Istio Service Mesh 전환 완료 (Nginx Ingress 제거) |
-| 2026-01-20 | Nextcloud 제거 (30Gi 절약), GitOps 파이프라인 완성 |
-| 2026-01-14 | Cilium + Hubble UI 구축 완료 |
-| 2025-12-02 | WAS (Spring Boot Board) 추가 |
-| 2025-11-28 | 프로젝트 시작 (Hugo 블로그 배포) |
+| 2026-01-22 | Istio Service Mesh 전환 완료 |
+| 2026-01-20 | GitOps 파이프라인 완성 |
+| 2025-11-28 | 프로젝트 시작 |
