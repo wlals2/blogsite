@@ -34,190 +34,97 @@
         {{- end }}
         {{- end }}
 
-        {{- /* Hero 섹션 */ -}}
-        <div class="home-hero">
-            <p class="home-hero-quote">"클라우드의 편안함에 안주하지 않고, 본질을 파고듭니다."</p>
-            <p class="home-hero-sub">
-                가상화 없는 베어메탈 위에 직접 설계한 Kubernetes 클러스터.<br>
-                {{ site.Data.metrics.homelab.uptime_days }}일간의 무중단 운영이 안정성을 증명합니다.<br>
-                지금 보시는 이 블로그도 그 위에서 실행 중입니다.
+        {{- /* ── ABOUT ── */ -}}
+        <div class="hi-about">
+            <p class="hi-about-title">베어메탈부터 서비스 메시까지 — 직접 구축하며 배웁니다.</p>
+            <p class="hi-about-body">
+                클라우드 매니지드 서비스에 의존하지 않고, 베어메탈 위에 Kubernetes 클러스터를 직접 설계했습니다.
+                Cilium eBPF 네트워킹, Istio mTLS, Falco 런타임 보안까지 — 이 블로그는 그 과정에서 배운 것들을 기록합니다.
             </p>
-
-            {{- /* 클러스터 통계 배지 */ -}}
-            <div class="home-stats">
-                <div class="home-stat-item">
-                    <span class="home-stat-value">{{ site.Data.metrics.homelab.total_nodes }}</span>
-                    <span class="home-stat-label">Nodes</span>
-                </div>
-                <div class="home-stat-item">
-                    <span class="home-stat-value">{{ site.Data.metrics.homelab.total_pods }}</span>
-                    <span class="home-stat-label">Pods</span>
-                </div>
-                <div class="home-stat-item">
-                    <span class="home-stat-value">{{ site.Data.metrics.homelab.uptime_days }}d</span>
-                    <span class="home-stat-label">Uptime</span>
-                </div>
-                <div class="home-stat-item">
-                    <span class="home-stat-value">100%</span>
-                    <span class="home-stat-label">mTLS</span>
-                </div>
+            <div class="hi-badges">
+                <span class="hi-badge">Kubernetes {{ site.Data.metrics.homelab.total_nodes }}노드 운영 중</span>
+                <span class="hi-badge">{{ site.Data.metrics.homelab.total_pods }}개 Pod</span>
+                <span class="hi-badge">{{ site.Data.metrics.homelab.uptime_days }}일 무중단</span>
+                <span class="hi-badge hi-badge--accent">이 블로그도 그 위에서 실행 중</span>
             </div>
         </div>
 
-        {{- /* 최신 포스트 */ -}}
-        <div class="profile-section">
-            <div class="home-section-header">
-                <h3>최신 포스트</h3>
-                <a href="/study/" class="home-view-all">전체 보기 →</a>
+        {{- /* ── RECENT POSTS ── */ -}}
+        <div class="hi-section">
+            <div class="hi-section-head">
+                <h2 class="hi-section-title">최신 글</h2>
+                <a href="/study/" class="hi-more-link">전체 글 보기 →</a>
             </div>
-            <div class="home-post-grid">
-                {{- $posts := where site.RegularPages "Section" "study" }}
-                {{- $posts = $posts | first 4 }}
-                {{- range $posts }}
-                <a class="home-post-card" href="{{ .Permalink }}">
-                    <div class="home-post-card-top">
+
+            {{- $allPosts := where site.RegularPages "Section" "study" }}
+            {{- $recent := $allPosts | first 6 }}
+
+            <div class="hi-post-grid">
+                {{- range $recent }}
+                <a class="hi-post-card" href="{{ .Permalink }}">
+                    <div class="hi-post-meta">
                         {{- with .Params.categories }}
-                        <span class="home-post-category">{{ index . 1 | default (index . 0) }}</span>
+                        <span class="hi-post-cat">{{ index . 1 | default (index . 0) }}</span>
                         {{- end }}
-                        <span class="home-post-date">{{ .Date.Format "Jan 02" }}</span>
+                        <span class="hi-post-dot">·</span>
+                        <span class="hi-post-date">{{ .Date.Format "2006.01.02" }}</span>
                     </div>
-                    <div class="home-post-title">{{ .Title }}</div>
+                    <h3 class="hi-post-title">{{ .Title }}</h3>
                     {{- with .Description }}
-                    <div class="home-post-desc">{{ . }}</div>
+                    <p class="hi-post-desc">{{ . }}</p>
                     {{- end }}
                 </a>
                 {{- end }}
             </div>
+
+            {{- /* 전체 글 목록 */ -}}
+            <details class="hi-all-posts">
+                <summary class="hi-all-posts-toggle">
+                    전체 글 목록 <span class="hi-all-count">({{ len $allPosts }}편)</span>
+                </summary>
+                <div class="hi-all-list">
+                    {{- range $allPosts }}
+                    <a class="hi-all-item" href="{{ .Permalink }}">
+                        <span class="hi-all-date">{{ .Date.Format "2006.01" }}</span>
+                        <span class="hi-all-title">{{ .Title }}</span>
+                        {{- with .Params.categories }}
+                        <span class="hi-all-cat">{{ index . 1 | default (index . 0) }}</span>
+                        {{- end }}
+                    </a>
+                    {{- end }}
+                </div>
+            </details>
         </div>
 
-        {{- /* 최신 보안 & AI 뉴스 */ -}}
-        <div class="profile-section">
-            <div class="home-section-header">
-                <h3>최신 보안 &amp; AI 뉴스</h3>
-                <a href="/news/" class="home-view-all">전체 보기 →</a>
+        {{- /* ── RECENT NEWS ── */ -}}
+        <div class="hi-section">
+            <div class="hi-section-head">
+                <h2 class="hi-section-title">보안 &amp; AI 뉴스</h2>
+                <a href="/news/" class="hi-more-link">전체 뉴스 →</a>
             </div>
-            <div class="home-news-list" id="home-news-list">
-                <div class="home-news-loading">뉴스를 불러오는 중...</div>
+            <div id="hi-news" class="hi-news-wrap">
+                <span class="hi-news-loading">불러오는 중…</span>
             </div>
         </div>
 
-        {{- /* 주요 프로젝트 */ -}}
-        <div class="profile-section">
-            <div class="home-section-header">
-                <h3>주요 프로젝트</h3>
+        {{- /* ── PROJECTS ── */ -}}
+        <div class="hi-section">
+            <div class="hi-section-head">
+                <h2 class="hi-section-title">주요 프로젝트</h2>
             </div>
-            <div class="home-project-grid">
-                <a class="home-project-card" href="/projects/bespin-project/">
-                    <div class="home-project-tag">Cloud / DR</div>
-                    <h4>멀티 클라우드 DR &amp; 비용 혁신 아키텍처</h4>
-                    <p>AWS 3-Tier 기반 <strong>RTO 28분</strong> 자동 복구. Route53 + CloudFront로 <strong>99.9% 가용성</strong>, Cold Standby로 <strong>비용 98% 절감</strong></p>
-                    <div class="home-project-stack">AWS EKS · Route53 · Terraform · ArgoCD</div>
+            <div class="hi-proj-grid">
+                <a class="hi-proj-card" href="/projects/bespin-project/">
+                    <span class="hi-proj-tag">Cloud · DR</span>
+                    <h3 class="hi-proj-name">멀티 클라우드 DR &amp; 비용 혁신</h3>
+                    <p class="hi-proj-desc">AWS 3-Tier 기반 RTO 28분 자동 복구. Route53 + CloudFront로 99.9% 가용성, Cold Standby로 비용 98% 절감.</p>
+                    <div class="hi-proj-stack">AWS EKS · Route53 · Terraform · ArgoCD</div>
                 </a>
-                <a class="home-project-card" href="/projects/local-k8s-blog/">
-                    <div class="home-project-tag">Kubernetes / Security</div>
-                    <h4>베어메탈 K8s &amp; 제로 트러스트 보안</h4>
-                    <p>Cilium eBPF로 iptables 병목 제거. Falco + Istio mTLS 결합 <strong>Full-Stack 보안</strong>. <strong>{{ site.Data.metrics.homelab.uptime_days }}일 무중단</strong> 운영 중</p>
-                    <div class="home-project-stack">Kubernetes · Cilium · Falco · Istio</div>
+                <a class="hi-proj-card" href="/projects/local-k8s-blog/">
+                    <span class="hi-proj-tag">Kubernetes · Security</span>
+                    <h3 class="hi-proj-name">베어메탈 K8s &amp; 제로 트러스트 보안</h3>
+                    <p class="hi-proj-desc">Cilium eBPF로 iptables 병목 제거. Falco + Istio mTLS 풀스택 보안. {{ site.Data.metrics.homelab.uptime_days }}일 무중단 운영 중.</p>
+                    <div class="hi-proj-stack">Kubernetes · Cilium · Falco · Istio · Wazuh</div>
                 </a>
-            </div>
-        </div>
-
-        {{- /* 현재 운영 환경 */ -}}
-        <div class="profile-section">
-            <div class="home-section-header">
-                <h3>현재 운영 환경</h3>
-                <a href="/study/2026-01-25-local-k8s-architecture/" class="home-view-all">아키텍처 상세 →</a>
-            </div>
-            <div class="home-arch-box">
-                <img src="/images/local-k8s-architecture.png" alt="Homelab Kubernetes Architecture" class="home-arch-img">
-                <div class="home-arch-meta">
-                    <div class="home-arch-row"><span class="home-arch-key">규모</span><span>{{ site.Data.metrics.homelab.total_nodes }}노드 ({{ site.Data.metrics.homelab.control_plane }} CP + {{ site.Data.metrics.homelab.workers }} Worker) · {{ site.Data.metrics.homelab.total_pods }}개 Pod</span></div>
-                    <div class="home-arch-row"><span class="home-arch-key">네트워킹</span><span>Cilium CNI (eBPF) · Istio Service Mesh</span></div>
-                    <div class="home-arch-row"><span class="home-arch-key">보안</span><span>Falco 런타임 · mTLS 100% · Wazuh SIEM</span></div>
-                    <div class="home-arch-row"><span class="home-arch-key">스토리지</span><span>Longhorn 3-replica HA</span></div>
-                    <div class="home-arch-row"><span class="home-arch-key">배포</span><span>ArgoCD GitOps · Argo Rollouts Canary</span></div>
-                    <div class="home-arch-row"><span class="home-arch-key">관측성</span><span>Prometheus · Loki · Grafana · Tempo</span></div>
-                </div>
-            </div>
-        </div>
-
-        {{- /* 기술 스택 */ -}}
-        <div class="profile-section">
-            <div class="home-section-header"><h3>기술 스택</h3></div>
-            <div class="home-stack-grid">
-                <div class="home-stack-group">
-                    <div class="home-stack-label">Infrastructure</div>
-                    <div class="home-stack-pills">
-                        <span>Kubernetes</span><span>Cilium CNI</span><span>Istio</span><span>Longhorn</span><span>ArgoCD</span>
-                    </div>
-                </div>
-                <div class="home-stack-group">
-                    <div class="home-stack-label">Security &amp; Observability</div>
-                    <div class="home-stack-pills">
-                        <span>Falco</span><span>Wazuh</span><span>Prometheus</span><span>Grafana</span><span>Loki</span><span>Tempo</span>
-                    </div>
-                </div>
-                <div class="home-stack-group">
-                    <div class="home-stack-label">CI/CD &amp; Application</div>
-                    <div class="home-stack-pills">
-                        <span>GitHub Actions</span><span>Argo Rollouts</span><span>Spring Boot</span><span>MySQL</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{- /* 타임라인 */ -}}
-        <div class="profile-section">
-            <div class="home-section-header"><h3>프로젝트 타임라인</h3></div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-date">2024.11 ~ 현재</div>
-                    <div class="timeline-content">
-                        <strong>Homelab Kubernetes 프로젝트</strong><br>
-                        베어메탈 클러스터 구축 및 운영 · Service Mesh · GitOps 파이프라인<br>
-                        <small style="color: var(--secondary);">Kubernetes, Cilium, Istio, ArgoCD, Argo Rollouts</small>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">2026.02</div>
-                    <div class="timeline-content">
-                        <strong>SOAR / AI 자동 대응 시스템 구축 중</strong><br>
-                        Falco 탐지 → Claude API 분석 → K8s 자동 격리<br>
-                        <small style="color: var(--secondary);">FastAPI, Claude API, Kubernetes RBAC</small>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">2026.01</div>
-                    <div class="timeline-content">
-                        <strong>Istio Service Mesh 구축 완료</strong><br>
-                        mTLS 보안 통신 · L7 Traffic Management · Distributed Tracing<br>
-                        <small style="color: var(--secondary);">Istio Gateway, VirtualService, DestinationRule, Kiali</small>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">2025.12</div>
-                    <div class="timeline-content">
-                        <strong>보안 &amp; 관측성 강화</strong><br>
-                        Falco 런타임 보안 · PLG Stack · OpenTelemetry Tracing<br>
-                        <small style="color: var(--secondary);">Falco, Prometheus, Loki, Grafana, Tempo</small>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-date">2025.11</div>
-                    <div class="timeline-content">
-                        <strong>AWS EKS Multi-Cloud DR</strong><br>
-                        AWS + Azure 하이브리드 DR · CloudFront Origin Group<br>
-                        <small style="color: var(--secondary);">EKS, Terraform, Route53, Azure AKS</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="profile-section">
-            <div class="goal-box">
-                <em>"Kubernetes 책을 10권 읽는 것보다,<br>
-                직접 클러스터를 구축하고 3일간 안 되는 네트워크를 디버깅하는 것이<br>
-                10배는 더 많은 걸 가르쳐줍니다."</em>
             </div>
         </div>
 
@@ -249,123 +156,116 @@
 </div>
 
 <style>
-/* ── Hero ─────────────────────────────────────────── */
-.home-hero {
-    margin: 0.5rem 0 2rem 0;
+/* ── About ────────────────────────────────────────── */
+.hi-about {
+    margin: 0.25rem 0 2.5rem;
+    padding: 1.5rem 1.75rem;
+    background: var(--entry);
+    border: 1px solid var(--border);
+    border-radius: 12px;
     text-align: left;
 }
-.home-hero-quote {
-    font-size: 1.15rem;
+.hi-about-title {
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--primary);
-    margin-bottom: 0.75rem;
+    margin: 0 0 0.6rem;
     line-height: 1.4;
-    border-left: 3px solid var(--primary);
-    padding-left: 0.85rem;
 }
-.home-hero-sub {
-    font-size: 0.95rem;
+.hi-about-body {
+    font-size: 0.9rem;
     color: var(--secondary);
     line-height: 1.8;
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.1rem;
 }
-
-/* ── Stats ────────────────────────────────────────── */
-.home-stats {
+.hi-badges {
     display: flex;
-    gap: 1.5rem;
     flex-wrap: wrap;
+    gap: 0.4rem;
 }
-.home-stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.hi-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
     background: var(--code-bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 0.75rem 1.25rem;
-    min-width: 80px;
-}
-.home-stat-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--primary);
-    line-height: 1;
-}
-.home-stat-label {
-    font-size: 0.7rem;
     color: var(--secondary);
-    margin-top: 0.3rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+}
+.hi-badge--accent {
+    background: var(--primary);
+    color: var(--theme);
+    border-color: var(--primary);
 }
 
-/* ── Section Header ───────────────────────────────── */
-.home-section-header {
+/* ── Section ──────────────────────────────────────── */
+.hi-section {
+    margin-bottom: 2.75rem;
+}
+.hi-section-head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     margin-bottom: 1.1rem;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.6rem;
 }
-.home-section-header h3 {
-    margin: 0;
-    font-size: 1.05rem;
+.hi-section-title {
+    font-size: 1rem;
     font-weight: 700;
+    margin: 0;
     letter-spacing: -0.2px;
 }
-.home-view-all {
+.hi-more-link {
     font-size: 0.78rem;
     color: var(--secondary);
     text-decoration: none;
-    transition: color 0.15s;
 }
-.home-view-all:hover { color: var(--primary); }
+.hi-more-link:hover { color: var(--primary); }
 
 /* ── Post Grid ────────────────────────────────────── */
-.home-post-grid {
+.hi-post-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 0.8rem;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 0.875rem;
+    margin-bottom: 1.1rem;
 }
-.home-post-card {
+.hi-post-card {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.4rem;
+    padding: 1.1rem 1.2rem;
     background: var(--entry);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 1rem 1.1rem;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-.home-post-card:hover {
+.hi-post-card:hover {
     border-color: var(--primary);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
     transform: translateY(-2px);
     text-decoration: none;
 }
-.home-post-card-top {
+.hi-post-meta {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-}
-.home-post-category {
-    font-size: 0.67rem;
-    font-weight: 700;
-    background: var(--code-bg);
+    gap: 0.35rem;
+    font-size: 0.7rem;
     color: var(--secondary);
-    padding: 2px 8px;
-    border-radius: 4px;
+}
+.hi-post-cat {
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.4px;
+    color: var(--primary);
+    opacity: 0.7;
 }
-.home-post-date {
-    font-size: 0.72rem;
-    color: var(--secondary);
-}
-.home-post-title {
-    font-size: 0.88rem;
+.hi-post-dot { opacity: 0.4; }
+.hi-post-title {
+    margin: 0;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--primary);
     line-height: 1.45;
@@ -374,204 +274,201 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
-.home-post-desc {
+.hi-post-desc {
+    margin: 0;
     font-size: 0.76rem;
     color: var(--secondary);
     line-height: 1.5;
     display: -webkit-box;
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* ── News List ────────────────────────────────────── */
-.home-news-loading {
-    color: var(--secondary);
-    font-size: 0.85rem;
-    padding: 0.75rem 0;
+/* ── All Posts (details/summary) ─────────────────── */
+.hi-all-posts {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
 }
-.home-news-list {
+.hi-all-posts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    list-style: none;
+    background: var(--entry);
+    user-select: none;
+}
+.hi-all-posts-toggle::-webkit-details-marker { display: none; }
+.hi-all-posts-toggle::before {
+    content: "▶";
+    font-size: 0.6rem;
+    transition: transform 0.2s;
+    color: var(--secondary);
+}
+.hi-all-posts[open] .hi-all-posts-toggle::before { transform: rotate(90deg); }
+.hi-all-count {
+    font-weight: 400;
+    color: var(--secondary);
+    font-size: 0.78rem;
+}
+.hi-all-list {
     display: flex;
     flex-direction: column;
+    border-top: 1px solid var(--border);
 }
-.home-news-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.7rem;
-    padding: 0.8rem 0;
+.hi-all-item {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.1rem;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+.hi-all-item:last-child { border-bottom: none; }
+.hi-all-item:hover { background: var(--code-bg); }
+.hi-all-date {
+    color: var(--secondary);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+.hi-all-title {
+    color: var(--primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hi-all-cat {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--secondary);
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+/* ── News ─────────────────────────────────────────── */
+.hi-news-wrap { display: flex; flex-direction: column; }
+.hi-news-loading { font-size: 0.82rem; color: var(--secondary); padding: 0.5rem 0; }
+.hi-news-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
     border-bottom: 1px solid var(--border);
     text-decoration: none;
     color: inherit;
 }
-.home-news-item:last-child { border-bottom: none; }
-.home-news-item:hover .home-news-title {
-    color: var(--primary);
-    text-decoration: underline;
-}
-.home-news-badge {
-    flex-shrink: 0;
+.hi-news-item:last-child { border-bottom: none; }
+.hi-news-item:hover .hi-news-title { color: var(--primary); text-decoration: underline; }
+.hi-news-src {
     display: inline-block;
     padding: 2px 7px;
     border-radius: 4px;
     font-size: 0.62rem;
     font-weight: 700;
     color: #fff;
-    margin-top: 2px;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
 }
-.home-news-body { flex: 1; min-width: 0; }
-.home-news-title {
+.hi-news-title {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--primary);
-    line-height: 1.45;
+    line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 3px;
 }
-.home-news-meta {
-    font-size: 0.7rem;
+.hi-news-time {
+    font-size: 0.68rem;
     color: var(--secondary);
+    white-space: nowrap;
 }
 
-/* ── Project Grid ─────────────────────────────────── */
-.home-project-grid {
+/* ── Projects ─────────────────────────────────────── */
+.hi-proj-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1rem;
 }
-.home-project-card {
+.hi-proj-card {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.45rem;
+    padding: 1.4rem 1.5rem;
     background: var(--entry);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.4rem 1.5rem;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-.home-project-card:hover {
+.hi-proj-card:hover {
     border-color: var(--primary);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.09);
     transform: translateY(-3px);
     text-decoration: none;
 }
-.home-project-tag {
+.hi-proj-tag {
     font-size: 0.67rem;
     font-weight: 700;
     color: var(--primary);
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
+    opacity: 0.75;
 }
-.home-project-card h4 {
+.hi-proj-name {
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
     color: var(--primary);
-    line-height: 1.4;
+    line-height: 1.35;
 }
-.home-project-card p {
+.hi-proj-desc {
     margin: 0;
-    font-size: 0.85rem;
+    font-size: 0.83rem;
     color: var(--secondary);
     line-height: 1.65;
 }
-.home-project-stack {
+.hi-proj-stack {
     margin-top: auto;
-    padding-top: 0.9rem;
-    font-size: 0.75rem;
-    color: var(--secondary);
-    font-weight: 500;
+    padding-top: 0.85rem;
     border-top: 1px solid var(--border);
-}
-
-/* ── Architecture Box ─────────────────────────────── */
-.home-arch-box {
-    background: var(--entry);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-}
-.home-arch-img {
-    width: 100%;
-    display: block;
-    border-bottom: 1px solid var(--border);
-}
-.home-arch-meta {
-    padding: 1rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-}
-.home-arch-row {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.82rem;
-    line-height: 1.5;
-}
-.home-arch-key {
-    flex-shrink: 0;
-    width: 80px;
-    font-weight: 600;
+    font-size: 0.72rem;
     color: var(--secondary);
-}
-
-/* ── Stack Grid ───────────────────────────────────── */
-.home-stack-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-.home-stack-group {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-}
-.home-stack-label {
-    flex-shrink: 0;
-    width: 160px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--secondary);
-    padding-top: 3px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-}
-.home-stack-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-.home-stack-pills span {
-    background: var(--code-bg);
-    border: 1px solid var(--border);
-    color: var(--primary);
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 0.78rem;
     font-weight: 500;
 }
 
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 640px) {
-    .home-post-grid { grid-template-columns: 1fr; }
-    .home-project-grid { grid-template-columns: 1fr; }
-    .home-stats { gap: 0.75rem; }
-    .home-stat-item { min-width: 65px; padding: 0.6rem 0.9rem; }
-    .home-stack-group { flex-direction: column; gap: 0.4rem; }
-    .home-stack-label { width: auto; }
-    .home-arch-row { flex-direction: column; gap: 0.1rem; }
-    .home-arch-key { width: auto; }
+    .hi-post-grid { grid-template-columns: 1fr; }
+    .hi-proj-grid { grid-template-columns: 1fr; }
+    .hi-all-item { grid-template-columns: 50px 1fr; }
+    .hi-all-cat { display: none; }
+    .hi-news-item { grid-template-columns: auto 1fr; }
+    .hi-news-time { display: none; }
 }
 </style>
 
 <script>
-(function() {
-    var SOURCE_CONFIG = {
+(function () {
+    var SRC = {
         'The Hacker News':       { abbr: 'THN',   color: '#2ecc71' },
         'BleepingComputer':      { abbr: 'BC',    color: '#3498db' },
         'Krebs on Security':     { abbr: 'Krebs', color: '#e74c3c' },
@@ -579,52 +476,42 @@
         'MIT Technology Review': { abbr: 'MIT',   color: '#e67e22' }
     };
 
-    function relTime(iso) {
+    function timeAgo(iso) {
         if (!iso) return '';
-        // publishedAt 필드가 timezone 없이 오면 UTC로 파싱
-        var s = iso.indexOf('Z') === -1 && iso.indexOf('+') === -1 ? iso + 'Z' : iso;
-        var d = new Date(s), now = new Date();
-        var diffMs = now - d;
-        if (diffMs < 0) diffMs = 0;
-        var h = Math.floor(diffMs / 3600000);
-        if (h < 1) return '방금 전';
+        var s = /[Z+]/.test(iso) ? iso : iso + 'Z';
+        var diff = Date.now() - new Date(s).getTime();
+        if (diff < 0) diff = 0;
+        var h = Math.floor(diff / 3600000);
+        if (h < 1) return '방금';
         if (h < 24) return h + '시간 전';
-        var day = Math.floor(h / 24);
-        if (day < 7) return day + '일 전';
-        return d.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+        var d = Math.floor(h / 24);
+        if (d < 7) return d + '일 전';
+        var dt = new Date(s);
+        return (dt.getMonth() + 1) + '/' + dt.getDate();
     }
 
-    function esc(s) {
-        return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function esc(t) {
+        return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    var wrap = document.getElementById('home-news-list');
+    var box = document.getElementById('hi-news');
 
-    fetch('/api/news?page=0&size=5')
-        .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
-        .then(function(data) {
-            var items = (data.content || []).slice(0, 5);
-            if (!items.length) {
-                wrap.innerHTML = '<div class="home-news-loading">뉴스가 없습니다.</div>';
-                return;
-            }
-            var html = items.map(function(a) {
-                var cfg = SOURCE_CONFIG[a.sourceName] || { abbr: (a.sourceName || '').slice(0, 3).toUpperCase(), color: '#7f8c8d' };
-                return '<a class="home-news-item" href="' + esc(a.link) + '" target="_blank" rel="noopener noreferrer">' +
-                    '<span class="home-news-badge" style="background:' + cfg.color + '">' + cfg.abbr + '</span>' +
-                    '<div class="home-news-body">' +
-                        '<div class="home-news-title">' + esc(a.title) + '</div>' +
-                        '<div class="home-news-meta">' + relTime(a.publishedAt) + ' · ' + esc(a.sourceName) + '</div>' +
-                    '</div>' +
+    fetch('/api/news?page=0&size=7')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (data) {
+            var list = (data.content || []).slice(0, 7);
+            if (!list.length) { box.innerHTML = '<span class="hi-news-loading">뉴스가 없습니다.</span>'; return; }
+            box.innerHTML = list.map(function (a) {
+                var cfg = SRC[a.sourceName] || { abbr: (a.sourceName || '').slice(0, 3).toUpperCase(), color: '#95a5a6' };
+                return '<a class="hi-news-item" href="' + esc(a.link) + '" target="_blank" rel="noopener noreferrer">' +
+                    '<span class="hi-news-src" style="background:' + cfg.color + '">' + cfg.abbr + '</span>' +
+                    '<span class="hi-news-title">' + esc(a.title) + '</span>' +
+                    '<span class="hi-news-time">' + timeAgo(a.publishedAt) + '</span>' +
                 '</a>';
             }).join('');
-            html += '<a href="/news/" style="display:block;text-align:right;font-size:0.78rem;color:var(--secondary);padding:0.7rem 0 0;text-decoration:none;">더 많은 뉴스 보기 →</a>';
-            wrap.innerHTML = html;
         })
-        .catch(function() {
-            wrap.innerHTML = '<div class="home-news-loading">뉴스를 불러올 수 없습니다.</div>';
-        });
-})();
+        .catch(function () { box.innerHTML = '<span class="hi-news-loading">뉴스를 불러올 수 없습니다.</span>'; });
+}());
 </script>
 
 {{- end }}{{- /* end main */ -}}
