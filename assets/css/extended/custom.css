@@ -474,7 +474,8 @@ code {
 .post-cover-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;       /* Why: 이미지 비율 무관하게 꽉 채움 */
+  object-fit: cover;        /* Why: 이미지 비율 무관하게 꽉 채움 */
+  object-position: left top; /* Why: 텍스트(카테고리·제목)가 이미지 좌상단에 있어서 중앙 crop 시 잘림 */
   transition: transform 0.3s;
 }
 .study-grid .post-entry:hover .post-cover-img img {
