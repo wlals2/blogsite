@@ -1,3 +1,9 @@
+/* 페이지 전체 폭 확장 */
+/* Why: 기본 720px → 3열 카드가 226px로 너무 좁아 썸네일이 잘림. 1050px로 확장하면 카드 ~336px */
+:root {
+  --main-width: 1050px;
+}
+
 /* 한글 코드 블록 폰트 수정 */
 code, pre, pre code, .highlight pre, .highlight code {
     font-family: 'Nanum Gothic Coding', 'Noto Sans Mono', 'Noto Sans Mono CJK KR', 'D2Coding', 'Consolas', 'Monaco', 'Courier New', monospace !important;
@@ -466,7 +472,7 @@ code {
 /* 커버 이미지 썸네일 (cover.* 파일 자동 감지 시) */
 .post-cover-img {
   position: relative;
-  height: 160px;           /* Why: 카드 상단 고정 높이, 이미지 잘림 방지 */
+  aspect-ratio: 800 / 420;  /* Why: 고정 height 대신 이미지 원본 비율 유지 → 잘림 없음 */
   overflow: hidden;
   flex-shrink: 0;
   border-radius: 10px 10px 0 0;
@@ -474,8 +480,7 @@ code {
 .post-cover-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;        /* Why: 이미지 비율 무관하게 꽉 채움 */
-  object-position: left top; /* Why: 텍스트(카테고리·제목)가 이미지 좌상단에 있어서 중앙 crop 시 잘림 */
+  object-fit: cover;
   transition: transform 0.3s;
 }
 .study-grid .post-entry:hover .post-cover-img img {
