@@ -82,6 +82,7 @@
 {{- $pages := (union .RegularPages .Sections).ByDate.Reverse }}
 {{- $paginator := .Paginate $pages }}
 
+<div class="study-grid">
 {{- range $index, $page := $paginator.Pages }}
 
 {{- $class := "post-entry" }}
@@ -115,6 +116,7 @@
   <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
 </article>
 {{- end }}
+</div>{{/* end study-grid */}}
 
 {{- if gt $paginator.TotalPages 1 }}
 <footer class="page-footer">

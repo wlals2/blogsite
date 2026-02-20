@@ -255,18 +255,28 @@ code {
 }
 
 /* ============================================
-   Navigation - 모던한 네비게이션
+   Navigation - 카카오/당근 스타일 네비게이션
    ============================================ */
 .nav {
-  backdrop-filter: blur(12px);
-  background: rgba(var(--theme-rgb), 0.85) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(var(--theme-rgb), 0.92) !important;
+  border-bottom: 1px solid var(--card-border);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+
+/* Why: 블로그 이름에 브랜드 컬러 강조 */
+.logo a {
+  font-weight: 800 !important;
+  letter-spacing: -0.5px;
 }
 
 #menu a {
   font-weight: 500;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.9rem;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
 }
 
 #menu a:hover,
@@ -412,11 +422,94 @@ code {
   animation-fill-mode: both;
 }
 
-.post-entry:nth-child(1) { animation-delay: 0.1s; }
-.post-entry:nth-child(2) { animation-delay: 0.2s; }
-.post-entry:nth-child(3) { animation-delay: 0.3s; }
-.post-entry:nth-child(4) { animation-delay: 0.4s; }
-.post-entry:nth-child(5) { animation-delay: 0.5s; }
+.post-entry:nth-child(1) { animation-delay: 0.05s; }
+.post-entry:nth-child(2) { animation-delay: 0.1s; }
+.post-entry:nth-child(3) { animation-delay: 0.15s; }
+.post-entry:nth-child(4) { animation-delay: 0.2s; }
+.post-entry:nth-child(5) { animation-delay: 0.25s; }
+
+/* ============================================
+   Study List - 2열 그리드 (카카오/당근 스타일)
+   ============================================ */
+
+/* Why: 기본 list.html의 단일 열 → 2열 카드 그리드로 변경 */
+.study-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* 그리드 내 카드 크기 조정 */
+.study-grid .post-entry {
+  margin-bottom: 0;  /* Why: grid gap이 간격을 대체하므로 기존 margin 제거 */
+}
+
+/* 카테고리 필터 박스 개선 */
+.category-filter-box {
+  margin-bottom: 1.75rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--entry);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.category-filter-box h3 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+}
+
+.category-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.category-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.category-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.category-btn.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+  font-weight: 600;
+}
+
+.category-btn .count {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.category-btn.active .count {
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  .study-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ============================================
    Responsive

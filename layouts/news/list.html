@@ -145,11 +145,15 @@
 }
 
 /* top accent line per source */
-.news-card[data-source="The Hacker News"]::before  { background: #2ecc71; }
-.news-card[data-source="BleepingComputer"]::before  { background: #3498db; }
-.news-card[data-source="Krebs on Security"]::before { background: #e74c3c; }
-.news-card[data-source="The Verge AI"]::before      { background: #9b59b6; }
-.news-card[data-source="MIT Technology Review"]::before { background: #e67e22; }
+.news-card[data-source="카카오 Tech"]::before      { background: #FEE500; }
+.news-card[data-source="토스 Tech"]::before        { background: #0064FF; }
+.news-card[data-source="당근 Tech"]::before        { background: #FF6F0F; }
+.news-card[data-source="우아한형제들 Tech"]::before { background: #1E88E5; }
+.news-card[data-source="네이버 D2"]::before        { background: #03C75A; }
+.news-card[data-source="카카오페이 Tech"]::before  { background: #3A1D96; }
+.news-card[data-source="라인 엔지니어링"]::before  { background: #00B900; }
+.news-card[data-source="쿠팡 엔지니어링"]::before  { background: #C00000; }
+.news-card[data-source="NHN Cloud"]::before        { background: #1B5EB4; }
 
 /* ── Card Header ───────────────────────────────────── */
 .news-card-header {
@@ -173,12 +177,16 @@
   letter-spacing: 0.3px;
   flex-shrink: 0;
 }
-.badge-thn    { background: #2ecc71; }
-.badge-bc     { background: #3498db; }
-.badge-krebs  { background: #e74c3c; }
-.badge-verge  { background: #9b59b6; }
-.badge-mit    { background: #e67e22; }
-.badge-other  { background: #7f8c8d; }
+.badge-kakao    { background: #FEE500; color: #1a1a1a !important; }
+.badge-toss     { background: #0064FF; }
+.badge-daangn   { background: #FF6F0F; }
+.badge-woowa    { background: #1E88E5; }
+.badge-naver    { background: #03C75A; }
+.badge-kakaopay { background: #3A1D96; }
+.badge-line     { background: #00B900; }
+.badge-coupang  { background: #C00000; }
+.badge-nhn      { background: #1B5EB4; }
+.badge-other    { background: #7f8c8d; }
 
 .news-category-tag {
   display: inline-block;
@@ -357,8 +365,8 @@
 
 <!-- Hero -->
 <div class="news-hero">
-  <h1>Security &amp; AI News</h1>
-  <p>보안과 AI 분야의 최신 뉴스를 자동으로 수집합니다</p>
+  <h1>국내 Tech 블로그</h1>
+  <p>카카오, 토스, 당근 등 국내 기술 블로그의 최신 글을 자동으로 수집합니다</p>
   <span class="news-live-badge">
     <span class="news-live-dot"></span>
     매시간 자동 업데이트
@@ -370,11 +378,8 @@
   <button class="news-filter-btn active" data-cat="all">
     전체 <span class="news-filter-count" id="count-all">–</span>
   </button>
-  <button class="news-filter-btn" data-cat="security">
-    🔒 Security <span class="news-filter-count" id="count-security">–</span>
-  </button>
-  <button class="news-filter-btn" data-cat="ai">
-    🤖 AI <span class="news-filter-count" id="count-ai">–</span>
+  <button class="news-filter-btn" data-cat="tech">
+    💻 Tech <span class="news-filter-count" id="count-tech">–</span>
   </button>
 </div>
 
@@ -406,11 +411,15 @@
 <script>
 (function () {
   const SOURCE_CONFIG = {
-    'The Hacker News':      { abbr: 'THN',   cls: 'badge-thn'   },
-    'BleepingComputer':     { abbr: 'BC',    cls: 'badge-bc'    },
-    'Krebs on Security':    { abbr: 'Krebs', cls: 'badge-krebs' },
-    'The Verge AI':         { abbr: 'Verge', cls: 'badge-verge' },
-    'MIT Technology Review':{ abbr: 'MIT',   cls: 'badge-mit'   },
+    '카카오 Tech':      { abbr: '카카오',   cls: 'badge-kakao'    },
+    '토스 Tech':        { abbr: '토스',     cls: 'badge-toss'     },
+    '당근 Tech':        { abbr: '당근',     cls: 'badge-daangn'   },
+    '우아한형제들 Tech': { abbr: '우아한',   cls: 'badge-woowa'    },
+    '네이버 D2':        { abbr: 'D2',       cls: 'badge-naver'    },
+    '카카오페이 Tech':  { abbr: '카카오페이', cls: 'badge-kakaopay' },
+    '라인 엔지니어링':  { abbr: 'LINE',     cls: 'badge-line'     },
+    '쿠팡 엔지니어링':  { abbr: '쿠팡',     cls: 'badge-coupang'  },
+    'NHN Cloud':        { abbr: 'NHN',      cls: 'badge-nhn'      },
   };
 
   const PAGE_SIZE = 20;
@@ -419,12 +428,14 @@
   let totalElements = 0;
   let totalPages = 0;
   let isLoading = false;
-  let counts = { all: 0, security: 0, ai: 0 };
+  let counts = { all: 0, tech: 0 };
 
   // ── Date formatter ──────────────────────────────────
   function formatDate(iso) {
     if (!iso) return '';
-    const d = new Date(iso);
+    // Why: API가 반환하는 ISO 문자열에 timezone 정보가 없으면 로컬타임으로 잘못 파싱됨
+    const s = /[Z+]/.test(iso) ? iso : iso + 'Z';
+    const d = new Date(s);
     const now = new Date();
     const diffMs = now - d;
     const diffMin = Math.floor(diffMs / 60000);
@@ -444,8 +455,7 @@
 
   // ── Category tag ────────────────────────────────────
   function categoryTag(cat) {
-    const label = cat === 'security' ? '🔒 Security' : '🤖 AI';
-    return `<span class="news-category-tag">${label}</span>`;
+    return `<span class="news-category-tag">💻 Tech</span>`;
   }
 
   // ── Build a single card ─────────────────────────────
@@ -520,10 +530,9 @@
   // ── Update stats bar ────────────────────────────────
   function updateStats() {
     document.getElementById('stats-total').innerHTML =
-      `<span>총 <strong>${totalElements}</strong>건의 기사</span>`;
-    document.getElementById('count-all').textContent      = counts.all      || '–';
-    document.getElementById('count-security').textContent = counts.security || '–';
-    document.getElementById('count-ai').textContent       = counts.ai       || '–';
+      `<span>총 <strong>${totalElements}</strong>건의 포스트</span>`;
+    document.getElementById('count-all').textContent  = counts.all  || '–';
+    document.getElementById('count-tech').textContent = counts.tech || '–';
     const now = new Date();
     document.getElementById('stats-updated').textContent  =
       `마지막 확인: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
@@ -573,14 +582,12 @@
   // ── Fetch counts for badges ─────────────────────────
   async function fetchCounts() {
     try {
-      const [all, sec, ai] = await Promise.all([
+      const [all, tech] = await Promise.all([
         fetch('/api/news?page=0&size=1').then(r => r.json()),
-        fetch('/api/news/category/security?page=0&size=1').then(r => r.json()),
-        fetch('/api/news/category/ai?page=0&size=1').then(r => r.json()),
+        fetch('/api/news/category/tech?page=0&size=1').then(r => r.json()),
       ]);
-      counts.all      = all.totalElements      || 0;
-      counts.security = sec.totalElements      || 0;
-      counts.ai       = ai.totalElements       || 0;
+      counts.all  = all.totalElements  || 0;
+      counts.tech = tech.totalElements || 0;
       updateStats();
     } catch (_) {}
   }
