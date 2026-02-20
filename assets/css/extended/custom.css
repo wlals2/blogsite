@@ -429,19 +429,130 @@ code {
 .post-entry:nth-child(5) { animation-delay: 0.25s; }
 
 /* ============================================
-   Study List - 2열 그리드 (카카오/당근 스타일)
+   Study List - 3열 그리드 (카카오 Tech 벤치마킹)
    ============================================ */
 
-/* Why: 기본 list.html의 단일 열 → 2열 카드 그리드로 변경 */
+/* Why: 카카오 Tech 기준 3열 → 2열(태블릿) → 1열(모바일) */
 .study-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
 }
 
 /* 그리드 내 카드 크기 조정 */
 .study-grid .post-entry {
-  margin-bottom: 0;  /* Why: grid gap이 간격을 대체하므로 기존 margin 제거 */
+  margin-bottom: 0;  /* Why: grid gap이 간격을 대체 */
+  padding: 0;        /* Why: 배너가 카드 상단에 딱 붙어야 함 */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 카드 본문 영역 (배너 아래 텍스트) */
+.study-grid .post-entry .entry-header,
+.study-grid .post-entry .entry-content,
+.study-grid .post-entry .entry-footer {
+  padding: 0 1.25rem;
+}
+.study-grid .post-entry .entry-header { padding-top: 1rem; }
+.study-grid .post-entry .entry-footer { padding-bottom: 1rem; }
+
+/* ============================================
+   카테고리 컬러 시스템 (썸네일 대체)
+   Why: 포스트에 썸네일이 없으므로 카테고리 컬러로 시각적 구분
+   벤치마킹: DEV.to / GitHub 기술 블로그 스타일
+   ============================================ */
+
+/* 카드 상단 컬러 배너 (study/list.html용) */
+.post-cat-banner {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  flex-shrink: 0;
+}
+.post-cat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* 카드 상단 컬러 배너 (index.html 홈용) */
+.hi-card-banner {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.1rem;
+  flex-shrink: 0;
+  border-radius: 10px 10px 0 0;
+}
+.hi-card-cat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* 카테고리별 배경색 */
+/* Kubernetes */
+.cat-kubernetes .post-cat-banner,
+.cat-kubernetes .hi-card-banner {
+  background: linear-gradient(120deg, #326CE5 0%, #1a4fd6 100%);
+}
+/* Security */
+.cat-security .post-cat-banner,
+.cat-security .hi-card-banner {
+  background: linear-gradient(120deg, #e53e3e 0%, #c53030 100%);
+}
+/* Observability */
+.cat-observability .post-cat-banner,
+.cat-observability .hi-card-banner {
+  background: linear-gradient(120deg, #dd6b20 0%, #c05621 100%);
+}
+/* Service Mesh */
+.cat-service-mesh .post-cat-banner,
+.cat-service-mesh .hi-card-banner {
+  background: linear-gradient(120deg, #466BB0 0%, #3b5998 100%);
+}
+/* Networking */
+.cat-networking .post-cat-banner,
+.cat-networking .hi-card-banner {
+  background: linear-gradient(120deg, #10B981 0%, #059669 100%);
+}
+/* Troubleshooting */
+.cat-troubleshooting .post-cat-banner,
+.cat-troubleshooting .hi-card-banner {
+  background: linear-gradient(120deg, #7C3AED 0%, #6d28d9 100%);
+}
+/* Development */
+.cat-development .post-cat-banner,
+.cat-development .hi-card-banner {
+  background: linear-gradient(120deg, #D53F8C 0%, #b83280 100%);
+}
+/* Cloud & Terraform */
+.cat-cloud--terraform .post-cat-banner,
+.cat-cloud--terraform .hi-card-banner {
+  background: linear-gradient(120deg, #7B341E 0%, #9C4221 100%);
+}
+/* Storage */
+.cat-storage .post-cat-banner,
+.cat-storage .hi-card-banner {
+  background: linear-gradient(120deg, #4A5568 0%, #2D3748 100%);
+}
+/* Elasticsearch */
+.cat-elasticsearch .post-cat-banner,
+.cat-elasticsearch .hi-card-banner {
+  background: linear-gradient(120deg, #D69E2E 0%, #B7791F 100%);
+}
+/* 기본 (카테고리 없음) */
+.cat- .post-cat-banner,
+.cat- .hi-card-banner,
+.post-cat-banner,
+.hi-card-banner {
+  background: linear-gradient(120deg, #0ea5e9 0%, #0284c7 100%);
 }
 
 /* 카테고리 필터 박스 개선 */
@@ -505,7 +616,14 @@ code {
   opacity: 0.85;
 }
 
-@media (max-width: 640px) {
+/* 태블릿: 3열 → 2열 */
+@media (max-width: 900px) {
+  .study-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/* 모바일: 1열 */
+@media (max-width: 600px) {
   .study-grid {
     grid-template-columns: 1fr;
   }

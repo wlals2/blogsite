@@ -85,11 +85,18 @@
 <div class="study-grid">
 {{- range $index, $page := $paginator.Pages }}
 
-{{- $class := "post-entry" }}
+{{- /* 두 번째 카테고리(study 제외)를 CSS 클래스로 변환 */ -}}
+{{- $secondCat := "" }}
+{{- range $page.Params.categories }}
+  {{- if and (ne . "study") (eq $secondCat "") }}{{- $secondCat = . }}{{- end }}
+{{- end }}
+{{- $catClass := $secondCat | lower | replaceRE "[^a-z0-9]+" "-" | strings.TrimRight "-" }}
 
-<article class="{{ $class }}" data-categories='{{ delimit ($page.Params.categories | default slice) "," }}'>
-  {{- $isHidden := (.Param "cover.hiddenInList") | default (.Param "cover.hidden") | default false }}
-  {{- partial "cover.html" (dict "cxt" . "IsSingle" false "isHidden" $isHidden) }}
+<article class="post-entry cat-{{ $catClass }}" data-categories='{{ delimit ($page.Params.categories | default slice) "," }}'>
+  {{- /* 카테고리별 컬러 헤더 (썸네일 대체) */ -}}
+  <div class="post-cat-banner">
+    <span class="post-cat-label">{{ $secondCat | default "Study" }}</span>
+  </div>
   <header class="entry-header">
     <h2 class="entry-hint-parent">
       {{- .Title }}
