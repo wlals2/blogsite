@@ -117,11 +117,6 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   url = "/tags/"
   weight = 5
 
-[[menu.main]]
-  identifier = "news"
-  name = "News"
-  url = "/news/"
-  weight = 6
 
 buildFuture = true
 

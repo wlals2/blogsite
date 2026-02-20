@@ -104,17 +104,6 @@
             </details>
         </div>
 
-        {{- /* ── RECENT NEWS ── */ -}}
-        <div class="hi-section">
-            <div class="hi-section-head">
-                <h2 class="hi-section-title">국내 Tech 블로그</h2>
-                <a href="/news/" class="hi-more-link">전체 보기 →</a>
-            </div>
-            <div id="hi-news" class="hi-news-wrap">
-                <span class="hi-news-loading">불러오는 중…</span>
-            </div>
-        </div>
-
         {{- /* ── PROJECTS ── */ -}}
         <div class="hi-section">
             <div class="hi-section-head">
@@ -396,47 +385,6 @@
     padding: 2px 6px;
 }
 
-/* ── News ─────────────────────────────────────────── */
-.hi-news-wrap { display: flex; flex-direction: column; }
-.hi-news-loading { font-size: 0.82rem; color: var(--secondary); padding: 0.5rem 0; }
-.hi-news-item {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
-    text-decoration: none;
-    color: inherit;
-}
-.hi-news-item:last-child { border-bottom: none; }
-.hi-news-item:hover .hi-news-title { color: var(--primary); text-decoration: underline; }
-.hi-news-src {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 0.62rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.2px;
-    white-space: nowrap;
-}
-.hi-news-title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--primary);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-.hi-news-time {
-    font-size: 0.68rem;
-    color: var(--secondary);
-    white-space: nowrap;
-}
-
 /* ── Projects ─────────────────────────────────────── */
 .hi-proj-grid {
     display: grid;
@@ -500,63 +448,8 @@
     .hi-proj-grid { grid-template-columns: 1fr; }
     .hi-all-item { grid-template-columns: 50px 1fr; }
     .hi-all-cat { display: none; }
-    .hi-news-item { grid-template-columns: auto 1fr; }
-    .hi-news-time { display: none; }
-    .hi-posts-divider { display: none; }
+.hi-posts-divider { display: none; }
 }
 </style>
-
-<script>
-(function () {
-    var SRC = {
-        '카카오 Tech':      { abbr: '카카오',    color: '#FEE500', textColor: '#1a1a1a' },
-        '토스 Tech':        { abbr: '토스',      color: '#0064FF' },
-        '당근 Tech':        { abbr: '당근',      color: '#FF6F0F' },
-        '우아한형제들 Tech': { abbr: '우아한',    color: '#1E88E5' },
-        '네이버 D2':        { abbr: 'D2',        color: '#03C75A' },
-        '카카오페이 Tech':  { abbr: '카카오페이', color: '#3A1D96' },
-        '라인 엔지니어링':  { abbr: 'LINE',      color: '#00B900' },
-        '쿠팡 엔지니어링':  { abbr: '쿠팡',      color: '#C00000' },
-        'NHN Cloud':        { abbr: 'NHN',       color: '#1B5EB4' }
-    };
-
-    function timeAgo(iso) {
-        if (!iso) return '';
-        var s = /[Z+]/.test(iso) ? iso : iso + 'Z';
-        var diff = Date.now() - new Date(s).getTime();
-        if (diff < 0) diff = 0;
-        var h = Math.floor(diff / 3600000);
-        if (h < 1) return '방금';
-        if (h < 24) return h + '시간 전';
-        var d = Math.floor(h / 24);
-        if (d < 7) return d + '일 전';
-        var dt = new Date(s);
-        return (dt.getMonth() + 1) + '/' + dt.getDate();
-    }
-
-    function esc(t) {
-        return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    var box = document.getElementById('hi-news');
-
-    fetch('/api/news?page=0&size=7')
-        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
-        .then(function (data) {
-            var list = (data.content || []).slice(0, 7);
-            if (!list.length) { box.innerHTML = '<span class="hi-news-loading">뉴스가 없습니다.</span>'; return; }
-            box.innerHTML = list.map(function (a) {
-                var cfg = SRC[a.sourceName] || { abbr: (a.sourceName || '').slice(0, 3).toUpperCase(), color: '#95a5a6' };
-                var textColor = cfg.textColor || '#fff';
-                return '<a class="hi-news-item" href="' + esc(a.link) + '" target="_blank" rel="noopener noreferrer">' +
-                    '<span class="hi-news-src" style="background:' + cfg.color + ';color:' + textColor + '">' + cfg.abbr + '</span>' +
-                    '<span class="hi-news-title">' + esc(a.title) + '</span>' +
-                    '<span class="hi-news-time">' + timeAgo(a.publishedAt) + '</span>' +
-                '</a>';
-            }).join('');
-        })
-        .catch(function () { box.innerHTML = '<span class="hi-news-loading">뉴스를 불러올 수 없습니다.</span>'; });
-}());
-</script>
 
 {{- end }}{{- /* end main */ -}}

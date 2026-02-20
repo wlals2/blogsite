@@ -463,7 +463,40 @@ code {
    벤치마킹: DEV.to / GitHub 기술 블로그 스타일
    ============================================ */
 
-/* 카드 상단 컬러 배너 (study/list.html용) */
+/* 커버 이미지 썸네일 (cover.* 파일 자동 감지 시) */
+.post-cover-img {
+  position: relative;
+  height: 160px;           /* Why: 카드 상단 고정 높이, 이미지 잘림 방지 */
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 10px 10px 0 0;
+}
+.post-cover-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* Why: 이미지 비율 무관하게 꽉 채움 */
+  transition: transform 0.3s;
+}
+.study-grid .post-entry:hover .post-cover-img img {
+  transform: scale(1.05);  /* Why: 호버 시 줌 효과 */
+}
+/* 커버 이미지 위에 카테고리 라벨 오버레이 */
+.post-cover-cat-label {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,0.5);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+
+/* 카드 상단 컬러 배너 (cover 이미지 없는 글의 폴백) */
 .post-cat-banner {
   height: 48px;
   display: flex;

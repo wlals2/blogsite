@@ -93,10 +93,18 @@
 {{- $catClass := $secondCat | lower | replaceRE "[^a-z0-9]+" "-" | strings.TrimRight "-" }}
 
 <article class="post-entry cat-{{ $catClass }}" data-categories='{{ delimit ($page.Params.categories | default slice) "," }}'>
-  {{- /* 카테고리별 컬러 헤더 (썸네일 대체) */ -}}
+  {{- /* 커버 이미지: cover.* 파일 자동 감지 → 없으면 카테고리 컬러 배너 폴백 */ -}}
+  {{- $cover := $page.Resources.GetMatch "cover.*" }}
+  {{- if $cover }}
+  <div class="post-cover-img">
+    <img src="{{ $cover.RelPermalink }}" alt="{{ $page.Title }}" loading="lazy">
+    <span class="post-cover-cat-label">{{ $secondCat | default "Study" }}</span>
+  </div>
+  {{- else }}
   <div class="post-cat-banner">
     <span class="post-cat-label">{{ $secondCat | default "Study" }}</span>
   </div>
+  {{- end }}
   <header class="entry-header">
     <h2 class="entry-hint-parent">
       {{- .Title }}
