@@ -54,6 +54,43 @@ CAT_KEYWORDS = {
     "storage":           "server hardware storage technology",
     "elasticsearch":     "search data analytics technology",
 }
+
+# 태그 → 검색 키워드 매핑
+# Why: 태그는 카테고리보다 더 구체적인 주제를 나타냄 → 더 관련성 높은 이미지 가능
+# 우선순위: TAG_KEYWORDS > CAT_KEYWORDS (태그가 더 구체적)
+TAG_KEYWORDS = {
+    # Security tools
+    "wazuh":            "cybersecurity soc analyst monitor screen",
+    "falco":            "security surveillance detection system",
+    "ids":              "security camera surveillance monitoring",
+    "ips":              "security alert firewall protection",
+    "siem":             "security operations center monitor",
+    "soar":             "automation security response system",
+    "devsecops":        "secure code development pipeline",
+    "sealed-secrets":   "lock encryption key vault secure",
+    "gitops":           "git code version control pipeline",
+    # Kubernetes ecosystem
+    "argocd":           "continuous deployment pipeline automation",
+    "helm":             "package management deployment",
+    "istio":            "network mesh service proxy",
+    "cilium":           "network security policy firewall",
+    "prometheus":       "monitoring metrics graph dashboard",
+    "grafana":          "analytics dashboard visualization chart",
+    "loki":             "log aggregation search system",
+    "opensearch":       "search data analytics technology",
+    # Protocols / concepts
+    "mtls":             "encryption secure connection lock",
+    "rbac":             "access control permission lock",
+    "zero-trust":       "security lock access control",
+    "canary":           "deployment pipeline gradual release",
+    "ebpf":             "linux kernel system low-level",
+    # General tech
+    "mysql":            "database server storage rows",
+    "terraform":        "infrastructure cloud deployment code",
+    "ansible":          "automation script configuration",
+    "docker":           "container ship cargo abstract",
+    "nginx":            "web server proxy load balance",
+}
 DEFAULT_KEYWORDS = "technology server abstract dark"
 
 
@@ -93,13 +130,23 @@ def parse_frontmatter(md_path: Path):
 
 
 def get_search_keywords(category: str, tags: list) -> str:
-    """카테고리 기반 Unsplash 검색 키워드 생성
-    Why: 기술 용어(Kubernetes, Falco 등)는 Unsplash에 없음 → 일반적인 시각 키워드 사용
+    """태그 → 카테고리 순으로 Unsplash 검색 키워드 생성
+    Why: 태그가 더 구체적인 주제를 나타내므로 우선 적용 → 더 관련성 높은 이미지
+    태그에 매핑 없으면 카테고리로 폴백 → 카테고리도 없으면 기본값 사용
     """
+    # 태그 먼저 확인 (더 구체적)
+    for tag in (tags or []):
+        tag_lower = tag.lower().strip()
+        for key, kw in TAG_KEYWORDS.items():
+            if key in tag_lower:
+                return kw
+
+    # 카테고리 폴백
     cat_lower = (category or "").lower().strip()
     for key, kw in CAT_KEYWORDS.items():
         if key in cat_lower:
             return kw
+
     return DEFAULT_KEYWORDS
 
 
