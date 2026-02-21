@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import json
+import random
 import argparse
 import urllib.request
 import urllib.parse
@@ -66,11 +67,11 @@ TAG_KEYWORDS = {
     "ips":              "security alert firewall protection",
     "siem":             "security operations center monitor",
     "soar":             "automation security response system",
-    "devsecops":        "secure code development pipeline",
+    "devsecops":        "secure code development workflow",
     "sealed-secrets":   "lock encryption key vault secure",
-    "gitops":           "git code version control pipeline",
+    "gitops":           "software deployment automation git workflow",
     # Kubernetes ecosystem
-    "argocd":           "continuous deployment pipeline automation",
+    "argocd":           "continuous delivery automation software workflow",
     "helm":             "package management deployment",
     "istio":            "network mesh service proxy",
     "cilium":           "network security policy firewall",
@@ -157,10 +158,12 @@ def fetch_unsplash(keywords: str) -> tuple | None:
         return None
 
     # Why: /photos/random은 결과 없으면 404 반환 → /search/photos 사용
+    # page 랜덤화: 같은 키워드라도 다양한 사진 선택
+    page = random.randint(1, 5)
     query = urllib.parse.quote(keywords)
     url = (
         f"https://api.unsplash.com/search/photos"
-        f"?query={query}&orientation=landscape&per_page=1&client_id={UNSPLASH_KEY}"
+        f"?query={query}&orientation=landscape&per_page=10&page={page}&client_id={UNSPLASH_KEY}"
     )
     try:
         req = urllib.request.Request(url, headers={"Accept": "application/json"})
@@ -168,9 +171,16 @@ def fetch_unsplash(keywords: str) -> tuple | None:
             data = json.loads(resp.read())
             results = data.get("results", [])
             if not results:
-                print(f"  Unsplash: 결과 없음 (query: {keywords[:40]})")
-                return None
-            photo = results[0]
+                # 결과 없으면 page=1로 재시도
+                url2 = url.replace(f"&page={page}", "&page=1")
+                req2 = urllib.request.Request(url2, headers={"Accept": "application/json"})
+                with urllib.request.urlopen(req2, timeout=15) as resp2:
+                    data = json.loads(resp2.read())
+                    results = data.get("results", [])
+                if not results:
+                    print(f"  Unsplash: 결과 없음 (query: {keywords[:40]})")
+                    return None
+            photo = random.choice(results)
             # regular URL: 1080px 고화질, Pillow로 리사이즈
             photo_url = photo["urls"]["regular"]
             credit = f"Photo by {photo['user']['name']} on Unsplash"
