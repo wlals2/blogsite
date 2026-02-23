@@ -4,6 +4,9 @@ date: 2026-01-24T10:00:00+09:00
 description: "중복 L7 라우팅 레이어 제거로 아키텍처 단순화 및 성능 개선"
 tags: ["kubernetes", "istio", "gateway", "ingress", "service-mesh", "metallb", "architecture"]
 categories: ["study", "Service Mesh", "Networking"]
+series: ["Istio 실전 시리즈"]
+showtoc: true
+tocopen: true
 ---
 
 ## 개요

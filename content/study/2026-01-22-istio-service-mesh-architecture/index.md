@@ -4,6 +4,9 @@ date: 2026-01-22T10:00:00+09:00
 description: "mTLS, Traffic Routing, Circuit Breaker, Distributed Tracing까지 프로덕션급 Service Mesh 구축"
 tags: ["kubernetes", "istio", "service-mesh", "mtls", "kiali", "jaeger", "canary-deployment", "circuit-breaker"]
 categories: ["study", "Service Mesh"]
+series: ["Istio 실전 시리즈"]
+showtoc: true
+tocopen: true
 ---
 
 ## 개요
