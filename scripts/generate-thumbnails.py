@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ─── 설정 ────────────────────────────────────────────
 CONTENT_DIR  = Path(__file__).parent.parent / "content" / "study"
+ICON_DIR     = Path(__file__).parent / "icons"
 IMG_W, IMG_H = 800, 420
 FONT_BOLD    = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
 FONT_REG     = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
@@ -33,6 +34,19 @@ CAT_COLORS = {
     "elasticsearch":     ((214, 158, 46),  (160, 110, 20)),
 }
 DEFAULT_COLOR = ((14, 165, 233), (2, 100, 180))
+
+CAT_ICONS = {
+    "kubernetes":        "kubernetes.png",
+    "service mesh":      "istio.png",
+    "security":          "security.png",
+    "observability":     "prometheus.png",
+    "networking":        "cilium.png",
+    "cloud & terraform": "terraform.png",
+    "elasticsearch":     "elastic.png",
+    "storage":           "docker.png",
+    "troubleshooting":   "argocd.png",
+    "development":       "docker.png",
+}
 
 # ─── 헬퍼 ────────────────────────────────────────────
 
@@ -69,6 +83,37 @@ def draw_bottom_overlay(img):
     img.paste(merged.convert("RGB"))
 
 
+def get_icon_path(category: str):
+    """카테고리에 맞는 아이콘 파일 경로 반환 (없으면 None)"""
+    cat = (category or "").lower().strip()
+    for key, fname in CAT_ICONS.items():
+        if key in cat:
+            p = ICON_DIR / fname
+            if p.exists():
+                return p
+    return None
+
+
+def draw_icon_overlay(img, icon_path):
+    """카테고리 아이콘을 우측 중앙에 반투명(18%)하게 합성"""
+    if not icon_path:
+        return
+    try:
+        icon = Image.open(icon_path).convert("RGBA")
+        target = int(img.height * 0.72)
+        icon = icon.resize((target, target), Image.LANCZOS)
+        r, g, b, a = icon.split()
+        a = a.point(lambda x: int(x * 0.18))   # 18% 불투명도
+        icon.putalpha(a)
+        x = img.width - target - 10
+        y = (img.height - target) // 2
+        base = img.convert("RGBA")
+        base.paste(icon, (x, y), icon)
+        img.paste(base.convert("RGB"))
+    except Exception:
+        pass
+
+
 def draw_deco(img, c1):
     """우상단 장식 원"""
     d = ImageDraw.Draw(img)
@@ -94,8 +139,14 @@ def parse_frontmatter(md_path: Path):
             title = re.sub(r'^title:\s*["\']?', '', line).rstrip('"\'').strip()
         elif line.startswith("date:"):
             date = re.sub(r'^date:\s*', '', line).strip()[:10]
-        elif line.strip() == "categories:":
-            in_cats = True
+        elif line.startswith("categories:"):
+            val = re.sub(r'^categories:\s*', '', line).strip()
+            if val.startswith("["):
+                # 인라인 배열: categories: ["study", "Service Mesh"]
+                items = re.findall(r'["\']([^"\']+)["\']', val)
+                categories.extend(items)
+            else:
+                in_cats = True
         elif in_cats:
             m = re.match(r'\s*-\s*(.+)', line)
             if m:
@@ -166,6 +217,7 @@ def generate(post_dir: Path, force=False):
     img = Image.new("RGB", (IMG_W, IMG_H), c1)
     draw_gradient_bg(img, c1, c2)
     draw_deco(img, c1)
+    draw_icon_overlay(img, get_icon_path(category))   # 카테고리 아이콘
     draw_bottom_overlay(img)
 
     draw = ImageDraw.Draw(img)
