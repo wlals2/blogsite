@@ -201,10 +201,10 @@ code {
    Tables - 단일 카드 테이블 스타일
    ============================================ */
 
-/* Why: overflow-x: auto(가로스크롤) + overflow-y: clip(border-radius 클리핑) 조합 */
+/* Why: overflow: auto로 가로 스크롤 허용
+        border-radius 클리핑은 모서리 셀에 직접 적용 (overflow: hidden 없이 해결) */
 .table-wrapper {
-  overflow-x: auto;
-  overflow-y: clip;
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
   margin: 2rem 0;
   border-radius: 12px;
@@ -241,6 +241,17 @@ code {
   text-align: left;
 }
 
+/* Why: 헤더 모서리 셀에 border-radius → wrapper 코너와 맞춤 */
+.table-wrapper table thead th:first-child,
+.post-content table thead th:first-child {
+  border-radius: 12px 0 0 0;
+  border-left: 3px solid var(--accent-color);
+}
+.table-wrapper table thead th:last-child,
+.post-content table thead th:last-child {
+  border-radius: 0 12px 0 0;
+}
+
 /* 행 셀 */
 .table-wrapper table tbody td,
 .post-content table tbody td {
@@ -253,10 +264,18 @@ code {
   transition: background 0.12s ease;
 }
 
-/* 마지막 행 하단 구분선 제거 */
+/* 마지막 행 하단 구분선 제거 + 모서리 radius */
 .table-wrapper table tbody tr:last-child td,
 .post-content table tbody tr:last-child td {
   border-bottom: none;
+}
+.table-wrapper table tbody tr:last-child td:first-child,
+.post-content table tbody tr:last-child td:first-child {
+  border-radius: 0 0 0 12px;
+}
+.table-wrapper table tbody tr:last-child td:last-child,
+.post-content table tbody tr:last-child td:last-child {
+  border-radius: 0 0 12px 0;
 }
 
 /* Why: 첫 열 왼쪽에 accent 라인으로 포인트 */
