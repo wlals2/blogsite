@@ -1,5 +1,5 @@
 ---
-title: "Envoy — Istio의 심장, Sidecar 프록시 동작 원리"
+title: "[Istio 시리즈 #3] Envoy — Istio의 심장, Sidecar 프록시 동작 원리"
 date: 2026-01-16T10:00:00+09:00
 summary: "Istio에서 실제 트래픽을 처리하는 것은 Envoy다. iptables로 트래픽을 가로채고, xDS API로 설정을 받아 L7 라우팅을 수행한다. Envoy가 어떻게 모든 트래픽을 알아채는지 살펴본다."
 tags: ["envoy", "istio", "service-mesh", "sidecar", "proxy", "kubernetes", "iptables", "xds"]
