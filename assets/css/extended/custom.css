@@ -198,92 +198,80 @@ code {
 }
 
 /* ============================================
-   Tables - Card Row 스타일 (Linear / GitHub 스타일)
+   Tables - 단일 카드 테이블 스타일
    ============================================ */
 
-/* Why: 가로 스크롤 wrapper - overflow: hidden 없이 scroll 처리 */
+/* Why: overflow-x: auto(가로스크롤) + overflow-y: clip(border-radius 클리핑) 조합 */
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: clip;
   -webkit-overflow-scrolling: touch;
   margin: 2rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .post-content .table-wrapper {
   margin: 2rem 0;
 }
 
-/* Why: border-spacing으로 행 간격 → 각 행이 독립 카드처럼 보임 */
 .table-wrapper table,
 .post-content table {
   width: 100%;
   min-width: 480px;
-  border-collapse: separate;
-  border-spacing: 0 5px;
+  border-collapse: collapse;
   border: none;
   box-shadow: none;
   background: transparent;
 }
 
-/* 헤더: 배경 없는 uppercase (Linear 스타일) */
+/* 헤더: 구분되는 배경 + uppercase */
 .table-wrapper table thead th,
 .post-content table thead th {
-  padding: 0.3rem 1.2rem 0.7rem;
-  font-size: 0.72rem;
+  padding: 0.75rem 1.2rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   color: var(--secondary);
-  background: transparent;
-  border: none;
+  background: var(--card-bg);
+  border-bottom: 2px solid var(--card-border);
   white-space: nowrap;
   text-align: left;
 }
 
-/* 각 행 셀: 카드 스타일 */
+/* 행 셀 */
 .table-wrapper table tbody td,
 .post-content table tbody td {
   padding: 0.85rem 1.2rem;
-  background: var(--entry);
-  border-top: 1px solid var(--card-border);
   border-bottom: 1px solid var(--card-border);
-  font-size: 0.91rem;
+  font-size: 0.92rem;
   word-break: keep-all;
   overflow-wrap: break-word;
   vertical-align: middle;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.12s ease;
 }
 
-/* Why: 첫 셀에 accent 라인 + 왼쪽 radius → 카드의 포인트 */
+/* 마지막 행 하단 구분선 제거 */
+.table-wrapper table tbody tr:last-child td,
+.post-content table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Why: 첫 열 왼쪽에 accent 라인으로 포인트 */
 .table-wrapper table tbody td:first-child,
 .post-content table tbody td:first-child {
   border-left: 3px solid var(--accent-color);
-  border-radius: 8px 0 0 8px;
 }
 
-.table-wrapper table tbody td:last-child,
-.post-content table tbody td:last-child {
-  border-right: 1px solid var(--card-border);
-  border-radius: 0 8px 8px 0;
-}
-
-/* hover: accent 색 테두리로 강조 */
+/* hover */
 .table-wrapper table tbody tr:hover td,
 .post-content table tbody tr:hover td {
   background: var(--card-bg);
-  border-color: rgba(14, 165, 233, 0.35);
-}
-
-.table-wrapper table tbody tr:hover td:first-child,
-.post-content table tbody tr:hover td:first-child {
-  border-left-color: var(--accent-color);
 }
 
 /* 다크모드 */
-.dark .table-wrapper table tbody td,
-.dark .post-content table tbody td {
-  border-color: var(--card-border);
-}
-
 .dark .table-wrapper table tbody tr:hover td,
 .dark .post-content table tbody tr:hover td {
   background: rgba(255, 255, 255, 0.04);
