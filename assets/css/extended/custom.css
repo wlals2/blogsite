@@ -198,19 +198,37 @@ code {
 }
 
 /* ============================================
-   Tables - 현대적인 테이블
+   Tables - 반응형 스크롤 테이블
    ============================================ */
-.post-content table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+
+/* Why: overflow: hidden 대신 wrapper에서 처리해야 가로 스크롤 가능 */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin: 2rem 0;
   border-radius: 12px;
-  overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--card-border);
 }
 
+.post-content .table-wrapper {
+  margin: 2rem 0;
+}
+
+.table-wrapper table,
+.post-content table {
+  width: 100%;
+  min-width: 500px;  /* Why: 너무 작게 압축되는 것 방지 */
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: none;
+  border: none;
+}
+
+.table-wrapper table th,
 .post-content table th {
   background: var(--accent-color);
   color: white;
@@ -218,26 +236,26 @@ code {
   font-weight: 600;
   text-align: left;
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 
+.table-wrapper table td,
 .post-content table td {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--card-border);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
+  word-break: keep-all;  /* Why: 한글 단어 중간 줄바꿈 방지 */
+  overflow-wrap: break-word;
 }
 
+.table-wrapper table tr:last-child td,
 .post-content table tr:last-child td {
   border-bottom: none;
 }
 
+.table-wrapper table tr:hover td,
 .post-content table tr:hover td {
   background: var(--card-bg);
-}
-
-/* Status icons in tables */
-.post-content table td:first-child {
-  text-align: center;
-  font-size: 1.3rem;
 }
 
 /* ============================================
