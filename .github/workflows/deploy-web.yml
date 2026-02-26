@@ -22,6 +22,20 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: false  # PaperMod은 더 이상 submodule이 아님
+          # Why: 전체 Git 히스토리 스캔 (depth=1이면 과거 커밋에서 지운 Secrets 놓침)
+          fetch-depth: 0
+
+      # ======================================================================
+      # Step 1.5: Secrets 스캔 (DevSecOps - GitLeaks)
+      # ======================================================================
+      # Why: Hugo config, Cloudflare API Token 등이 실수로 커밋될 수 있음
+      #      탐지 예시: CLOUDFLARE_API_TOKEN, GHCR_TOKEN 하드코딩 후 삭제해도 히스토리에 남음
+      #      exit-code 기본값 1 → Secrets 발견 시 이후 Steps 전체 차단 (Build/Deploy 불가)
+      - name: Scan for secrets with GitLeaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_SUMMARY: true
 
       # ======================================================================
       # Step 2: Docker Buildx 설정 (캐시 활용)
