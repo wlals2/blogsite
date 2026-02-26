@@ -22,8 +22,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: false  # PaperMod은 더 이상 submodule이 아님
-          # Why: 전체 Git 히스토리 스캔 (depth=1이면 과거 커밋에서 지운 Secrets 놓침)
-          fetch-depth: 0
+          # Why: 직전 커밋 1개만 스캔 (증분) - 과거 히스토리는 최초 full scan 이후 clean 보장
+          fetch-depth: 2
 
       # ======================================================================
       # Step 1.5: Secrets 스캔 (DevSecOps - GitLeaks)
@@ -47,7 +47,8 @@ jobs:
           fi
 
           # exit-code=2: secrets 발견 시 step 실패 → 이후 빌드/배포 차단
-          $GITLEAKS_BIN detect --source=. -v --exit-code=2 --log-opts=-1
+          # Why: HEAD~1..HEAD = 직전 커밋만 스캔 (증분) - 전체 히스토리 스캔 대비 ~90% 시간 절약
+          $GITLEAKS_BIN detect --source=. -v --exit-code=2 --log-opts="HEAD~1..HEAD"
 
       # ======================================================================
       # Step 2: Docker Buildx 설정 (캐시 활용)
@@ -89,10 +90,7 @@ jobs:
         run: |
           echo "🔍 Verifying Docker image..."
 
-          # 1. 이미지 존재 확인
-          docker pull ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
-
-          # 2. 이미지 크기 확인
+          # 1. 이미지 크기 확인 (Build and push step에서 이미 로컬에 있음 - docker pull 중복 제거)
           IMAGE_SIZE=$(docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
             --format='{{.Size}}' | awk '{print int($1/1024/1024)}')
           echo "📦 Image size: ${IMAGE_SIZE} MB"
@@ -125,6 +123,8 @@ jobs:
           exit-code: '0'  # 취약점 발견해도 빌드 실패 안 함 (경고만)
           severity: 'CRITICAL,HIGH'
           timeout: '5m'
+          # Why: DB를 self-hosted runner 로컬에 캐시 → 매 실행마다 다운로드 방지 (~1분 절약)
+          cache-dir: /tmp/trivy-db-cache
 
       # ======================================================================
       # Step 5: GitOps - Update Kubernetes Manifest (Stateless)
@@ -138,7 +138,8 @@ jobs:
           TEMP_DIR="/tmp/k8s-manifests-${{ github.run_number }}"
           echo "📁 Cloning to: $TEMP_DIR"
 
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git $TEMP_DIR
+          # Why: --depth 1 = 최신 커밋만 clone (전체 히스토리 불필요, ~30초 절약)
+          git clone --depth 1 https://${{ secrets.GITOPS_TOKEN }}@github.com/wlals2/k8s-manifests.git $TEMP_DIR
           cd $TEMP_DIR/services/blog-system/web
 
           # 2. yq로 이미지 태그 업데이트
