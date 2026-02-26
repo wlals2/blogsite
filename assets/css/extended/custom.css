@@ -216,11 +216,20 @@ code {
   margin: 2rem 0;
 }
 
+/* Why: JS wrapper 없이도 CSS만으로 가로 스크롤 보장
+        display: block이 있어야 overflow-x: auto가 table에서 작동함 */
+.post-content table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .table-wrapper table,
 .post-content table {
   width: 100%;
   min-width: 480px;
   border-collapse: collapse;
+  border-spacing: 0;
   border: none;
   box-shadow: none;
   background: transparent;
