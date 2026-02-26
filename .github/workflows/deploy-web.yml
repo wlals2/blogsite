@@ -30,13 +30,24 @@ jobs:
       # ======================================================================
       # Why: Hugo config, Cloudflare API Token 등이 실수로 커밋될 수 있음
       #      탐지 예시: CLOUDFLARE_API_TOKEN, GHCR_TOKEN 하드코딩 후 삭제해도 히스토리에 남음
-      #      exit-code 기본값 1 → Secrets 발견 시 이후 Steps 전체 차단 (Build/Deploy 불가)
+      #      exit-code 2 → Secrets 발견 시 이후 Steps 전체 차단 (Build/Deploy 불가)
+      # Why: gitleaks-action@v2 대신 직접 실행
+      #      self-hosted runner에서 SARIF 업로드 시 rootDirectory 불일치 에러 발생
+      #      action 내부에서 SARIF 업로드를 항상 실행해 ENABLE_SUMMARY 옵션으로 막을 수 없음
       - name: Scan for secrets with GitLeaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Why: self-hosted runner에서 SARIF 업로드 시 rootDirectory 불일치 에러 발생
-          GITLEAKS_ENABLE_SUMMARY: false
+        run: |
+          GITLEAKS_VERSION="8.24.3"
+          GITLEAKS_BIN="/tmp/gitleaks-${GITLEAKS_VERSION}/gitleaks"
+
+          # 바이너리 없으면 다운로드 (캐시 히트 시 재사용)
+          if [ ! -f "$GITLEAKS_BIN" ]; then
+            mkdir -p "/tmp/gitleaks-${GITLEAKS_VERSION}"
+            curl -sSfL "https://github.com/zricethezav/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+              | tar -xz -C "/tmp/gitleaks-${GITLEAKS_VERSION}"
+          fi
+
+          # exit-code=2: secrets 발견 시 step 실패 → 이후 빌드/배포 차단
+          $GITLEAKS_BIN detect --source=. -v --exit-code=2 --log-opts=-1
 
       # ======================================================================
       # Step 2: Docker Buildx 설정 (캐시 활용)
