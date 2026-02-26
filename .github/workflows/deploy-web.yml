@@ -35,7 +35,8 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_SUMMARY: true
+          # Why: self-hosted runner에서 SARIF 업로드 시 rootDirectory 불일치 에러 발생
+          GITLEAKS_ENABLE_SUMMARY: false
 
       # ======================================================================
       # Step 2: Docker Buildx 설정 (캐시 활용)
