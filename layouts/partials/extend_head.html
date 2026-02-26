@@ -58,16 +58,6 @@
       mermaid.run({ nodes: [element] });
     });
 
-    // 테이블 가로 스크롤 wrapper 적용
-    // Why: overflow: hidden + border-radius로 테이블이 잘리는 문제 방지
-    document.querySelectorAll('.post-content table').forEach(function(table) {
-      if (!table.parentElement.classList.contains('table-wrapper')) {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'table-wrapper';
-        table.parentNode.insertBefore(wrapper, table);
-        wrapper.appendChild(table);
-      }
-    });
   });
 </script>
 

@@ -201,10 +201,11 @@ code {
    Tables - 단일 카드 테이블 스타일
    ============================================ */
 
-/* Why: overflow: auto로 가로 스크롤 허용
-        border-radius 클리핑은 모서리 셀에 직접 적용 (overflow: hidden 없이 해결) */
+/* Why: render-table.html (Hugo Render Hook)이 빌드 시점에 모든 마크다운 표를
+        .table-wrapper로 감싸므로, overflow-x: auto로 가로 스크롤 보장 (JS 불필요) */
 .table-wrapper {
-  overflow: auto;
+  width: 100%;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin: 2rem 0;
   border-radius: 12px;
@@ -212,32 +213,19 @@ code {
   box-shadow: var(--shadow-sm);
 }
 
-.post-content .table-wrapper {
-  margin: 2rem 0;
-}
-
-/* Why: JS wrapper 없이도 CSS만으로 가로 스크롤 보장
-        display: block이 있어야 overflow-x: auto가 table에서 작동함 */
-.post-content table {
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.table-wrapper table,
-.post-content table {
+.table-wrapper table {
   width: 100%;
   min-width: 480px;
   border-collapse: collapse;
   border-spacing: 0;
+  margin: 0;
   border: none;
   box-shadow: none;
   background: transparent;
 }
 
 /* 헤더: 구분되는 배경 + uppercase */
-.table-wrapper table thead th,
-.post-content table thead th {
+.table-wrapper table thead th {
   padding: 0.75rem 1.2rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -251,19 +239,14 @@ code {
 }
 
 /* Why: 헤더 모서리 셀에 border-radius → wrapper 코너와 맞춤 */
-.table-wrapper table thead th:first-child,
-.post-content table thead th:first-child {
+.table-wrapper table thead th:first-child {
   border-radius: 12px 0 0 0;
   border-left: 3px solid var(--accent-color);
 }
-.table-wrapper table thead th:last-child,
-.post-content table thead th:last-child {
-  border-radius: 0 12px 0 0;
-}
+.table-wrapper table thead th:last-child { border-radius: 0 12px 0 0; }
 
 /* 행 셀 */
-.table-wrapper table tbody td,
-.post-content table tbody td {
+.table-wrapper table tbody td {
   padding: 0.85rem 1.2rem;
   border-bottom: 1px solid var(--card-border);
   font-size: 0.92rem;
@@ -274,34 +257,20 @@ code {
 }
 
 /* 마지막 행 하단 구분선 제거 + 모서리 radius */
-.table-wrapper table tbody tr:last-child td,
-.post-content table tbody tr:last-child td {
-  border-bottom: none;
-}
-.table-wrapper table tbody tr:last-child td:first-child,
-.post-content table tbody tr:last-child td:first-child {
-  border-radius: 0 0 0 12px;
-}
-.table-wrapper table tbody tr:last-child td:last-child,
-.post-content table tbody tr:last-child td:last-child {
-  border-radius: 0 0 12px 0;
-}
+.table-wrapper table tbody tr:last-child td { border-bottom: none; }
+.table-wrapper table tbody tr:last-child td:first-child { border-radius: 0 0 0 12px; }
+.table-wrapper table tbody tr:last-child td:last-child { border-radius: 0 0 12px 0; }
 
 /* Why: 첫 열 왼쪽에 accent 라인으로 포인트 */
-.table-wrapper table tbody td:first-child,
-.post-content table tbody td:first-child {
+.table-wrapper table tbody td:first-child {
   border-left: 3px solid var(--accent-color);
 }
 
 /* hover */
-.table-wrapper table tbody tr:hover td,
-.post-content table tbody tr:hover td {
-  background: var(--card-bg);
-}
+.table-wrapper table tbody tr:hover td { background: var(--card-bg); }
 
 /* 다크모드 */
-.dark .table-wrapper table tbody tr:hover td,
-.dark .post-content table tbody tr:hover td {
+.dark .table-wrapper table tbody tr:hover td {
   background: rgba(255, 255, 255, 0.04);
 }
 
