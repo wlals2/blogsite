@@ -2,6 +2,8 @@ package com.jimin.board.exception;
 
 import com.jimin.board.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,6 +27,9 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // Why: 서버 내부 에러는 로그에 상세 기록, 응답에는 일반 메시지만
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * PostNotFoundException 처리
@@ -94,16 +99,18 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        // Why: 실제 에러 메시지(스택 트레이스, 클래스명 등)는 로그에만 기록.
+        //      응답에 포함하면 공격자가 내부 구조(패키지명, 라인 번호)를 파악 가능.
+        //      ZAP CWE-550 Application Error Disclosure 대응.
+        log.error("Unexpected error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
         ErrorResponse error = new ErrorResponse(
                 LocalDateTime.now().toString(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "서버 내부 오류가 발생했습니다: " + ex.getMessage(),
+                "서버 내부 오류가 발생했습니다.",  // 일반 메시지만 반환 (ex.getMessage() 제거)
                 request.getRequestURI()
         );
-
-        // 실제 운영 환경에서는 로깅 추가
-        // log.error("Unexpected error", ex);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

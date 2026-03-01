@@ -2,9 +2,7 @@
 # Spring Boot Application 설정
 # ==============================================================================
 
-# 서버 포트 설정
-server:
-  port: 8080  # Spring Boot가 8080 포트에서 실행
+# 서버 포트 설정 (error 설정은 Actuator 섹션 아래에 통합)
 
 # Spring 설정
 spring:
@@ -46,7 +44,21 @@ management:
         include: health,info  # /actuator/health, /actuator/info 노출
   endpoint:
     health:
-      show-details: always  # 헬스체크 상세 정보 표시
+      # Why: always → when-authorized로 변경.
+      #      'always'는 인증 없이 DB 연결 상태, 디스크 용량, 메모리 등 내부 정보 노출.
+      #      K8s Probe는 단순 UP/DOWN만 확인하면 충분 (상세 정보 불필요).
+      show-details: when-authorized
+
+# Spring Boot 기본 에러 응답 설정
+server:
+  port: 8080
+  error:
+    # Why: 기본 /error 페이지가 스택 트레이스를 포함할 수 있음.
+    #      include-message: never → ex.getMessage() 응답 차단 (ZAP CWE-550 대응)
+    #      include-stacktrace: never → 스택 트레이스 응답 차단
+    include-message: never
+    include-stacktrace: never
+    include-exception: false  # 예외 클래스명 노출 차단
 
 # GitHub OAuth 설정
 github:

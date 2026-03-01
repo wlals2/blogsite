@@ -24,13 +24,33 @@
 
 | 항목 | 내용 |
 |------|------|
-| 프로젝트명 | AWS EKS 3-Tier + Multi-Cloud DR |
-| 기간 | 2025.10 ~ 2026.01 (약 3개월) |
-| 팀 구성 | 4명 |
-| 역할 | **팀장** — 아키텍처 설계 + 프로젝트 조율 + Terraform IaC |
+| 프로젝트명 | 멀티클라우드 기반 고가용성 아키텍처 구축 (PROJECT I2ST) |
+| 기간 | 2025.12.08 ~ 2026.01.04 (28일) |
+| 팀 구성 | 3명 작업 (Leader 1 + Member 2) + 멘토 1명 |
+| 역할 | **Leader / Cloud Architect** — 전체 아키텍처 설계 + 프로젝트 총괄 + EKS 설계 + Terraform 코드 |
+| 시나리오 | 아마존 동물병원: 24/7 프랜차이즈 예약 플랫폼 (가맹 2,500+개, 월 100만 예약, 일 3만 트래픽) |
 | 애플리케이션 | Spring PetClinic |
-| Primary | AWS (EKS, RDS, ALB, Route53, CloudFront) |
+| Primary | AWS (EKS, RDS, ALB, Route53, CloudFront, VPC Multi-AZ) |
 | DR | Azure (VM, MySQL, Static Web Apps, Blob Storage) |
+
+### 팀 역할 상세
+| 이름 | 역할 | 담당 |
+|------|------|------|
+| **오지민** | Leader / Cloud Architect | 전체 아키텍처 구축, 프로젝트 총괄, EKS 클러스터 설계, Terraform |
+| 김지수 | CI/CD Specialist | CI/CD 파이프라인 구축, 카나리 배포 완성, Redis 세션 |
+| 김창주 | System Engineer | DR 시스템 구축, 모니터링 대시보드 생성 |
+| 김남룡 | Mentor / Project Advisor | 전체 멘토링, 아키텍처 피드백, 이슈 해결 |
+
+### 중간 프로젝트 (선행 경험)
+```
+프로젝트명: 아마존 동물병원 웹사이트 인프라 구축 (인스턴스 기반)
+기간: ~2025.12 (최종 프로젝트 이전)
+기술: AWS, Java17, Tomcat9, Apache 2.4.65, Amazon Linux
+역할: 팀장 — 아키텍처 설계, 총괄 및 모니터링
+팀원: 오지민, 김지수, 김창주, 조현준
+의미: 인스턴스 기반 3-Tier → EKS 컨테이너 기반으로 전환하며
+      "왜 K8s가 필요한지"를 직접 체감한 경험
+```
 
 ---
 
@@ -42,11 +62,23 @@
 - 전체 아키텍처 다이어그램
 - 시연 영상 링크/QR
 
-### 핵심 성과 요약
+### 핵심 성과 요약 (발표 자료 FINAL 슬라이드 기준)
 ```
-· 고객 요구 RTO 6시간 → 실제 30분 이내 달성 (시연 영상 검증)
+· 장애 복구: 5시간+ → 2분 (Route53 자동 Failover)
+· 전체 DR 복구: 고객 요구 RTO 6시간 → 실제 30분 이내 달성 (시연 영상 검증)
+· 스케일링: 30분(수동) → 3분(자동, Karpenter)
+· 배포 영향: 100% → 최대 10% (Canary)
+· 장애 감지: 30분+ → 30초 (Prometheus + Grafana)
+· DR 비용: 월 $15 추가 (+9%)로 자동화/DR 확보
 · Terraform State 삭제 사고 → DynamoDB Lock 재발 방지 설계
 · Pushgateway로 백업 CronJob 실패 감지 → DR 신뢰성 확보
+```
+
+### 성과 수치 맥락 구분 (면접 주의)
+```
+"2분" = Route53 Failover 자동 전환 시간 (87초)
+"30분" = 전체 서비스 복구 시간 (CloudFront 3분 + Terraform 13분 + DB 2분 + DNS 10분)
+→ 면접에서 질문받으면 두 가지를 구분해서 설명할 것
 ```
 
 ### 사용할 이미지
@@ -67,6 +99,17 @@
 
 > ⚠️ RPO = Point (어느 시점까지 복구), RTO = Time (얼마나 걸리는가)
 > 면접에서 100% 나오는 질문. 절대 혼동하지 말 것
+
+### 팀 내 논의: Warm vs Cold (발표 자료 기준)
+| 방식 | 내용 | 장점 | 단점 | 결과 |
+|------|------|------|------|------|
+| Warm Standby | AKS + DMS 실시간 동기화 | 높은 복구 속도, 동일 컨테이너 환경 | 비용 높음 | 탈락 |
+| **Cold Standby** | Azure VM + mysqldump 백업 복원 | **비용 최적화**, Terraform 프로비저닝 | 복구 시간 김 | **채택** |
+
+선택 이유:
+- 금융 기관이 아닌 동물 병원 — 수 분 복구 불필요
+- AWS 리전 장애는 일년에 자주 일어나지 않음
+- Terraform 코드가 있어 빠르게 프로비저닝 가능 (13분)
 
 ### 4가지 DR 옵션 비용 비교 (핵심 의사결정)
 | 옵션 | 비용 | RTO | 선택 |
@@ -152,8 +195,33 @@
 
 분리 이유: Jenkins는 빌드, ArgoCD는 배포 — 관심사 분리 + kubectl 직접 접근 방지
 
+### EKS 고가용성 설계 (발표 자료 기준)
+```
+Multi-AZ: ap-northeast-2a + 2c
+
+Pod 분산 전략:
+  Pod Anti-Affinity → 노드 부족 시 Pod 스케줄 불가 (탈락)
+  TopologySpreadConstraints + ScheduleAnyway → AZ 균등 분산 시도,
+    불가능하면 어디든 배치 (채택)
+
+오토스케일링:
+  HPA (Pod): CPU 80%, min2, max10 → 트래픽 증가 시 Pod 확장
+  Karpenter (Node): 워크로드 기반 자동 프로비저닝 → Pod Pending 시 노드 추가
+
+Spot 인스턴스:
+  처음 Spot 사용 → 운영 오버헤드 문제로 삭제 → On-demand 전환
+
+시연: AZ 장애 + 대형 트래픽 동시 발생
+  1. AZ-A Cordon (장애 시뮬레이션)
+  2. Replica 10 (대형 트래픽 발생)
+  3. → AZ-C로 Pod 자동 분산 + Karpenter 노드 추가
+  4. uncordon → 노드 복구 + Pod 재분배
+  성과: 단일 장애 지점(SPOF) 제거 — AZ 장애 시에도 고가용성 서비스 유지
+```
+
 ### Karpenter 노드 스케일링
 - Node Group 고정 대신 Karpenter로 워크로드에 맞게 노드 자동 프로비저닝
+- Spot 인스턴스 시도 → 운영 오버헤드 문제 → On-demand로 전환 (비용 vs 안정성 판단)
 
 ### 사용할 이미지
 - CI/CD 파이프라인 다이어그램
