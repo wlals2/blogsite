@@ -124,7 +124,7 @@ jobs:
       #      GitLeaks와 동일하게 바이너리를 직접 다운로드하여 이 문제를 회피.
       - name: Scan image with Trivy
         run: |
-          TRIVY_VERSION="0.61.0"
+          TRIVY_VERSION="0.69.2"
           TRIVY_BIN="/tmp/trivy-${TRIVY_VERSION}/trivy"
 
           # 바이너리 없으면 다운로드 (캐시 히트 시 재사용)
