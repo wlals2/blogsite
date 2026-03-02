@@ -223,15 +223,26 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: self-hosted
     steps:
+      # Why: trivy-action 대신 직접 실행 (setup-trivy가 aquasecurity/trivy main 브랜치 clone 실패 문제)
       - name: Scan latest image with Trivy
         id: trivy
-        uses: aquasecurity/trivy-action@0.34.0
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}:latest
-          format: 'table'
-          exit-code: '0'
-          severity: 'CRITICAL,HIGH'
-          timeout: '10m'
+        run: |
+          TRIVY_VERSION="0.61.0"
+          TRIVY_BIN="/tmp/trivy-${TRIVY_VERSION}/trivy"
+
+          if [ ! -f "$TRIVY_BIN" ]; then
+            mkdir -p "/tmp/trivy-${TRIVY_VERSION}"
+            curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
+              | tar -xz -C "/tmp/trivy-${TRIVY_VERSION}"
+          fi
+
+          $TRIVY_BIN image \
+            --cache-dir /tmp/trivy-db-cache \
+            --severity CRITICAL,HIGH \
+            --exit-code 0 \
+            --format table \
+            --timeout 10m \
+            ${{ env.IMAGE_NAME }}:latest
         continue-on-error: true
 
       - name: Send Trivy Scan Result to Discord

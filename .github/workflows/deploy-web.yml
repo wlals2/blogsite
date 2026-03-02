@@ -118,16 +118,33 @@ jobs:
       # ======================================================================
       # Step 4.6: Trivy 이미지 보안 스캔 (DevSecOps)
       # ======================================================================
+      # Why: trivy-action 대신 직접 실행
+      #      trivy-action 내부의 setup-trivy가 aquasecurity/trivy 레포를 main 브랜치로
+      #      clone 시도하지만 실제 기본 브랜치가 main이 아니므로 항상 실패.
+      #      GitLeaks와 동일하게 바이너리를 직접 다운로드하여 이 문제를 회피.
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.34.0
-        with:
-          image-ref: ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
-          format: 'table'
-          exit-code: '0'  # 취약점 발견해도 빌드 실패 안 함 (경고만)
-          severity: 'CRITICAL,HIGH'
-          timeout: '5m'
-          # Why: DB를 self-hosted runner 로컬에 캐시 → 매 실행마다 다운로드 방지 (~1분 절약)
-          cache-dir: /tmp/trivy-db-cache
+        run: |
+          TRIVY_VERSION="0.61.0"
+          TRIVY_BIN="/tmp/trivy-${TRIVY_VERSION}/trivy"
+
+          # 바이너리 없으면 다운로드 (캐시 히트 시 재사용)
+          if [ ! -f "$TRIVY_BIN" ]; then
+            mkdir -p "/tmp/trivy-${TRIVY_VERSION}"
+            curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
+              | tar -xz -C "/tmp/trivy-${TRIVY_VERSION}"
+          fi
+
+          # Why: --cache-dir /tmp/trivy-db-cache → Trivy DB를 로컬 캐시
+          #      매 실행마다 DB 다운로드 방지 (~1분 절약)
+          # Why: exit-code 0 → CRITICAL/HIGH 발견해도 빌드 실패 안 함 (경고만)
+          #      이미지 배포를 막지 않되, 취약점 현황은 로그로 확인
+          $TRIVY_BIN image \
+            --cache-dir /tmp/trivy-db-cache \
+            --severity CRITICAL,HIGH \
+            --exit-code 0 \
+            --format table \
+            --timeout 5m \
+            ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
 
       # ======================================================================
       # Step 5: GitOps - Update Kubernetes Manifest (Stateless)
