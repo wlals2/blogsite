@@ -12,14 +12,14 @@
 # ==============================================================================
 # Stage 1: Builder - Hugo Build
 # ==============================================================================
-FROM alpine:latest AS builder
+# Why: hugomods/hugo 공식 이미지 사용
+#      apk add hugo 불필요 → Alpine 패키지 서버 통신 없음 → 빌드 10~15분 → 3분으로 단축
+#      alpine:latest + apk add hugo 방식은 매 빌드마다 Hugo 바이너리를 인터넷에서 다운로드
+FROM hugomods/hugo:0.146.0 AS builder
 
 # Git commit SHA를 받아서 캐시 무효화
 ARG GIT_COMMIT=unknown
 RUN echo "Building from commit: $GIT_COMMIT"
-
-# Hugo 설치 + timezone 데이터
-RUN apk add --no-cache hugo tzdata
 
 WORKDIR /src
 

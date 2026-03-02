@@ -80,8 +80,9 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
             ${{ env.IMAGE_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Why: GHA 캐시 제거
+          #      self-hosted runner에서 GHA 캐시는 GitHub 서버와 왕복 → 20분 소요
+          #      hugomods 이미지로 전환으로 Hugo 레이어 제거 → 캐시 없어도 빠름
 
       # ======================================================================
       # Step 4.5: 빌드 검증
