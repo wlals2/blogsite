@@ -5,6 +5,10 @@ categories: ["study", "Cloud & Terraform", "Kubernetes"]
 tags: ["AWS", "EKS", "Kubernetes", "ArgoCD", "Multi-Cloud", "DR", "GitOps", "Terraform", "PetClinic"]
 description: "Spring PetClinic을 AWS EKS 기반 3-Tier 아키텍처로 구축하고, Azure를 활용한 멀티 클라우드 DR 환경까지 구현한 완전한 여정입니다."
 slug: bespin-project-complete-architecture
+cover:
+  image: "cover.jpg"
+  alt: "Bespin 프로젝트 완전한 아키텍처 가이드"
+  relative: true
 ---
 
 > **작성 배경**: "단순한 Spring Boot 애플리케이션을 프로덕션 수준의 클라우드 네이티브 시스템으로 발전시킨다면?" 이 질문에서 시작된 6개월간의 여정입니다.

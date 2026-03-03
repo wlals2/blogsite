@@ -7,6 +7,10 @@ categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
+cover:
+  image: "cover.jpg"
+  alt: "[Istio 시리즈 #1] Service Mesh는 왜 탄생했나 — 마이크로서비스의 숨겨진 복잡성"
+  relative: true
 ---
 
 ## Service Mesh란

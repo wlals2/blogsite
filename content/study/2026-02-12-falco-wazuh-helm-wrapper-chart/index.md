@@ -15,6 +15,10 @@ tags:
   - SIEM
   - Kubernetes
   - Sealed Secrets
+cover:
+  image: "cover.jpg"
+  alt: "Falco-Wazuh 연동 트러블슈팅: Helm Wrapper Chart의 함정"
+  relative: true
 ---
 
 Falco 런타임 보안 이벤트를 Wazuh SIEM으로 연동하는 과정에서 4시간 동안 values.yaml 설정이 ConfigMap에 반영되지 않는 문제와 씨름했다. Chart 버전 문제, ArgoCD auto-sync 충돌, 수동 패치 시도 등 여러 시행착오를 거쳐 최종적으로 **Helm Wrapper Chart의 Subchart values 전달 규칙**을 잘못 이해한 설정 오류였음을 발견했다.

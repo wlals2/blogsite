@@ -7,6 +7,10 @@ categories: ["study", "Service Mesh", "Networking"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
+cover:
+  image: "cover.jpg"
+  alt: "[Istio 시리즈 #7] Nginx Ingress 제거 및 Istio Gateway 일원화"
+  relative: true
 ---
 
 ## 개요

@@ -10,6 +10,10 @@ series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "[Istio 시리즈 #2.5] 우리 홈랩의 Istio 구성 — 실제 환경 살펴보기"
+  relative: true
 ---
 
 ## 배경 — 왜 실제 환경을 먼저 보는가

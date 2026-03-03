@@ -9,6 +9,10 @@ weight: 1
 showtoc: true
 tocopen: true
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "ArgoCD 설치 완전 가이드: Helm vs kubectl, Ingress, Cloudflare Tunnel"
+  relative: true
 ---
 
 ## 목표

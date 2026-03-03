@@ -7,6 +7,10 @@ categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
+cover:
+  image: "cover.jpg"
+  alt: "[Istio 시리즈 #4] VirtualService & DestinationRule — Istio L7 라우팅의 두 축"
+  relative: true
 ---
 
 ## Kubernetes Service만으로 부족한 이유

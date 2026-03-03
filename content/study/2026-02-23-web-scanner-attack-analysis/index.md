@@ -9,6 +9,10 @@ summary: "SSH Brute Force 대응 완료 직후, Istio 액세스 로그를 확인
 showtoc: true
 tocopen: true
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "SSH 공격 대응 중 발견한 것: 웹 스캐너도 왔다 갔다"
+  relative: true
 ---
 
 ## 배경

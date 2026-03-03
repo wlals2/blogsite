@@ -5,6 +5,10 @@ tags: ["kubernetes", "longhorn", "mysql", "ha", "storage", "rto", "rpo"]
 categories: ["study", "Storage"]
 summary: "왜 MySQL HA 구성 없이 Longhorn 복제본 + 백업 전략을 선택했는가? RTO/RPO 분석, 복구 시나리오, 리소스 트레이드오프 완전 분석"
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "Longhorn 분산 스토리지와 MySQL HA 전략"
+  relative: true
 ---
 
 ## 핵심 질문

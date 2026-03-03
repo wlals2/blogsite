@@ -11,6 +11,10 @@ tags:
   - slack
 categories:
   - study
+cover:
+  image: "cover.jpg"
+  alt: "알람하나 받기 이렇게나 힘들다니: 홈랩 모니터링 구축 실패와 성공기"
+  relative: true
 ---
 ## 알람이 오지 않는다.
 

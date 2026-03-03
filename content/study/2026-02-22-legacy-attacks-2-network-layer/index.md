@@ -11,6 +11,10 @@ tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 2
+cover:
+  image: "cover.jpg"
+  alt: "공격자의 시선으로 보는 보안: 2편 - 네트워크 레이어 공격"
+  relative: true
 ---
 
 ## 배경

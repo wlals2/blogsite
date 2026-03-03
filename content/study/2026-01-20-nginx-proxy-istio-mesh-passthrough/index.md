@@ -7,6 +7,10 @@ categories: ["study", "Service Mesh", "Networking"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
+cover:
+  image: "cover.jpg"
+  alt: "[Istio 시리즈 #8] PassthroughCluster 문제 해결: nginx proxy → Istio mesh 통합"
+  relative: true
 ---
 
 ## 개요

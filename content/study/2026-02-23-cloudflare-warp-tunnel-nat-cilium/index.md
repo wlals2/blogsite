@@ -7,6 +7,10 @@ categories:
   - Networking
 tags: ["cloudflare", "warp", "tunnel", "nat", "dnat", "snat", "cilium", "firewall", "wireguard", "proxy", "homelab"]
 series: ["홈랩 보안"]
+cover:
+  image: "cover.jpg"
+  alt: "Cloudflare WARP vs Tunnel: NAT 개념으로 이해하는 홈랩 보안 설계"
+  relative: true
 ---
 
 ## 배경

@@ -12,6 +12,10 @@ tags:
   - monitoring
   - kube-state-metrics
   - observability
+cover:
+  image: "cover.jpg"
+  alt: "Grafana Alert NoData 트러블슈팅: kube-state-metrics 장애 진단"
+  relative: true
 ---
 
 ## 문제 발견

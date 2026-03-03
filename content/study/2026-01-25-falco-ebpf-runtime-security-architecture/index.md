@@ -5,6 +5,10 @@ tags: ["kubernetes", "falco", "ebpf", "security", "ids", "ips", "runtime-securit
 categories: ["study", "Security"]
 summary: "eBPF 기반 컨테이너 런타임 보안 모니터링과 자동 대응. Falco IDS + Falco Talon IPS 아키텍처, 실제 RCE 공격 탐지 및 NetworkPolicy 기반 자동 격리"
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "Falco eBPF 런타임 보안 아키텍처 (IDS + IPS)"
+  relative: true
 ---
 
 ## 핵심 질문

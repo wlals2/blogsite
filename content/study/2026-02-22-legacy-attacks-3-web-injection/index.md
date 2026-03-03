@@ -11,6 +11,10 @@ tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 3
+cover:
+  image: "cover.jpg"
+  alt: "공격자의 시선으로 보는 보안: 3편 - 웹 공격 Part 1 (Injection)"
+  relative: true
 ---
 
 ## 배경

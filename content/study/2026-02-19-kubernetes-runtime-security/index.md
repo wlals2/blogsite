@@ -15,6 +15,10 @@ tags:
   - IPS
   - eBPF
 summary: "Falco로 런타임 위협을 탐지하고 Talon으로 자동 격리하는 Kubernetes IDS/IPS 체계 구축 과정"
+cover:
+  image: "cover.jpg"
+  alt: "Kubernetes Runtime Security - Falco + Talon으로 IDS/IPS 구축"
+  relative: true
 ---
 
 ## 배경 — 왜 Runtime Security가 필요한가

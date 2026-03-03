@@ -11,6 +11,10 @@ tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 1
+cover:
+  image: "cover.jpg"
+  alt: "공격자의 시선으로 보는 보안: 1편 - 정찰과 스캐닝"
+  relative: true
 ---
 
 ## 배경

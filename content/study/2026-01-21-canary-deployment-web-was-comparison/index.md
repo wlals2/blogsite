@@ -4,6 +4,10 @@ date: 2026-01-21T10:00:00+09:00
 description: "Hugo 정적 블로그와 Spring Boot API의 Canary 배포 전략 차이와 설계 철학"
 tags: ["canary-deployment", "argo-rollouts", "istio", "kubernetes", "web", "was"]
 categories: ["study", "Kubernetes"]
+cover:
+  image: "cover.jpg"
+  alt: "Canary 배포 전략: WEB vs WAS 비교 분석"
+  relative: true
 ---
 
 ## 개요

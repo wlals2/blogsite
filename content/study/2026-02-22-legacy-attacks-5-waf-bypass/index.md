@@ -11,6 +11,10 @@ tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 5
+cover:
+  image: "cover.jpg"
+  alt: "공격자의 시선으로 보는 보안: 5편 - WAF 우회 기법"
+  relative: true
 ---
 
 ## 배경

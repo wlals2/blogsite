@@ -7,6 +7,10 @@ categories: ["study", "Security", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
+cover:
+  image: "cover.jpg"
+  alt: "[Istio 시리즈 #6] Istio mTLS와 AuthorizationPolicy로 Zero Trust 보안 구현하기"
+  relative: true
 ---
 
 ## 개요
