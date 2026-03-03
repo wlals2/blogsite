@@ -9,10 +9,6 @@ weight: 1
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "Hugo 블로그 배포 트러블슈팅: Source of Truth 우선순위 문제"
-  relative: true
 ---
 
 ## 문제 상황

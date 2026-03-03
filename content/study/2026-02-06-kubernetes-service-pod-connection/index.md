@@ -11,10 +11,6 @@ tags:
   - endpoints
   - networking
   - kube-proxy
-cover:
-  image: "cover.jpg"
-  alt: "Kubernetes Service와 Pod는 어떻게 연결되는가"
-  relative: true
 ---
 
 ## 들어가며

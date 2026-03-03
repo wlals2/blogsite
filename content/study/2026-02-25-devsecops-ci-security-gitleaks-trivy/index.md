@@ -9,10 +9,6 @@ summary: "GitHub Actions CI/CD에 GitLeaks(Secret 탐지)와 Trivy(이미지 CVE
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "CI/CD 보안 파이프라인 구축기 — GitLeaks와 Trivy로 코드부터 이미지까지"
-  relative: true
 ---
 
 ## 배경 — CI/CD에 보안이 왜 필요한가

@@ -5,10 +5,6 @@ draft: false
 categories: ["study", "Security"]
 tags: ["cloudflare", "warp", "metallb", "cilium", "firewall", "ssh", "homelab", "kubernetes"]
 series: ["홈랩 보안"]
-cover:
-  image: "cover.jpg"
-  alt: "Cloudflare WARP + MetalLB + Cilium Host Firewall: 홈랩 네트워크 보안 설계"
-  relative: true
 ---
 
 ## 배경

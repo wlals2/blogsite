@@ -11,10 +11,6 @@ tags:
 categories:
   - study
   - Troubleshooting
-cover:
-  image: "cover.jpg"
-  alt: "GitOps로 kubernetes 매니페스트 관리하기: Helm Wrapper Chart"
-  relative: true
 ---
 ### 1. 매니페스트 파일들은 어떻게 관리해야하는가 ? \
 

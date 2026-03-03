@@ -9,10 +9,6 @@ weight: 1
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "Homeserver K8s 현재 상태 및 다음 구축 계획"
-  relative: true
 ---
 
 ## 📌 현재 상태 (2026-01-22 업데이트)

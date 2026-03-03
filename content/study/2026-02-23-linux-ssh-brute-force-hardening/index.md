@@ -9,10 +9,6 @@ summary: "Wazuh SIEM이 238,903건의 SSH Brute Force 공격을 탐지했다. Is
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "K8s 보안은 완벽했다, 그런데 리눅스가 뚫릴 뻔했다"
-  relative: true
 ---
 
 ## 배경: K8s 보안은 충분하다고 생각했다

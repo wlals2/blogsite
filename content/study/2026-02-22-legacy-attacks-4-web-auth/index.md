@@ -11,10 +11,6 @@ tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 4
-cover:
-  image: "cover.jpg"
-  alt: "공격자의 시선으로 보는 보안: 4편 - 웹 공격 Part 2 (인증/세션/접근 제어)"
-  relative: true
 ---
 
 ## 배경

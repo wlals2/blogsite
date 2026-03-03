@@ -9,10 +9,6 @@ tags:
 categories:
   - study
   - Cloud & Terraform
-cover:
-  image: "cover.jpg"
-  alt: "[aws] 스토리지 서비스 정리"
-  relative: true
 ---
 # AWS Stroage Service
 ---

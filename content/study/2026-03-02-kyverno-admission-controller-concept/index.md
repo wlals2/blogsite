@@ -10,10 +10,6 @@ series: ["Kyverno 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "Kyverno Admission Controller 개념"
-  relative: true
 ---
 
 ## 배경: CI/CD만으로 충분한가?

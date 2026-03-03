@@ -13,10 +13,6 @@ tags:
   - SSH
   - Brute Force
   - Troubleshooting
-cover:
-  image: "cover.jpg"
-  alt: "Wazuh SIEM 실전 보안 모니터링 - SSH Brute Force 탐지와 트러블슈팅"
-  relative: true
 ---
 
 ## 개요

@@ -12,10 +12,6 @@ tags:
 categories:
   - study
   - Kubernetes
-cover:
-  image: "cover.jpg"
-  alt: "cover"
-  relative: true
 ---
 ## 배경지식: Linux File Descriptor 란?
 ---

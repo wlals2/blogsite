@@ -14,10 +14,6 @@ tags:
   - Istio
   - Cilium
 description: "Blackbox Exporter 대시보드에 데이터가 표시되지 않는 문제를 해결한 과정. Prometheus Operator의 Probe CRD, Istio AuthorizationPolicy, Cilium NetworkPolicy의 계층적 보안 구조를 이해하고 적용."
-cover:
-  image: "cover.jpg"
-  alt: "Blackbox Exporter 대시보드 복구: 메트릭이 수집되지 않는 문제"
-  relative: true
 ---
 
 ## 문제 상황

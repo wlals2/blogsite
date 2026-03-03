@@ -7,10 +7,6 @@ categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
-cover:
-  image: "cover.jpg"
-  alt: "[Istio 시리즈 #3] Envoy — Istio의 심장, Sidecar 프록시 동작 원리"
-  relative: true
 ---
 
 ## Istio 아키텍처 전체 구조

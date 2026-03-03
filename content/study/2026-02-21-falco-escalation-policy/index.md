@@ -14,10 +14,6 @@ tags:
   - Kubernetes
   - Runtime Security
 summary: "단발성 오탐과 실제 공격을 구분하는 에스컬레이션 정책 설계 - WARNING 5분 내 3회 반복 시 CRITICAL 자동 격상"
-cover:
-  image: "cover.jpg"
-  alt: "Falco 에스컬레이션 정책 - WARNING 반복 시 CRITICAL 자동 격상"
-  relative: true
 ---
 
 ## 배경 — 알람 피로(Alert Fatigue) 문제

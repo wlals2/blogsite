@@ -15,10 +15,6 @@ tags:
   - Service
   - Troubleshooting
 summary: "Wazuh Dashboard 외부 접근 시 발생한 upstream connect error를 5번의 시도 끝에 해결한 과정. Port 매핑, Protocol 불일치, TLS Origination 실패, Config 우선순위 문제를 순차적으로 해결했다."
-cover:
-  image: "cover.jpg"
-  alt: "Wazuh Dashboard 외부 접근 트러블슈팅 (upstream connect error → HTTP 전환)"
-  relative: true
 ---
 
 ## 문제 상황

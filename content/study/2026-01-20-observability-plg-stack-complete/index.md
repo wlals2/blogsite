@@ -9,10 +9,6 @@ weight: 2
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "Datadog 수준의 Observability 시스템 구축 완료 (PLG Stack)"
-  relative: true
 ---
 
 ## 프로젝트 개요

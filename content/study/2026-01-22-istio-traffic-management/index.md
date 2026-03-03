@@ -7,10 +7,6 @@ categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
-cover:
-  image: "cover.jpg"
-  alt: "[Istio 시리즈 #5] Istio Traffic Management 실전 가이드"
-  relative: true
 ---
 
 ## 개요

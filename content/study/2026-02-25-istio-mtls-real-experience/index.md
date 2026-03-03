@@ -10,10 +10,6 @@ series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
-cover:
-  image: "cover.jpg"
-  alt: "[Istio 시리즈 #6.5] mTLS와 보안 적용기 — 하루 만에 커밋 12개를 찍은 이유"
-  relative: true
 ---
 
 ## 배경 — "보안 적용하면 끝이겠지"

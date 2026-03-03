@@ -12,10 +12,6 @@ tags:
   - argo-rollouts
   - istio
   - troubleshooting
-cover:
-  image: "cover.jpg"
-  alt: "ArgoCD ignoreDifferences로 GitOps 동적 필드 관리하기"
-  relative: true
 ---
 
 ## 문제 발견
