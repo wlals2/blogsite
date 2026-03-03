@@ -10,6 +10,10 @@ series: ["Kyverno 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "Kyverno 4개 ClusterPolicy 구현기"
+  relative: true
 ---
 
 ## 배경: 어떤 정책이 필요한가

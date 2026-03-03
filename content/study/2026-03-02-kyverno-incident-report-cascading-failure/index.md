@@ -10,6 +10,10 @@ series: ["Kyverno 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
+cover:
+  image: "cover.jpg"
+  alt: "Kyverno Incident Report - 연쇄 배포 실패"
+  relative: true
 ---
 
 ## 사고 요약 (Executive Summary)
