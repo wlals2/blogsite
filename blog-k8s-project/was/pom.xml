@@ -78,11 +78,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- Why: CI 환경에서 MySQL 없이 단위 테스트 실행 (H2 In-Memory DB) -->
+		<!-- Why: CI 환경 단위 테스트 + 로컬 개발(local profile) 시 MySQL 대체
+		     scope 없음 = compile+runtime 모두 포함 (로컬 spring-boot:run 가능)
+		     운영 배포 시에는 application-local.yml 미적용이므로 MySQL 사용 -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<!-- Why: 인증/인가 프레임워크 — JWT 기반 API 보호를 위한 Filter Chain 제공 -->
 		<dependency>
