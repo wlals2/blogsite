@@ -6,6 +6,7 @@ categories: ["study", "Storage"]
 tags: ["k8s","longhorn","troubleshooting","PVC","creating"]
 description: "longhorn 트러블 슈팅 정리 가이드 - 추가 정리"
 author: "늦찌민"
+series: ["Longhorn/Storage 시리즈"]
 ---
 
 # Kubernetes + Longhorn + VMware Worker 환경에서 PVC가 계속 망가지는 문제 해결

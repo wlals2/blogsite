@@ -6,7 +6,7 @@ categories: ["study", "Kubernetes"]
 tags: ["k8s","데이터 영속성","longhorn","service","nodeport","네트워크","deployment","k9s"]
 description: "Kubernetes Service 뿌시는 트러블 슈팅 Service 완벽 정복(?)"
 author: "늦찌민"
-series: ["K8s 개념 뿌시기"]
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 >NodePort Service를 만들었는데 외부에서 접속이 안 된다면?  

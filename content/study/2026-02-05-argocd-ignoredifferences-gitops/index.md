@@ -1,5 +1,5 @@
 ---
-title: "ArgoCD ignoreDifferences로 GitOps 동적 필드 관리하기"
+title: "[ArgoCD/GitOps 시리즈 #6] ArgoCD ignoreDifferences — GitOps에서 동적 필드를 관리하는 방법"
 date: 2026-02-05T13:00:00+09:00
 draft: false
 categories:
@@ -12,6 +12,7 @@ tags:
   - argo-rollouts
   - istio
   - troubleshooting
+series: ["ArgoCD/GitOps 시리즈"]
 ---
 
 ## 문제 발견

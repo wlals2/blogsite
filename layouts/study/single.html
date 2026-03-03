@@ -1,0 +1,149 @@
+{{- define "main" }}
+
+{{/* 헤딩 존재 여부 확인 */}}
+{{- $headers := findRE "<h[1-6].*?>(.|\n]+?)</h[1-6]>" .Content -}}
+{{- $hasToc := ge (len $headers) 2 -}}
+
+<div class="post-with-toc{{ if $hasToc }} has-toc{{ end }}">
+
+  {{/* ===== 글 본문 ===== */}}
+  <article class="post-single post-body">
+    <header class="post-header">
+      {{ partial "breadcrumbs.html" . }}
+      <h1 class="post-title entry-hint-parent">
+        {{ .Title }}
+        {{- if .Draft }}
+        <span class="entry-hint" title="Draft">
+          <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+            <path
+              d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+          </svg>
+        </span>
+        {{- end }}
+      </h1>
+      {{- if .Description }}
+      <div class="post-description">
+        {{ .Description }}
+      </div>
+      {{- end }}
+      {{- if not (.Param "hideMeta") }}
+      <div class="post-meta">
+        {{- partial "post_meta.html" . -}}
+        {{- partial "translation_list.html" . -}}
+        {{- partial "edit_post.html" . -}}
+        {{- partial "post_canonical.html" . -}}
+      </div>
+      {{- end }}
+    </header>
+    {{- $isHidden := (.Param "cover.hiddenInSingle") | default (.Param "cover.hidden") | default false }}
+    {{- partial "cover.html" (dict "cxt" . "IsSingle" true "isHidden" $isHidden) }}
+
+    {{- if .Content }}
+    <div class="post-content">
+      {{- if not (.Param "disableAnchoredHeadings") }}
+      {{- partial "anchored_headings.html" .Content -}}
+      {{- else }}{{ .Content }}{{ end }}
+    </div>
+    {{- end }}
+
+    <footer class="post-footer">
+      {{- $tags := .Language.Params.Taxonomies.tag | default "tags" }}
+      <ul class="post-tags">
+        {{- range ($.GetTerms $tags) }}
+        <li><a href="{{ .Permalink }}">{{ .LinkTitle }}</a></li>
+        {{- end }}
+      </ul>
+      {{- if (.Param "ShowPostNavLinks") }}
+      {{- partial "post_nav_links.html" . }}
+      {{- end }}
+      {{- if (and site.Params.ShowShareButtons (ne .Params.disableShare true)) }}
+      {{- partial "share_icons.html" . -}}
+      {{- end }}
+    </footer>
+
+    {{- if (.Param "comments") }}
+    {{- partial "comments.html" . }}
+    {{- end }}
+  </article>
+
+  {{/* ===== 오른쪽 sticky TOC (카카오 기술블로그 스타일) ===== */}}
+  {{- if $hasToc }}
+  <aside class="post-toc-sidebar" id="post-toc-sidebar">
+    <div class="post-toc-sticky">
+      <nav class="post-toc-nav" id="post-toc-nav">
+        <p class="post-toc-title">목차</p>
+        <div id="post-toc-list">
+          {{/* Hugo 내장 TOC 사용 */}}
+          {{- .TableOfContents -}}
+        </div>
+      </nav>
+    </div>
+  </aside>
+  {{- end }}
+
+</div>{{/* end post-with-toc */}}
+
+{{/* ===== TOC 활성 항목 강조 스크립트 ===== */}}
+{{- if $hasToc }}
+<script>
+(function() {
+  const tocLinks = document.querySelectorAll('#post-toc-list a');
+  const headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3, .post-content h4');
+
+  if (!tocLinks.length || !headings.length) return;
+
+  function getActiveHeading() {
+    const scrollY = window.scrollY + 100;
+    let active = headings[0];
+    for (let i = 0; i < headings.length; i++) {
+      if (headings[i].getBoundingClientRect().top + window.scrollY <= scrollY) {
+        active = headings[i];
+      }
+    }
+    return active;
+  }
+
+  function updateToc() {
+    const active = getActiveHeading();
+    if (!active) return;
+
+    tocLinks.forEach(function(link) {
+      link.classList.remove('active');
+    });
+
+    const id = active.getAttribute('id');
+    if (id) {
+      const activeLink = document.querySelector('#post-toc-list a[href="#' + id + '"]');
+      if (activeLink) {
+        activeLink.classList.add('active');
+        // 활성 링크가 TOC 뷰포트 안에 보이도록 스크롤
+        const tocNav = document.getElementById('post-toc-nav');
+        if (tocNav) {
+          const linkTop = activeLink.offsetTop;
+          const navScrollTop = tocNav.scrollTop;
+          const navHeight = tocNav.offsetHeight;
+          if (linkTop < navScrollTop || linkTop > navScrollTop + navHeight - 40) {
+            tocNav.scrollTop = linkTop - navHeight / 2;
+          }
+        }
+      }
+    }
+  }
+
+  let ticking = false;
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(function() {
+        updateToc();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  updateToc();
+})();
+</script>
+{{- end }}
+
+{{- end }}{{/* end main */}}

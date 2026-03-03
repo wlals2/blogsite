@@ -26,220 +26,495 @@
 </header>
 {{- end }}
 
-{{/* Category Filter Box */}}
-<div class="category-filter-box">
-  <h3>📂 카테고리 필터</h3>
-  <div class="category-buttons">
-    {{- $allPages := where .Site.RegularPages "Section" "study" }}
-    {{- $totalCount := len $allPages }}
+{{/* 전체 포스트 수집 */}}
+{{- $allPages := where .Site.RegularPages "Section" "study" }}
+{{- $totalCount := len $allPages }}
 
-    <button class="category-btn active" data-category="all">
-      All <span class="count">({{ $totalCount }})</span>
-    </button>
+{{/* 카테고리별 카운트 계산 */}}
+{{- $categoryMap := dict
+  "Kubernetes" 0
+  "Service Mesh" 0
+  "Networking" 0
+  "Security" 0
+  "Storage" 0
+  "Observability" 0
+  "Cloud & Terraform" 0
+  "Elasticsearch" 0
+  "Troubleshooting" 0
+  "Development" 0
+}}
 
-    {{/* Count posts by category */}}
-    {{- $categoryMap := dict
-      "Kubernetes" 0
-      "Service Mesh" 0
-      "Networking" 0
-      "Security" 0
-      "Storage" 0
-      "Observability" 0
-      "Cloud & Terraform" 0
-      "Elasticsearch" 0
-      "Troubleshooting" 0
-      "Development" 0
-    }}
+{{- range $allPages }}
+  {{- range .Params.categories }}
+    {{- if ne . "study" }}
+      {{- $count := index $categoryMap . | default 0 }}
+      {{- $categoryMap = merge $categoryMap (dict . (add $count 1)) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
 
-    {{- range $allPages }}
-      {{- range .Params.categories }}
-        {{- if ne . "study" }}
-          {{- $count := index $categoryMap . | default 0 }}
-          {{- $categoryMap = merge $categoryMap (dict . (add $count 1)) }}
+{{/* Security 하위: 시리즈 기반 서브 카테고리 카운트 */}}
+{{- $falcoWazuhCount := 0 }}
+{{- $devsecopsCount := 0 }}
+{{- $attackerCount := 0 }}
+{{- $kyvernoCount := 0 }}
+{{- $homelabSecCount := 0 }}
+
+{{- range $allPages }}
+  {{- $isSecurity := false }}
+  {{- range .Params.categories }}
+    {{- if eq . "Security" }}{{- $isSecurity = true }}{{- end }}
+  {{- end }}
+  {{- if $isSecurity }}
+    {{- $seriesName := "" }}
+    {{- with .Params.series }}{{- $seriesName = index . 0 }}{{- end }}
+    {{- if or (in $seriesName "Falco") (in $seriesName "Wazuh") }}
+      {{- $falcoWazuhCount = add $falcoWazuhCount 1 }}
+    {{- else if in $seriesName "DevSecOps" }}
+      {{- $devsecopsCount = add $devsecopsCount 1 }}
+    {{- else if or (in $seriesName "공격자") (in .Title "공격자") (in $seriesName "해킹") }}
+      {{- $attackerCount = add $attackerCount 1 }}
+    {{- else if in $seriesName "Kyverno" }}
+      {{- $kyvernoCount = add $kyvernoCount 1 }}
+    {{- else }}
+      {{- $homelabSecCount = add $homelabSecCount 1 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{/* 시리즈별 카운트: Hugo Taxonomy 시스템 사용 */}}
+{{/* .Site.Taxonomies.series 는 map[string]WeightedPages */}}
+
+{{/* 3단 레이아웃 래퍼 */}}
+<div class="study-layout-wrapper">
+
+  {{/* ===== 왼쪽 사이드바: 카테고리 트리 ===== */}}
+  <aside class="study-sidebar-left">
+    <div class="sidebar-sticky">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">카테고리</h3>
+        <ul class="category-tree">
+          <li class="tree-item">
+            <button class="tree-btn active" data-category="all">
+              <span class="tree-icon">📚</span>
+              <span class="tree-label">전체</span>
+              <span class="tree-count">{{ $totalCount }}</span>
+            </button>
+          </li>
+
+          {{/* 카테고리 순서 고정 */}}
+          {{- $orderedCats := slice
+            "Kubernetes"
+            "Service Mesh"
+            "Networking"
+            "Security"
+            "Observability"
+            "Storage"
+            "Cloud & Terraform"
+            "Development"
+            "Troubleshooting"
+            "Elasticsearch"
+          }}
+
+          {{- $catIcons := dict
+            "Kubernetes" "☸️"
+            "Service Mesh" "🕸️"
+            "Networking" "🌐"
+            "Security" "🔒"
+            "Observability" "📊"
+            "Storage" "💾"
+            "Cloud & Terraform" "☁️"
+            "Development" "💻"
+            "Troubleshooting" "🔧"
+            "Elasticsearch" "🔍"
+          }}
+
+          {{- range $orderedCats }}
+            {{- $cat := . }}
+            {{- $count := index $categoryMap $cat | default 0 }}
+            {{- if gt $count 0 }}
+            <li class="tree-item{{ if eq $cat "Security" }} has-children{{ end }}">
+              <button class="tree-btn" data-category="{{ $cat }}">
+                <span class="tree-icon">{{ index $catIcons $cat }}</span>
+                <span class="tree-label">{{ $cat }}</span>
+                <span class="tree-count">{{ $count }}</span>
+                {{- if eq $cat "Security" }}
+                <span class="tree-toggle">▾</span>
+                {{- end }}
+              </button>
+              {{- if eq $cat "Security" }}
+              <ul class="tree-children" id="security-children">
+                {{- if gt $falcoWazuhCount 0 }}
+                <li><button class="tree-btn tree-child" data-category="Security" data-series-filter="Falco/Wazuh">
+                  <span class="tree-icon">🦅</span>
+                  <span class="tree-label">Falco / Wazuh</span>
+                  <span class="tree-count">{{ $falcoWazuhCount }}</span>
+                </button></li>
+                {{- end }}
+                {{- if gt $devsecopsCount 0 }}
+                <li><button class="tree-btn tree-child" data-category="Security" data-series-filter="DevSecOps">
+                  <span class="tree-icon">🛡️</span>
+                  <span class="tree-label">DevSecOps</span>
+                  <span class="tree-count">{{ $devsecopsCount }}</span>
+                </button></li>
+                {{- end }}
+                {{- if gt $attackerCount 0 }}
+                <li><button class="tree-btn tree-child" data-category="Security" data-series-filter="attacker">
+                  <span class="tree-icon">👾</span>
+                  <span class="tree-label">공격자의 시선</span>
+                  <span class="tree-count">{{ $attackerCount }}</span>
+                </button></li>
+                {{- end }}
+                {{- if gt $kyvernoCount 0 }}
+                <li><button class="tree-btn tree-child" data-category="Security" data-series-filter="Kyverno">
+                  <span class="tree-icon">📋</span>
+                  <span class="tree-label">Kyverno</span>
+                  <span class="tree-count">{{ $kyvernoCount }}</span>
+                </button></li>
+                {{- end }}
+                {{- if gt $homelabSecCount 0 }}
+                <li><button class="tree-btn tree-child" data-category="Security" data-series-filter="homelab">
+                  <span class="tree-icon">🏠</span>
+                  <span class="tree-label">홈랩 보안</span>
+                  <span class="tree-count">{{ $homelabSecCount }}</span>
+                </button></li>
+                {{- end }}
+              </ul>
+              {{- end }}
+            </li>
+            {{- end }}
+          {{- end }}
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  {{/* ===== 중앙 메인: 카드 그리드 ===== */}}
+  <main class="study-main-content">
+
+    {{- if .Content }}
+    <div class="post-content">
+      {{- if not (.Param "disableAnchoredHeadings") }}
+      {{- partial "anchored_headings.html" .Content -}}
+      {{- else }}{{ .Content }}{{ end }}
+    </div>
+    {{- end }}
+
+    {{- $pages := (union .RegularPages .Sections).ByDate.Reverse }}
+    {{- $paginator := .Paginate $pages }}
+
+    <div class="study-grid" id="study-grid">
+    {{- range $index, $page := $paginator.Pages }}
+
+    {{- $secondCat := "" }}
+    {{- range $page.Params.categories }}
+      {{- if and (ne . "study") (eq $secondCat "") }}{{- $secondCat = . }}{{- end }}
+    {{- end }}
+    {{- $catClass := $secondCat | lower | replaceRE "[^a-z0-9]+" "-" | strings.TrimRight "-" }}
+
+    {{/* 시리즈 정보 추출 (data-series 속성용) */}}
+    {{- $seriesName := "" }}
+    {{- with $page.Params.series }}{{- $seriesName = index . 0 }}{{- end }}
+
+    <article class="post-entry cat-{{ $catClass }}"
+      data-categories='{{ delimit ($page.Params.categories | default slice) "," }}'
+      data-series='{{ $seriesName }}'>
+      {{- $cover := $page.Resources.GetMatch "cover.*" }}
+      {{- if $cover }}
+      <div class="post-cover-img">
+        <img src="{{ $cover.RelPermalink }}" alt="{{ $page.Title }}" loading="lazy">
+        <span class="post-cover-cat-label">{{ $secondCat | default "Study" }}</span>
+      </div>
+      {{- else }}
+      <div class="post-cat-banner">
+        <span class="post-cat-label">{{ $secondCat | default "Study" }}</span>
+      </div>
+      {{- end }}
+      <header class="entry-header">
+        <h2 class="entry-hint-parent">
+          {{- .Title }}
+          {{- if .Draft }}
+          <span class="entry-hint" title="Draft">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" fill="currentColor">
+              <path
+                d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+            </svg>
+          </span>
+          {{- end }}
+        </h2>
+      </header>
+      {{- if (ne (.Param "hideSummary") true) }}
+      <div class="entry-content">
+        <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}...{{ end }}</p>
+      </div>
+      {{- end }}
+      {{- if not (.Param "hideMeta") }}
+      <footer class="entry-footer">
+        {{- partial "post_meta.html" . -}}
+      </footer>
+      {{- end }}
+      <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
+    </article>
+    {{- end }}
+    </div>{{/* end study-grid */}}
+
+    {{- if gt $paginator.TotalPages 1 }}
+    <footer class="page-footer">
+      <nav class="pagination">
+        {{- if $paginator.HasPrev }}
+        <a class="prev" href="{{ $paginator.Prev.URL | absURL }}">
+          «&nbsp;{{ i18n "prev_page" }}&nbsp;
+          {{- if (.Param "ShowPageNums") }}
+          {{- sub $paginator.PageNumber 1 }}/{{ $paginator.TotalPages }}
+          {{- end }}
+        </a>
         {{- end }}
-      {{- end }}
+        {{- if $paginator.HasNext }}
+        <a class="next" href="{{ $paginator.Next.URL | absURL }}">
+          {{- i18n "next_page" }}&nbsp;
+          {{- if (.Param "ShowPageNums") }}
+          {{- add 1 $paginator.PageNumber }}/{{ $paginator.TotalPages }}
+          {{- end }}&nbsp;»
+        </a>
+        {{- end }}
+      </nav>
+    </footer>
     {{- end }}
 
-    {{/* Render category buttons */}}
-    {{- range $category, $count := $categoryMap }}
-      {{- if gt $count 0 }}
-    <button class="category-btn" data-category="{{ $category }}">
-      {{ $category }} <span class="count">({{ $count }})</span>
-    </button>
-      {{- end }}
-    {{- end }}
-  </div>
-</div>
+  </main>
 
-{{- if .Content }}
-<div class="post-content">
-  {{- if not (.Param "disableAnchoredHeadings") }}
-  {{- partial "anchored_headings.html" .Content -}}
-  {{- else }}{{ .Content }}{{ end }}
-</div>
-{{- end }}
+  {{/* ===== 오른쪽 사이드바: 시리즈 목록 ===== */}}
+  <aside class="study-sidebar-right">
+    <div class="sidebar-sticky">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">시리즈</h3>
+        <ul class="series-list">
 
-{{- $pages := (union .RegularPages .Sections).ByDate.Reverse }}
-{{- $paginator := .Paginate $pages }}
+          {{/* 시리즈 순서 고정 (중요도/그룹별) */}}
+          {{- $orderedSeries := slice
+            "Cilium 시리즈"
+            "Istio 실전 시리즈"
+            "ArgoCD/GitOps 시리즈"
+            "Falco/Wazuh 시리즈"
+            "DevSecOps 시리즈"
+            "Kyverno 시리즈"
+            "공격자의 시선 시리즈"
+            "Argo Rollouts 시리즈"
+            "Elasticsearch 시리즈"
+            "Longhorn 시리즈"
+          }}
 
-<div class="study-grid">
-{{- range $index, $page := $paginator.Pages }}
+          {{- $seriesIcons := dict
+            "Cilium 시리즈" "🌐"
+            "Istio 실전 시리즈" "🕸️"
+            "ArgoCD/GitOps 시리즈" "♾️"
+            "Falco/Wazuh 시리즈" "🦅"
+            "DevSecOps 시리즈" "🛡️"
+            "Kyverno 시리즈" "📋"
+            "공격자의 시선 시리즈" "👾"
+            "Argo Rollouts 시리즈" "🚀"
+            "Elasticsearch 시리즈" "🔍"
+            "Longhorn 시리즈" "💾"
+          }}
 
-{{- /* 두 번째 카테고리(study 제외)를 CSS 클래스로 변환 */ -}}
-{{- $secondCat := "" }}
-{{- range $page.Params.categories }}
-  {{- if and (ne . "study") (eq $secondCat "") }}{{- $secondCat = . }}{{- end }}
-{{- end }}
-{{- $catClass := $secondCat | lower | replaceRE "[^a-z0-9]+" "-" | strings.TrimRight "-" }}
+          {{/* orderedSeries 순서대로 먼저 표시 */}}
+          {{- range $orderedSeries }}
+            {{- $series := . }}
+            {{- $seriesSlug := $series | urlize }}
+            {{- $termPages := index $.Site.Taxonomies.series $seriesSlug }}
+            {{- if $termPages }}
+            <li class="series-item">
+              <button class="series-btn" data-series="{{ $series }}">
+                <span class="series-icon">{{ index $seriesIcons $series | default "📖" }}</span>
+                <span class="series-label">{{ $series }}</span>
+                <span class="series-count">{{ len $termPages }}</span>
+              </button>
+            </li>
+            {{- end }}
+          {{- end }}
 
-<article class="post-entry cat-{{ $catClass }}" data-categories='{{ delimit ($page.Params.categories | default slice) "," }}'>
-  {{- /* 커버 이미지: cover.* 파일 자동 감지 → 없으면 카테고리 컬러 배너 폴백 */ -}}
-  {{- $cover := $page.Resources.GetMatch "cover.*" }}
-  {{- if $cover }}
-  <div class="post-cover-img">
-    <img src="{{ $cover.RelPermalink }}" alt="{{ $page.Title }}" loading="lazy">
-    <span class="post-cover-cat-label">{{ $secondCat | default "Study" }}</span>
-  </div>
-  {{- else }}
-  <div class="post-cat-banner">
-    <span class="post-cat-label">{{ $secondCat | default "Study" }}</span>
-  </div>
-  {{- end }}
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">
-      {{- .Title }}
-      {{- if .Draft }}
-      <span class="entry-hint" title="Draft">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" fill="currentColor">
-          <path
-            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
-        </svg>
-      </span>
-      {{- end }}
-    </h2>
-  </header>
-  {{- if (ne (.Param "hideSummary") true) }}
-  <div class="entry-content">
-    <p>{{ .Summary | plainify | htmlUnescape }}{{ if .Truncated }}...{{ end }}</p>
-  </div>
-  {{- end }}
-  {{- if not (.Param "hideMeta") }}
-  <footer class="entry-footer">
-    {{- partial "post_meta.html" . -}}
-  </footer>
-  {{- end }}
-  <a class="entry-link" aria-label="post link to {{ .Title | plainify }}" href="{{ .Permalink }}"></a>
-</article>
-{{- end }}
-</div>{{/* end study-grid */}}
+          {{/* orderedSeries에 없는 나머지 시리즈 표시 */}}
+          {{- range $slug, $termPages := $.Site.Taxonomies.series }}
+            {{- $seriesTitle := ($.Site.GetPage (printf "series/%s" $slug)).Title | default $slug }}
+            {{- $isOrdered := false }}
+            {{- range $orderedSeries }}
+              {{- if eq . $seriesTitle }}{{- $isOrdered = true }}{{- end }}
+            {{- end }}
+            {{- if not $isOrdered }}
+            <li class="series-item">
+              <button class="series-btn" data-series="{{ $seriesTitle }}">
+                <span class="series-icon">📖</span>
+                <span class="series-label">{{ $seriesTitle }}</span>
+                <span class="series-count">{{ len $termPages }}</span>
+              </button>
+            </li>
+            {{- end }}
+          {{- end }}
 
-{{- if gt $paginator.TotalPages 1 }}
-<footer class="page-footer">
-  <nav class="pagination">
-    {{- if $paginator.HasPrev }}
-    <a class="prev" href="{{ $paginator.Prev.URL | absURL }}">
-      «&nbsp;{{ i18n "prev_page" }}&nbsp;
-      {{- if (.Param "ShowPageNums") }}
-      {{- sub $paginator.PageNumber 1 }}/{{ $paginator.TotalPages }}
-      {{- end }}
-    </a>
-    {{- end }}
-    {{- if $paginator.HasNext }}
-    <a class="next" href="{{ $paginator.Next.URL | absURL }}">
-      {{- i18n "next_page" }}&nbsp;
-      {{- if (.Param "ShowPageNums") }}
-      {{- add 1 $paginator.PageNumber }}/{{ $paginator.TotalPages }}
-      {{- end }}&nbsp;»
-    </a>
-    {{- end }}
-  </nav>
-</footer>
-{{- end }}
+        </ul>
+      </div>
+    </div>
+  </aside>
 
-{{/* Category Filter JavaScript */}}
+</div>{{/* end study-layout-wrapper */}}
+
+{{/* ===== JavaScript: 필터링 로직 ===== */}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const categoryButtons = document.querySelectorAll('.category-btn');
   const articles = document.querySelectorAll('article[data-categories]');
+  const treeBtns = document.querySelectorAll('.tree-btn');
+  const seriesBtns = document.querySelectorAll('.series-btn');
+  const pagination = document.querySelector('.page-footer');
 
-  // Get current filter from URL parameter
+  // URL 파라미터에서 초기 상태 복원
   const urlParams = new URLSearchParams(window.location.search);
-  const currentFilter = urlParams.get('category') || 'all';
+  const initCategory = urlParams.get('category') || 'all';
+  const initSeries = urlParams.get('series') || '';
+  const initSeriesFilter = urlParams.get('series_filter') || '';
 
-  // Apply initial filter
-  applyFilter(currentFilter);
+  // Security 서브카테고리 시리즈 매핑
+  const seriesFilterMap = {
+    'Falco/Wazuh': function(seriesName) {
+      return seriesName && (seriesName.includes('Falco') || seriesName.includes('Wazuh'));
+    },
+    'DevSecOps': function(seriesName) {
+      return seriesName && seriesName.includes('DevSecOps');
+    },
+    'attacker': function(seriesName, title) {
+      return (seriesName && seriesName.includes('공격자')) || (title && title.includes('공격자'));
+    },
+    'Kyverno': function(seriesName) {
+      return seriesName && seriesName.includes('Kyverno');
+    },
+    'homelab': function(seriesName) {
+      // Falco/Wazuh, DevSecOps, attacker, Kyverno에 해당하지 않는 Security 글
+      return seriesName && !seriesName.includes('Falco') && !seriesName.includes('Wazuh')
+        && !seriesName.includes('DevSecOps') && !seriesName.includes('공격자')
+        && !seriesName.includes('Kyverno');
+    }
+  };
 
-  function applyFilter(selectedCategory) {
-    // Update active button
-    categoryButtons.forEach(btn => {
-      if (btn.getAttribute('data-category') === selectedCategory) {
-        btn.classList.add('active');
+  // 필터 적용 함수
+  function applyFilter(category, seriesName, seriesFilterKey) {
+    let visibleCount = 0;
+
+    articles.forEach(function(article) {
+      const cats = (article.getAttribute('data-categories') || '').split(',').map(function(c) { return c.trim(); });
+      const articleSeries = article.getAttribute('data-series') || '';
+      const articleTitle = article.querySelector('.entry-header h2') ? article.querySelector('.entry-header h2').textContent : '';
+
+      let show = false;
+
+      if (seriesName) {
+        // 시리즈 필터 (오른쪽 패널)
+        show = articleSeries === seriesName;
+      } else if (seriesFilterKey && category === 'Security') {
+        // Security 서브카테고리 필터
+        const filterFn = seriesFilterMap[seriesFilterKey];
+        if (filterFn) {
+          show = cats.includes('Security') && filterFn(articleSeries, articleTitle);
+        } else {
+          show = cats.includes(category);
+        }
+      } else if (category === 'all') {
+        show = true;
       } else {
-        btn.classList.remove('active');
+        show = cats.includes(category);
       }
+
+      article.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
     });
 
-    // Filter articles
-    let visibleCount = 0;
-    articles.forEach(article => {
-      const categoriesStr = article.getAttribute('data-categories');
-      if (!categoriesStr) {
-        article.style.display = 'none';
-        return;
-      }
+    // 페이지네이션 숨김 처리 (필터 적용 시)
+    if (pagination) {
+      pagination.style.display = (category === 'all' && !seriesName && !seriesFilterKey) ? '' : 'none';
+    }
 
-      // Split and trim to handle spaces
-      const categories = categoriesStr.split(',').map(c => c.trim());
+    // URL 업데이트
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.delete('category');
+    newUrl.searchParams.delete('series');
+    newUrl.searchParams.delete('series_filter');
+    if (category !== 'all') newUrl.searchParams.set('category', category);
+    if (seriesName) newUrl.searchParams.set('series', seriesName);
+    if (seriesFilterKey) newUrl.searchParams.set('series_filter', seriesFilterKey);
+    window.history.pushState({}, '', newUrl);
+  }
 
-      if (selectedCategory === 'all') {
-        article.style.display = '';
-        visibleCount++;
-      } else {
-        if (categories.includes(selectedCategory)) {
-          article.style.display = '';
-          visibleCount++;
-        } else {
-          article.style.display = 'none';
+  // 활성 버튼 표시 업데이트
+  function updateActiveButtons(category, seriesName, seriesFilterKey) {
+    treeBtns.forEach(function(btn) {
+      const btnCat = btn.getAttribute('data-category');
+      const btnSF = btn.getAttribute('data-series-filter');
+      btn.classList.remove('active');
+      if (!seriesName) {
+        if (seriesFilterKey && btnSF === seriesFilterKey) {
+          btn.classList.add('active');
+        } else if (!seriesFilterKey && btnCat === category) {
+          btn.classList.add('active');
         }
       }
     });
 
-    // 페이지네이션 처리
-    const pagination = document.querySelector('.page-footer');
-    if (pagination) {
-      if (selectedCategory === 'all') {
-        pagination.style.display = '';  // "All"이면 페이지네이션 표시
-      } else {
-        pagination.style.display = 'none';  // 필터 사용 시 페이지네이션 숨김
+    seriesBtns.forEach(function(btn) {
+      btn.classList.remove('active');
+      if (seriesName && btn.getAttribute('data-series') === seriesName) {
+        btn.classList.add('active');
       }
-    }
-
-    // Update URL without reload
-    const newUrl = new URL(window.location);
-    if (selectedCategory === 'all') {
-      newUrl.searchParams.delete('category');
-    } else {
-      newUrl.searchParams.set('category', selectedCategory);
-    }
-    window.history.pushState({}, '', newUrl);
+    });
   }
 
-  categoryButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const selectedCategory = this.getAttribute('data-category');
-      applyFilter(selectedCategory);
+  // Security 서브카테고리 토글
+  function toggleSecurityChildren(show) {
+    const children = document.getElementById('security-children');
+    if (children) {
+      children.style.display = show ? 'block' : 'none';
+    }
+    const toggleSpan = document.querySelector('.tree-item.has-children .tree-toggle');
+    if (toggleSpan) {
+      toggleSpan.textContent = show ? '▾' : '▸';
+    }
+  }
+
+  // Security 트리 초기 상태 (항상 펼침)
+  toggleSecurityChildren(true);
+
+  // 왼쪽 사이드바 버튼 이벤트
+  treeBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const cat = btn.getAttribute('data-category');
+      const sf = btn.getAttribute('data-series-filter');
+
+      if (cat === 'Security' && !sf) {
+        // Security 클릭 시 서브카테고리 토글
+        const children = document.getElementById('security-children');
+        const isOpen = children && children.style.display !== 'none';
+        toggleSecurityChildren(!isOpen);
+        if (!btn.classList.contains('active') || sf) {
+          applyFilter('Security', '', '');
+          updateActiveButtons('Security', '', '');
+        }
+        return;
+      }
+
+      applyFilter(cat, '', sf || '');
+      updateActiveButtons(cat, '', sf || '');
     });
   });
 
-  // Update pagination links to preserve category filter
-  const paginationLinks = document.querySelectorAll('.pagination a');
-  paginationLinks.forEach(link => {
-    if (currentFilter !== 'all') {
-      const url = new URL(link.href);
-      url.searchParams.set('category', currentFilter);
-      link.href = url.toString();
-    }
+  // 오른쪽 시리즈 버튼 이벤트
+  seriesBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const series = btn.getAttribute('data-series');
+      applyFilter('all', series, '');
+      updateActiveButtons('all', series, '');
+    });
   });
+
+  // 초기 필터 적용
+  applyFilter(initCategory, initSeries, initSeriesFilter);
+  updateActiveButtons(initCategory, initSeries, initSeriesFilter);
 });
 </script>
 

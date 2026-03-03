@@ -11,6 +11,7 @@ tags:
   - endpoints
   - networking
   - kube-proxy
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## 들어가며

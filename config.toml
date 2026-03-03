@@ -34,6 +34,11 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
     guessSyntax = true
     lineNos = false
     style = "monokai"
+  [markup.tableOfContents]
+    # Why: 오른쪽 sticky TOC에서 h2(##), h3(###)까지 표시
+    startLevel = 2
+    endLevel = 3
+    ordered = false
   [markup.goldmark.extensions]
     [markup.goldmark.extensions.passthrough]
       enable = false

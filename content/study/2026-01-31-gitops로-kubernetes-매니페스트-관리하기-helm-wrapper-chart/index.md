@@ -1,5 +1,5 @@
 ---
-title: "GitOps로 kubernetes 매니페스트 관리하기: Helm Wrapper Chart"
+title: "[ArgoCD/GitOps 시리즈 #5] GitOps로 K8s 매니페스트 관리하기 — Helm Wrapper Chart와 App of Apps"
 date: 2026-01-31T17:06:00+09:00
 draft: false
 description: apps/ configs/ services/ 구분
@@ -10,7 +10,8 @@ tags:
   - argoCD
 categories:
   - study
-  - Troubleshooting
+  - Kubernetes
+series: ["ArgoCD/GitOps 시리즈"]
 ---
 ### 1. 매니페스트 파일들은 어떻게 관리해야하는가 ? \
 

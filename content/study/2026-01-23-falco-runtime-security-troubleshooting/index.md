@@ -1,9 +1,10 @@
 ---
-title: "Falco 런타임 보안 트러블슈팅 (eBPF IDS)"
+title: "[Falco/Wazuh 시리즈 #3] Falco 런타임 보안 트러블슈팅 — eBPF IDS 운영 중 발생한 문제들"
 date: 2026-01-23T10:00:00+09:00
 description: "inotify 초기화, Falcosidekick 연결, eBPF 드라이버, BuildKit False Positive 해결"
 tags: ["kubernetes", "falco", "ebpf", "security", "ids", "runtime-security", "troubleshooting"]
-categories: ["study", "Troubleshooting", "Security"]
+categories: ["study", "트러블슈팅", "Security"]
+series: ["Falco/Wazuh 시리즈"]
 ---
 
 ## 개요

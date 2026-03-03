@@ -6,7 +6,7 @@ categories: ["study", "Cloud & Terraform"]
 tags: ["EKS","k8s","automode","LB","3tier","service"]
 description: "EKS 3-Tier 아키텍처 설계 여정: Auto Mode에서 실전 구성까지"
 author: "늦찌민"
-series: ["EKS 뿌시고 정복하기"]
+series: ["EKS 시리즈"]
 ---
 
 ## 들어가며

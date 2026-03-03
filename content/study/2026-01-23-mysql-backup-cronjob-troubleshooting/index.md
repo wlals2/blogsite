@@ -3,7 +3,7 @@ title: "MySQL 백업 CronJob 트러블슈팅 (Cilium, Istio, Longhorn, S3)"
 date: 2026-01-23T10:00:00+09:00
 description: "CiliumNetworkPolicy, Istio Sidecar, Longhorn PVC, AWS S3 인증 문제 해결"
 tags: ["kubernetes", "mysql", "cronjob", "cilium", "istio", "longhorn", "s3", "troubleshooting"]
-categories: ["study", "Troubleshooting", "Storage"]
+categories: ["study", "트러블슈팅", "Storage"]
 ---
 
 ## 개요

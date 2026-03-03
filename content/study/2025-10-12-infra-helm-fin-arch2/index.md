@@ -3,7 +3,7 @@ title: "『온프레미스 vs 클라우드 인프라: 내가 직접 비교해봤
 date: 2025-10-11T22:55:33
 draft: false
 categories: ["study", "Kubernetes"]
-tags: ["Helm", "Jenkins", "ArgoCD", "CI/CD", "IaC"]
+tags: ["Helm", "Jenkins", "ArgoCD", "Other", "IaC"]
 summary: "Helm, Jenkins, ArgoCD를 이용한 완전한 IaC 및 GitOps형 CI/CD 인프라 구축기"
 description: "컨테이너 말아본 인프라 구조"
 author: "늦찌민"

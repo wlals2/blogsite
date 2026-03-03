@@ -1,5 +1,5 @@
 ---
-title: "Wazuh SIEM 실전 보안 모니터링 - SSH Brute Force 탐지와 트러블슈팅"
+title: "[Falco/Wazuh 시리즈 #5] Wazuh SIEM 실전 보안 모니터링 — SSH Brute Force 탐지와 트러블슈팅"
 date: 2026-02-16T02:30:00+09:00
 draft: false
 categories:
@@ -13,6 +13,7 @@ tags:
   - SSH
   - Brute Force
   - Troubleshooting
+series: ["Falco/Wazuh 시리즈"]
 ---
 
 ## 개요

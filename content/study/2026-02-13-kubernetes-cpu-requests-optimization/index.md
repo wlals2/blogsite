@@ -13,6 +13,7 @@ tags:
   - Policy
   - GitOps
 summary: "Kubernetes 클러스터에서 CPU Requests가 과도하게 설정되어 k8s-worker3 노드가 99%에 달하는 문제를 발견했다. 임의 조정 대신 일관된 정책을 수립하여 16.15 Core를 절약하고, 모든 워크로드에 재현 가능한 리소스 관리 방법론을 적용한 과정을 공유한다."
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## 1. 문제 발견

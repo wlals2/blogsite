@@ -12,6 +12,7 @@ tags:
 categories:
   - study
   - Kubernetes
+series: ["Kubernetes 기초 시리즈"]
 ---
 ## 배경지식: Linux File Descriptor 란?
 ---

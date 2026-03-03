@@ -4,7 +4,7 @@ date: 2026-02-03T05:00:00+09:00
 summary: "config.toml vs layouts 충돌로 OLD 콘텐츠가 표시된 문제를 해결한 과정. 우선순위가 명확하지 않으면 오류가 발생한다."
 tags: ["hugo", "troubleshooting", "docker", "gitops", "kubernetes"]
 categories: ["study"]
-series: ["Troubleshooting"]
+series: ["트러블슈팅"]
 weight: 1
 showtoc: true
 tocopen: true

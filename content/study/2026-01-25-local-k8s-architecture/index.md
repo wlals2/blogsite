@@ -4,6 +4,7 @@ date: 2026-01-25T10:00:00+09:00
 tags: ["kubernetes", "architecture", "istio", "cilium", "argocd", "monitoring", "security"]
 categories: ["study", "Kubernetes"]
 summary: "4대의 서버로 만든 홈랩 Kubernetes - 58일간 운영하면서 배운 것들"
+series: ["홈랩 K8s 아키텍처 시리즈"]
 ---
 
 ## 시작하며

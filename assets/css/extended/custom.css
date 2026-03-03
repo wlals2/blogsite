@@ -469,10 +469,235 @@ code {
 .post-entry:nth-child(5) { animation-delay: 0.25s; }
 
 /* ============================================
-   Study List - 3열 그리드 (카카오 Tech 벤치마킹)
+   Study List - 3단 레이아웃 (왼쪽 사이드바 + 중앙 그리드 + 오른쪽 시리즈)
+   Why: 카카오 Tech 스타일 — 좌/우 여백 활용, 카테고리 트리 탐색
    ============================================ */
 
-/* Why: 카카오 Tech 기준 3열 → 2열(태블릿) → 1열(모바일) */
+/* 3단 래퍼: 전체 폭을 넓게 사용 */
+.study-layout-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* 왼쪽 사이드바 */
+.study-sidebar-left {
+  width: 200px;
+  flex-shrink: 0;
+}
+
+/* 오른쪽 사이드바 */
+.study-sidebar-right {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+/* 중앙 메인 */
+.study-main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 사이드바 sticky 컨테이너 */
+.sidebar-sticky {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+}
+
+.sidebar-sticky::-webkit-scrollbar {
+  width: 3px;
+}
+.sidebar-sticky::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 3px;
+}
+
+/* 사이드바 섹션 */
+.sidebar-section {
+  padding: 0;
+}
+
+.sidebar-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+/* ============================================
+   왼쪽 사이드바: 카테고리 트리
+   ============================================ */
+.category-tree {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tree-item {
+  margin-bottom: 2px;
+}
+
+.tree-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--primary);
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.tree-btn:hover {
+  background: var(--card-bg);
+  color: var(--accent-color);
+}
+
+.tree-btn.active {
+  background: rgba(14, 165, 233, 0.1);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.tree-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+
+.tree-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-count {
+  font-size: 0.72rem;
+  color: var(--secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 1px 5px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.tree-btn.active .tree-count {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: var(--accent-color);
+}
+
+.tree-toggle {
+  font-size: 0.7rem;
+  color: var(--secondary);
+  flex-shrink: 0;
+}
+
+/* Security 서브카테고리 */
+.tree-children {
+  list-style: none;
+  padding: 2px 0 2px 22px;
+  margin: 0;
+}
+
+.tree-child {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+/* ============================================
+   오른쪽 사이드바: 시리즈 목록
+   ============================================ */
+.series-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.series-item {
+  margin-bottom: 2px;
+}
+
+.series-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.series-btn:hover {
+  background: var(--card-bg);
+  color: var(--accent-color);
+}
+
+.series-btn.active {
+  background: rgba(14, 165, 233, 0.1);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.series-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+
+.series-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.series-count {
+  font-size: 0.68rem;
+  color: var(--secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 1px 5px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.series-btn.active .series-count {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: var(--accent-color);
+}
+
+/* ============================================
+   Study Grid - 3열 카드 그리드 (중앙 메인)
+   Why: 카카오 Tech 기준 3열 → 2열(태블릿) → 1열(모바일)
+   ============================================ */
 .study-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -496,6 +721,23 @@ code {
 }
 .study-grid .post-entry .entry-header { padding-top: 1rem; }
 .study-grid .post-entry .entry-footer { padding-bottom: 1rem; }
+
+/* 태블릿: 사이드바 숨김 + 2열 */
+@media (max-width: 1100px) {
+  .study-sidebar-left,
+  .study-sidebar-right {
+    display: none;
+  }
+  .study-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/* 모바일: 1열 */
+@media (max-width: 600px) {
+  .study-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ============================================
    카테고리 컬러 시스템 (썸네일 대체)
@@ -689,16 +931,120 @@ code {
   opacity: 0.85;
 }
 
-/* 태블릿: 3열 → 2열 */
-@media (max-width: 900px) {
-  .study-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* Why: 사이드바가 있을 때 반응형은 study-layout-wrapper 내부에서 처리 */
+
+/* ============================================
+   개별 글 페이지 - 오른쪽 sticky TOC (카카오 기술블로그 스타일)
+   Why: 글이 길어질수록 현재 위치를 한눈에 파악하기 어려움
+        오른쪽 고정 목차가 탐색 편의성을 크게 높임
+   ============================================ */
+
+/* 글 + TOC 2단 래퍼 */
+.post-with-toc {
+  display: block;
 }
-/* 모바일: 1열 */
-@media (max-width: 600px) {
-  .study-grid {
-    grid-template-columns: 1fr;
+
+.post-with-toc.has-toc {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/* 글 본문 영역 */
+.post-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 오른쪽 TOC 사이드바 */
+.post-toc-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.post-toc-sticky {
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow: hidden;
+}
+
+.post-toc-nav {
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+}
+
+.post-toc-nav::-webkit-scrollbar {
+  width: 2px;
+}
+.post-toc-nav::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 2px;
+}
+
+.post-toc-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+/* Hugo 내장 TOC ul/li/a 스타일 재정의 */
+#post-toc-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#post-toc-list ul ul {
+  padding-left: 0.85rem;
+  border-left: 1.5px solid var(--card-border);
+  margin-left: 0.25rem;
+}
+
+#post-toc-list li {
+  margin: 0;
+}
+
+#post-toc-list a {
+  display: block;
+  padding: 4px 6px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  color: var(--secondary);
+  text-decoration: none;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#post-toc-list a:hover {
+  color: var(--accent-color);
+  background: var(--card-bg);
+}
+
+/* 활성 항목 (스크롤 위치 기반 JS로 추가) */
+#post-toc-list a.active {
+  color: var(--accent-color);
+  font-weight: 600;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+/* 태블릿 이하: TOC 사이드바 숨김 */
+@media (max-width: 1200px) {
+  .post-toc-sidebar {
+    display: none;
+  }
+  .post-with-toc.has-toc {
+    display: block;
   }
 }
 

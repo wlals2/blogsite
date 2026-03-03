@@ -2,11 +2,11 @@
 title: "Kubernetes Probe 완벽 가이드: livenessProbe와 readinessProbe"
 date: 2025-11-05T10:03:08+09:00
 draft: false
-categories: ["study", "Kubernetes", "Troubleshooting"]
+categories: ["study", "Kubernetes", "트러블슈팅"]
 tags: ["k8s","probe","troubleshooting","study","health-check","nextcloud","error"]
 description: "Kubernetes Probe 완벽 가이드: livenessProbe와 readinessProbe"
 author: "늦찌민"
-series: ["K8s 개념 뿌시기"]
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## Git Secret 노출 트러블슈팅 정리

@@ -6,7 +6,7 @@ categories: ["study", "Cloud & Terraform"]
 tags: ["eks","k8s","k9s","study","karpenter"]
 description: "Amazon EKS 완전 가이드"
 author: "늦찌민"
-series: ["EKS 정복기"]
+series: ["EKS 시리즈"]
 ---
 
 ## 목차

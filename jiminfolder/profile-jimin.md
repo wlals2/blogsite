@@ -40,12 +40,26 @@ Bare-Metal Kubernetes 블로그 플랫폼 (blog.jiminhome.shop)
 │   ├── 실제 공격 탐지: SSH Brute Force 238,903건, 웹 스캐너 17건
 │   ├── 5개 공격 시나리오 396건 탐지
 │   └── OS 하드닝 (SSH 키 인증, fail2ban)
-├── 관측성
-│   ├── PLG Stack (Prometheus + Loki + Grafana)
-│   ├── Tempo 분산 트레이싱 (OTEL Java Agent)
-│   ├── SLI/SLO 체계 (Availability 99%, Latency p95 < 500ms)
-│   ├── Discord 알람
-│   └── 대시보드 3-Level 구조 (SLO → Service Detail → 상세 분석)
+├── 관측성 (Metrics + Logs + Traces 3축 완비)
+│   ├── 메트릭 수집 (6개 ServiceMonitor)
+│   │   ├── Alloy DaemonSet → 노드 CPU/Memory/Disk (USE Method)
+│   │   ├── Istio Metrics → WEB/WAS RPS/Error/Latency (RED Method)
+│   │   ├── MySQL Exporter → 연결/쿼리/InnoDB 상태
+│   │   ├── Blackbox Exporter → WEB·WAS·MySQL 가용성 Probe (30초 간격)
+│   │   ├── Tempo → 분산 추적 기반 Span 메트릭
+│   │   └── Pushgateway → CronJob(백업) 성공/실패 메트릭
+│   ├── SLI/SLO 체계
+│   │   ├── SLI Recording Rules: Availability, Latency p95/p99, Error Rate, Throughput
+│   │   ├── SLO 목표: Availability 99%, Latency p95 < 500ms, Error Rate < 1%
+│   │   ├── Alert: SLOAvailabilityViolation1h/30d, SLOLatencyViolation, BlogServiceDown
+│   │   └── 한계 인지: 내부 Probe 기반 → 측정 주체 장애 시 공백 처리(avg_over_time 제외)
+│   ├── 로그: Loki + Alloy (WEB/WAS/MySQL/Istio Proxy 전 계층 수집)
+│   ├── 분산 추적: Tempo + OTEL Java Agent (서비스 간 호출 경로 추적)
+│   ├── Discord 알람 (Grafana Alerting → Discord Webhook)
+│   └── 대시보드 7개 (3-Level 구조)
+│       ├── [L1] SLO Overview — 전체 가용성/에러율/레이턴시 한눈에
+│       ├── [L2] Service Detail (RED) / Node Detail (USE) / MySQL Detail
+│       └── [L3] CronJob / Logs / MITRE ATT&CK (Falco+Wazuh)
 ├── 운영 성과
 │   ├── 220일 무중단 운영
 │   ├── CPU Requests 22.4 Core → 6.25 Core (-72% 최적화)
@@ -179,6 +193,13 @@ UTM 기반 IDS/IPS 운영
 
 7. 넷코아텍 UTM 실무 → Falco Phase 전략 설계
    → "현장 경험에서 나온 설계"
+
+8. SLO 측정 한계까지 이해한 관측성 설계
+   → 내부 Blackbox Exporter 기반 SLO의 한계 파악
+     (측정 주체 장애 시 공백 처리 → avg_over_time에서 제외)
+   → 외부 관측 기반 SLO와의 차이 이해
+   → 홈랩 환경 특수성(PC 전원 off)을 고려한 측정 정책 설계
+   → "SLO 99%를 만들었다"가 아닌 "왜 88%가 나왔는지 수식부터 분석하고 한계를 정의"
 ```
 
 ---
@@ -234,4 +255,5 @@ DevSecOps 지원 시:
 ---
 
 ## 변경 이력
+- 2026-03-03: 관측성 섹션 상세화 (6개 ServiceMonitor, SLI/SLO 한계 명시, 7개 대시보드 3-Level 구조) + Section 5에 차별화 포인트 8번 추가
 - 2026-02-25: 초안 작성 (직무 분석 + 지원 가능 공고 + 보강 로드맵)

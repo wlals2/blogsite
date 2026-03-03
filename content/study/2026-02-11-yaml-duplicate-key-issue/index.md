@@ -12,6 +12,7 @@ tags:
   - kube-prometheus-stack
   - ArgoCD
   - Debugging
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 홈랩 Kubernetes 클러스터에서 Prometheus 모니터링을 구축하던 중, ArgoCD Application이 **9시간 동안 Syncing 상태**에서 멈춰있는 문제가 발생했다. 조사 결과, values.yaml에서 같은 키가 중복 선언되어 **280줄의 설정이 13줄에 의해 완전히 무효화**되었던 것이 원인이었다.

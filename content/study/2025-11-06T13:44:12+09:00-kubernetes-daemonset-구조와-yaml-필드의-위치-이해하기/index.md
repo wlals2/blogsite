@@ -6,6 +6,7 @@ categories: ["study", "Kubernetes"]
 tags: []
 description: "Kubernetes DaemonSet 구조와 YAML 필드의 위치 이해하기"
 author: "늦찌민"
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 # 🧩 DaemonSet YAML 구조, 왜 이렇게 써야 할까?

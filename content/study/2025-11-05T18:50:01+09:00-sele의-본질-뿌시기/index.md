@@ -6,7 +6,7 @@ categories: ["study", "Kubernetes", "Storage"]
 tags: ["k8s","pvc","pv","selector"]
 description: "Selector의 본질 뿌시기"
 author: "늦찌민"
-series: ["K8s 개념 뿌시기"]
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## K8s-Selector 뿌시기

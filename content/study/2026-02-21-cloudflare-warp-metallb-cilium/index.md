@@ -4,7 +4,7 @@ date: 2026-02-21T18:00:00+09:00
 draft: false
 categories: ["study", "Security"]
 tags: ["cloudflare", "warp", "metallb", "cilium", "firewall", "ssh", "homelab", "kubernetes"]
-series: ["홈랩 보안"]
+series: ["홈랩 보안 시리즈"]
 ---
 
 ## 배경

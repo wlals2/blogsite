@@ -12,6 +12,7 @@ tags:
   - monitoring
   - kube-state-metrics
   - observability
+series: ["Prometheus/Observability 시리즈"]
 ---
 
 ## 문제 발견

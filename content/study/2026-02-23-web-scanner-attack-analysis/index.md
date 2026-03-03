@@ -9,6 +9,7 @@ summary: "SSH Brute Force 대응 완료 직후, Istio 액세스 로그를 확인
 showtoc: true
 tocopen: true
 draft: false
+series: ["홈랩 보안 시리즈"]
 ---
 
 ## 배경

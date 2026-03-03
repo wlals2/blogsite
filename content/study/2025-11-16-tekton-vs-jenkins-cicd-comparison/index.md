@@ -2,9 +2,9 @@
 title: "Tekton vs Jenkins: 컨테이너 환경에서의 CI/CD 도구 비교"
 date: 2025-11-16
 draft: false
-tags: ["CI/CD", "Tekton", "Jenkins", "Kubernetes", "DevOps", "Container"]
+tags: ["Other", "Tekton", "Jenkins", "Kubernetes", "DevOps", "Container"]
 categories: ["study", "Development"]
-series: ["CI/CD"]
+series: ["Other"]
 description: "Jenkins 컨테이너의 문제점과 Tekton이 이를 어떻게 해결하는지 비교 분석"
 ---
 

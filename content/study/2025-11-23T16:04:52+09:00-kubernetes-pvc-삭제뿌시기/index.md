@@ -6,7 +6,7 @@ categories: ["study", "Storage", "Kubernetes"]
 tags: ["k8s","pvc","migrade","storageclass","pvc binding"]
 description: "kubernetes PVC 삭제뿌시기"
 author: "늦찌민"
-series: ["K8s 개념 뿌시기"]
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 # Kubernetes PVC 마이그레이션 가이드

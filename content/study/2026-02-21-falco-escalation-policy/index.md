@@ -1,5 +1,5 @@
 ---
-title: "Falco 에스컬레이션 정책 - WARNING 반복 시 CRITICAL 자동 격상"
+title: "[Falco/Wazuh 시리즈 #7] Falco 에스컬레이션 정책 — WARNING 반복 시 CRITICAL 자동 격상"
 date: 2026-02-21T10:00:00+09:00
 draft: false
 categories:
@@ -14,6 +14,7 @@ tags:
   - Kubernetes
   - Runtime Security
 summary: "단발성 오탐과 실제 공격을 구분하는 에스컬레이션 정책 설계 - WARNING 5분 내 3회 반복 시 CRITICAL 자동 격상"
+series: ["Falco/Wazuh 시리즈"]
 ---
 
 ## 배경 — 알람 피로(Alert Fatigue) 문제

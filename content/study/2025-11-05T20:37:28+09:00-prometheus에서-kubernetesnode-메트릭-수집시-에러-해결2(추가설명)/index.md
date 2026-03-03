@@ -2,11 +2,11 @@
 title: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결2(추가설명)"
 date: 2025-11-05T20:37:28+09:00
 draft: false
-categories: ["study", "Observability", "Troubleshooting"]
+categories: ["study", "Observability", "트러블슈팅"]
 tags: ["prometheus","troubleshooting","metric error","monitoring","CA","RBAC","k8s"]
 description: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결2(추가설명)"
 author: "늦찌민"
-series: ["K8s 개념 뿌시기"]
+series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## 메트릭 해결 및 추가 설명

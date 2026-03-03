@@ -1,9 +1,10 @@
 ---
-title: "ArgoCD 트러블슈팅 모음"
+title: "[ArgoCD/GitOps 시리즈 #4] ArgoCD 트러블슈팅 모음 — 설치·운영 중 발생한 문제 해결"
 date: 2026-01-23T10:00:00+09:00
 description: "ArgoCD 설치 및 운영 중 발생한 문제들 해결 기록"
 tags: ["argocd", "kubernetes", "gitops", "cloudflare-tunnel", "troubleshooting"]
-categories: ["study", "Troubleshooting"]
+categories: ["study", "트러블슈팅"]
+series: ["ArgoCD/GitOps 시리즈"]
 ---
 
 ## 1. Cloudflared 설정 미반영

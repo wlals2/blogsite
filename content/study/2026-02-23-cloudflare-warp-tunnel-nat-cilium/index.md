@@ -6,7 +6,7 @@ categories:
   - study
   - Networking
 tags: ["cloudflare", "warp", "tunnel", "nat", "dnat", "snat", "cilium", "firewall", "wireguard", "proxy", "homelab"]
-series: ["홈랩 보안"]
+series: ["홈랩 보안 시리즈"]
 ---
 
 ## 배경

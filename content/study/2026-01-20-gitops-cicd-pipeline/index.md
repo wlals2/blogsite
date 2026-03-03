@@ -1,9 +1,10 @@
 ---
-title: "GitOps CI/CD 파이프라인 구축 완전 가이드"
+title: "[ArgoCD/GitOps 시리즈 #3] GitOps CI/CD 파이프라인 구축 — GitHub Actions + ArgoCD 완전 가이드"
 date: 2026-01-20T14:00:00+09:00
 description: "GitHub Actions + ArgoCD로 Git을 Single Source of Truth로 만든 GitOps 파이프라인 구축기"
 tags: ["gitops", "argocd", "github-actions", "kubernetes", "cicd", "canary-deployment"]
 categories: ["study", "Kubernetes"]
+series: ["ArgoCD/GitOps 시리즈"]
 ---
 
 ## 개요
