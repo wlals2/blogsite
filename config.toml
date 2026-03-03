@@ -48,6 +48,10 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   showWordCount = true
   mainSections = ["projects", "study"]
 
+  # Why: 글 목록에서는 cover 썸네일 표시, 글 본문에서는 숨김 (본문 가독성)
+  [params.cover]
+    hiddenInSingle = true
+
   # Home Page - Profile Mode
   [params.profileMode]
     enabled = true
