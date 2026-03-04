@@ -141,11 +141,11 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE_NAME }}:latest
-          # Why: type=local → self-hosted runner 로컬 디스크에 BuildKit 레이어 캐시 저장
-          #      type=gha는 10GB 한도 초과(현재 9.54GB)로 매번 evict → 캐시 miss
-          #      로컬 캐시는 용량 제한 없음, runner 재시작 간에도 유지됨
-          cache-from: type=local,src=/tmp/buildkit-cache/was
-          cache-to: type=local,dest=/tmp/buildkit-cache/was,mode=max
+          # Why: /mnt/data/ci/cache/buildkit-was → 재부팅 후에도 유지 (영구 디스크)
+          #      /tmp는 재부팅 시 삭제됨 → 매번 full rebuild
+          #      type=gha는 10GB 한도 초과로 evict → 로컬 영구 디스크 사용
+          cache-from: type=local,src=/mnt/data/ci/cache/buildkit-was
+          cache-to: type=local,dest=/mnt/data/ci/cache/buildkit-was,mode=max
 
       - name: Verify Build
         run: |
@@ -237,16 +237,21 @@ jobs:
         id: trivy
         run: |
           TRIVY_VERSION="0.69.2"
-          TRIVY_BIN="/tmp/trivy-${TRIVY_VERSION}/trivy"
+          # Why: /mnt/data/ci/cache/ → 재부팅 후에도 유지되는 영구 디스크
+          #      /tmp는 재부팅 시 삭제 → Trivy 바이너리 매번 재다운로드
+          TRIVY_BIN="/mnt/data/ci/cache/trivy-db/trivy-${TRIVY_VERSION}"
 
           if [ ! -f "$TRIVY_BIN" ]; then
-            mkdir -p "/tmp/trivy-${TRIVY_VERSION}"
             curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
-              | tar -xz -C "/tmp/trivy-${TRIVY_VERSION}"
+              | tar -xz -C "/mnt/data/ci/cache/trivy-db" trivy
+            mv /mnt/data/ci/cache/trivy-db/trivy "$TRIVY_BIN"
           fi
 
+          # Why: --cache-dir /mnt/data/ci/cache/trivy-db → Trivy가 자체적으로 DB 갱신
+          #      Trivy는 기존 DB가 있으면 변경분(delta)만 업데이트 → 항상 859MB 유지
+          #      GHA Cache 사용 시: 매일 새 key → 859MB × N일 누적 → 10GB 초과
           $TRIVY_BIN image \
-            --cache-dir /tmp/trivy-db-cache \
+            --cache-dir /mnt/data/ci/cache/trivy-db \
             --severity CRITICAL,HIGH \
             --exit-code 0 \
             --format table \
