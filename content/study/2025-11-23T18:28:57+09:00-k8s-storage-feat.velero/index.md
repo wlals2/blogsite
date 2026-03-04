@@ -2,7 +2,7 @@
 title: "k8s-storage-feat.velero"
 date: 2025-11-23T18:28:57+09:00
 draft: false
-categories: ["Storage", "Kubernetes"]
+categories: ["Storage"]
 tags: ["k8s","storage","velero","pvc","backup","migration"]
 description: "k8s-storage-feat.velero"
 author: "늦찌민"

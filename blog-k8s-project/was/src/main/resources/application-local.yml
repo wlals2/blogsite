@@ -1,0 +1,44 @@
+# ==============================================================================
+# 로컬 개발 전용 설정 (application-local.yml)
+# ==============================================================================
+# Why: K8s Secret 없이 로컬에서 학습/테스트 실행을 위한 더미 값 제공
+#      이 파일은 로컬 실행 시에만 적용됨 (운영 배포 영향 없음)
+# 실행: ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+# ==============================================================================
+
+spring:
+  # Why: 로컬에 MySQL 없으므로 H2 In-Memory DB로 대체
+  #      실행 즉시 DB가 생성되고, 종료하면 사라짐
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      # Why: H2는 Entity 기반으로 테이블 자동 생성 (운영은 none)
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        # Why: H2 사용 시 MySQLDialect 제거 (자동 감지)
+        dialect:
+    show-sql: true  # 로컬에서는 SQL 확인용으로 출력
+
+  # Why: H2 콘솔 활성화 → 브라우저에서 DB 직접 확인 가능
+  #      http://192.168.1.187:8090/h2-console
+  h2:
+    console:
+      enabled: true
+
+# Why: GitHub OAuth Secret이 없어도 실행되도록 더미값 설정
+#      로컬에서 OAuth 기능은 동작하지 않음 (학습 목적)
+github:
+  oauth:
+    client-secret: local-dummy-secret
+
+# Why: 로컬에서만 디버깅 목적으로 에러 상세 노출 (운영 application.yml의 never 설정 오버라이드)
+server:
+  error:
+    include-message: always
+    include-stacktrace: always

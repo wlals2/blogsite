@@ -3,7 +3,7 @@ title: "[Falco/Wazuh 시리즈 #3] Falco 런타임 보안 트러블슈팅 — eB
 date: 2026-01-23T10:00:00+09:00
 description: "inotify 초기화, Falcosidekick 연결, eBPF 드라이버, BuildKit False Positive 해결"
 tags: ["kubernetes", "falco", "ebpf", "security", "ids", "runtime-security", "troubleshooting"]
-categories: ["Troubleshooting", "Security"]
+categories: ["Troubleshooting"]
 series: ["Falco/Wazuh 시리즈"]
 ---
 

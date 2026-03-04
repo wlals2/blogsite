@@ -3,7 +3,7 @@ title: "kubectl Connection Refused - Self-hosted Runner로 해결"
 date: 2026-01-23T10:00:00+09:00
 description: "GitHub Actions에서 Private K8s 클러스터 접근 불가 문제 해결"
 tags: ["kubernetes", "github-actions", "self-hosted-runner", "troubleshooting"]
-categories: ["Kubernetes", "Troubleshooting"]
+categories: ["Troubleshooting"]
 ---
 
 ## 상황
