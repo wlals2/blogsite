@@ -15,7 +15,7 @@ on:
       - '.github/workflows/deploy-was.yml'
   # Why: Trivy를 야간 별도 Job으로 분리 → Push 빌드 시간에 영향 없음
   schedule:
-    - cron: '0 2 * * *'  # 매일 새벽 02:00 (KST 11:00)
+    - cron: '0 17 * * *'  # 매일 새벽 02:00 KST (UTC 17:00 = KST 02:00)
 
 env:
   IMAGE_NAME: ghcr.io/wlals2/board-was
@@ -247,9 +247,13 @@ jobs:
             mv /mnt/data/ci/cache/trivy-db/trivy "$TRIVY_BIN"
           fi
 
+          # Why: fanal/ = 이미지 레이어 분석 캐시 → 이미지 교체 시 이전 레이어는 유령 데이터
+          #      야간 스캔 전에 매일 초기화 → trivy.db(CVE DB)는 유지, fanal만 제거
+          rm -rf /mnt/data/ci/cache/trivy-db/fanal/
+
           # Why: --cache-dir /mnt/data/ci/cache/trivy-db → Trivy가 자체적으로 DB 갱신
-          #      Trivy는 기존 DB가 있으면 변경분(delta)만 업데이트 → 항상 859MB 유지
-          #      GHA Cache 사용 시: 매일 새 key → 859MB × N일 누적 → 10GB 초과
+          #      NextUpdate 지났으면 trivy.db 전체 교체 (993MB), 아니면 기존 재사용
+          #      GHA Cache 사용 시: 매일 새 key → 누적 → 10GB 초과 / 로컬은 항상 덮어쓰기
           $TRIVY_BIN image \
             --cache-dir /mnt/data/ci/cache/trivy-db \
             --severity CRITICAL,HIGH \
