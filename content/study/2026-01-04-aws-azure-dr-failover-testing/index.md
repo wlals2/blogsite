@@ -2,13 +2,11 @@
 title: "AWS-Azure DR 실전 Failover 테스트 가이드"
 date: 2026-01-04T10:00:00+09:00
 tags: ["Disaster Recovery", "AWS", "Azure", "Multi-Cloud", "High Availability"]
-categories: ["study", "Cloud & Terraform"]
-series: ["Other"]
+categories: ["Cloud & Terraform"]
 description: "AWS EKS에서 Azure VM으로의 실제 재해 복구 시나리오를 테스트했어요. Pod Scale Down 방식으로 DNS Failover를 트리거하고, Azure에서 서비스를 복원하는 전 과정을 단계별로 공유합니다."
 showToc: true
 draft: false
 ---
-
 ## DR 테스트의 필요성을 느낀 순간
 
 "DR 환경 구축했습니다!" 하고 발표는 했지만, 솔직히 불안했어요. **"진짜 장애가 나면 이게 작동할까?"**

@@ -2,7 +2,6 @@
 title: "[DevSecOps 시리즈 #1] CI/CD 보안 파이프라인 구축기 — GitLeaks와 Trivy로 코드부터 이미지까지"
 date: 2026-02-25T14:00:00+09:00
 categories:
-  - study
   - Security
 tags: ["devsecops", "trivy", "gitleaks", "github-actions", "ci-cd", "container-security"]
 summary: "GitHub Actions CI/CD에 GitLeaks(Secret 탐지)와 Trivy(이미지 CVE 스캔)를 통합한 과정. 각 YAML 필드의 설계 의도와 다른 환경에 적용하는 방법까지."
@@ -11,7 +10,6 @@ tocopen: true
 draft: false
 series: ["DevSecOps 시리즈"]
 ---
-
 ## 배경 — CI/CD에 보안이 왜 필요한가
 
 블로그 서비스를 Kubernetes에서 운영하면서, 런타임 보안은 Falco + Wazuh로 갖춰놨다. 하지만 **배포 전 단계**는 비어 있었다.

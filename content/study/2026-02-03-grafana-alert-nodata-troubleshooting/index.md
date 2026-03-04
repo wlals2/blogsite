@@ -3,7 +3,6 @@ title: "Grafana Alert NoData 트러블슈팅: kube-state-metrics 장애 진단"
 date: 2026-02-03T16:15:00+09:00
 draft: false
 categories:
-  - study
   - Troubleshooting
 tags:
   - kubernetes
@@ -14,7 +13,6 @@ tags:
   - observability
 series: ["Prometheus/Observability 시리즈"]
 ---
-
 ## 문제 발견
 
 Grafana에서 "Pod Not Ready" alert가 발화했다. blog-system namespace의 web pod 2개에 대한 alert였다.

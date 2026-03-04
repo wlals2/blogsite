@@ -4,14 +4,12 @@ date: 2026-02-25T10:00:00+09:00
 summary: "Istio 보안을 '이론대로' 적용하면 서비스가 죽는다. STRICT mTLS로 502, MySQL JDBC CrashLoopBackOff, AuthorizationPolicy로 서비스 접근 차단, Protocol Detection 데드락까지. 실제 커밋 이력과 함께 5번의 삽질을 복기한다."
 tags: ["istio", "mtls", "security", "kubernetes", "authorizationpolicy", "troubleshooting", "service-mesh"]
 categories:
-  - study
   - Service Mesh
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
 ---
-
 ## 배경 — "보안 적용하면 끝이겠지"
 
 [#6 mTLS 이론편](/study/2026-01-22-istio-mtls-security/)에서 Istio의 mTLS와 AuthorizationPolicy를 다뤘다. PeerAuthentication으로 STRICT 모드를 켜면 mesh 내부 트래픽이 자동 암호화되고, AuthorizationPolicy로 서비스 간 접근을 제어한다.

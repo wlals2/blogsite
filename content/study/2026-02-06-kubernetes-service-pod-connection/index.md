@@ -3,7 +3,6 @@ title: "Kubernetes Service와 Pod는 어떻게 연결되는가"
 date: 2026-02-06T17:00:00+09:00
 draft: false
 categories:
-  - study
   - Kubernetes
 tags:
   - kubernetes
@@ -13,7 +12,6 @@ tags:
   - kube-proxy
 series: ["Kubernetes 기초 시리즈"]
 ---
-
 ## 들어가며
 
 Kubernetes 클러스터에 Prometheus를 구축하면서 한 가지 의문이 생겼다. MySQL Exporter의 메트릭을 수집하기 위해 ServiceMonitor를 설정했는데, Prometheus Target 목록에 Pod가 잡히지 않는 문제가 발생했다. Service는 정상적으로 생성되었고, Pod도 Running 상태였지만, Prometheus는 메트릭을 수집하지 못했다.

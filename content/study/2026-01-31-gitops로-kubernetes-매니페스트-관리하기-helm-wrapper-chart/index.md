@@ -9,7 +9,6 @@ tags:
   - manifest
   - argoCD
 categories:
-  - study
   - Kubernetes
 series: ["ArgoCD/GitOps 시리즈"]
 ---

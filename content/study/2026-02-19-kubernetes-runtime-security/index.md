@@ -3,7 +3,6 @@ title: "[Falco/Wazuh 시리즈 #6] Falco + Talon으로 IDS/IPS 구축 — 컨테
 date: 2026-02-19T14:00:00+09:00
 draft: false
 categories:
-  - study
   - Security
 tags:
   - Kubernetes
@@ -17,7 +16,6 @@ tags:
 summary: "Falco로 런타임 위협을 탐지하고 Talon으로 자동 격리하는 Kubernetes IDS/IPS 체계 구축 과정"
 series: ["Falco/Wazuh 시리즈"]
 ---
-
 ## 배경 — 왜 Runtime Security가 필요한가
 
 CI/CD 파이프라인에 GitLeaks(Secrets 스캔)와 Trivy(이미지 취약점 스캔)를 붙였다. 코드가 Git에 올라가는 순간부터, Docker 이미지가 만들어지는 순간까지 보안 검사가 자동으로 돌아간다.

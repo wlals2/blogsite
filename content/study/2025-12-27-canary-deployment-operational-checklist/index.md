@@ -2,13 +2,11 @@
 title: "Canary 배포 운영 체크리스트 완벽 가이드"
 date: 2025-12-27
 tags: ["Canary Deployment", "Argo Rollouts", "Kubernetes", "DevOps", "Production"]
-categories: ["study", "Kubernetes"]
-series: ["Other"]
+categories: ["Kubernetes"]
 description: "Production 환경에서 Canary 배포를 안전하게 수행하기 위한 완벽한 체크리스트를 만들었어요. 배포 전 준비부터 롤백 절차까지, 실전에서 검증된 모든 과정을 공유합니다."
 showToc: true
 draft: false
 ---
-
 ## 첫 Production 배포의 떨림
 
 처음 Production 환경에 Canary 배포를 시도했을 때, 정말 떨렸어요. "혹시 실수하면 서비스가 멈추는 거 아닐까?" 하는 걱정에 밤잠을 설쳤죠.

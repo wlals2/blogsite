@@ -10,7 +10,6 @@ tags:
   - versioning
   - log
 categories:
-  - study
   - Kubernetes
 series: ["Kubernetes 기초 시리즈"]
 ---

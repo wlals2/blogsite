@@ -2,7 +2,7 @@
 title: "MetalLB와 SSH Port Forwarding을 활용한 Kubernetes 클러스터 외부 접근 구성"
 date: 2025-11-06T18:37:51+09:00
 draft: false
-categories: ["study", "Kubernetes", "Networking"]
+categories: ["Kubernetes", "Networking"]
 tags: ["LB","metallb","aws","ssh-portforward","clusterIP","podIP","metalIP"]
 description: "MetalLB와 SSH Port Forwarding을 활용한 Kubernetes 클러스터 외부 접근 구성"
 author: "늦찌민"

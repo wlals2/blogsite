@@ -3,11 +3,9 @@ title: "Tekton vs Jenkins: 컨테이너 환경에서의 CI/CD 도구 비교"
 date: 2025-11-16
 draft: false
 tags: ["Other", "Tekton", "Jenkins", "Kubernetes", "DevOps", "Container"]
-categories: ["study", "Development"]
-series: ["Other"]
+categories: ["Development"]
 description: "Jenkins 컨테이너의 문제점과 Tekton이 이를 어떻게 해결하는지 비교 분석"
 ---
-
 ## 들어가며
 
 Hugo 블로그의 CI/CD 파이프라인을 구축하면서, GitHub Actions self-hosted runner에서 벗어나 독립적인 CI/CD 시스템을 고민하게 되었습니다.

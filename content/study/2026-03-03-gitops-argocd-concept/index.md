@@ -3,7 +3,7 @@ title: "[ArgoCD/GitOps 시리즈 #1] GitOps란 무엇인가 — Git이 유일한
 date: 2026-03-03T10:00:00+09:00
 description: "GitOps가 왜 등장했는지, kubectl apply와 무엇이 다른지, ArgoCD가 어떤 문제를 해결하는지 개념부터 이해한다"
 tags: ["gitops", "argocd", "kubernetes", "cicd", "devops", "single-source-of-truth"]
-categories: ["study", "Kubernetes"]
+categories: ["Kubernetes"]
 series: ["ArgoCD/GitOps 시리즈"]
 draft: false
 ---

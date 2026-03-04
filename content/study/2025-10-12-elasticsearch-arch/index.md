@@ -2,7 +2,7 @@
 title: "ES의 analyzer 중 edge_ngram에 알아보자"
 date: 2025-10-12T10:42:36
 draft: false
-categories: ["study", "Elasticsearch"]
+categories: ["Elasticsearch"]
 tags: ["Elasticsearch", "Json"]
 description: "ES의 analyzer 중 edge_ngram에 알아보자"
 author: "늦찌민"

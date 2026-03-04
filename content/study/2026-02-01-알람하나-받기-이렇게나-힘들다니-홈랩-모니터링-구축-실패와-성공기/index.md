@@ -9,8 +9,7 @@ tags:
   - discord
   - alertmanager
   - slack
-categories:
-  - study
+categories: []
 ---
 ## 알람이 오지 않는다.
 

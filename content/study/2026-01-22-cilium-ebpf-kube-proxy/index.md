@@ -3,7 +3,7 @@ title: "[Cilium 시리즈 #4] Cilium eBPF로 kube-proxy 대체하기 — 성능 
 date: 2026-01-22T10:00:00+09:00
 description: "kube-proxy를 Cilium eBPF로 대체하여 Kubernetes 네트워크 성능을 30-40% 향상시키는 방법"
 tags: ["cilium", "ebpf", "kubernetes", "kube-proxy", "performance"]
-categories: ["study", "Networking"]
+categories: ["Networking"]
 series: ["Cilium 시리즈"]
 ---
 

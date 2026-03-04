@@ -2,7 +2,6 @@
 title: "[Falco/Wazuh 시리즈 #9] Falco + Wazuh 공격 탐지 파이프라인 — 구축과 실전 검증"
 date: 2026-02-24T14:00:00+09:00
 categories:
-  - study
   - Security
 tags: ["falco", "wazuh", "siem", "attack-detection", "mitre-attack", "defense-in-depth"]
 summary: "Falco의 컨테이너 런타임 이벤트를 Wazuh SIEM으로 수집하는 파이프라인을 구축하고, 5가지 공격 시나리오로 탐지 성능을 검증한 과정을 정리한다."
@@ -11,7 +10,6 @@ tocopen: true
 draft: false
 series: ["Falco/Wazuh 시리즈"]
 ---
-
 ## 배경: Falco와 Wazuh가 따로 노는 문제
 
 Falco(컨테이너 런타임 보안)와 Wazuh(SIEM)가 각각 독립적으로 동작하고 있었다. Falco는 컨테이너 내부의 의심스러운 행위를 탐지하고, Wazuh는 호스트 레벨의 보안 이벤트를 수집한다. 문제는 두 시스템이 **연결되지 않아** Falco 알림을 Wazuh에서 통합 분석할 수 없었다는 점이다.

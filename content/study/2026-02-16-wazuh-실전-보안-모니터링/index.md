@@ -3,7 +3,6 @@ title: "[Falco/Wazuh 시리즈 #5] Wazuh SIEM 실전 보안 모니터링 — SSH
 date: 2026-02-16T02:30:00+09:00
 draft: false
 categories:
-  - study
   - Security
 tags:
   - Wazuh
@@ -15,7 +14,6 @@ tags:
   - Troubleshooting
 series: ["Falco/Wazuh 시리즈"]
 ---
-
 ## 개요
 
 Kubernetes 클러스터에 Wazuh SIEM을 구축하고, 실제 보안 위협을 탐지하는 과정을 기록했다. Falco 로그만 수집하던 Agent를 시스템 전체 보안 모니터링으로 확장하면서, 예상치 못한 실제 SSH Brute Force 공격을 발견했다.

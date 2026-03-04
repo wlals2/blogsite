@@ -3,7 +3,7 @@ title: "WAS Docker 빌드 경로 오류 (Dockerfile not found)"
 date: 2026-01-23T10:00:00+09:00
 description: ".gitignore에 포함된 소스코드로 인한 Docker 빌드 실패 해결"
 tags: ["docker", "github-actions", "gitignore", "troubleshooting"]
-categories: ["study", "Development"]
+categories: ["Development"]
 ---
 
 ## 상황

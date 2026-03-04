@@ -2,7 +2,6 @@
 title: "공격자의 시선으로 보는 보안: 3편 - 웹 공격 Part 1 (Injection)"
 date: 2026-02-22T16:00:00+09:00
 categories:
-  - study
   - Security
 tags: ["security", "sql-injection", "xss", "command-injection", "owasp", "web-security", "legacy-attacks"]
 summary: "네트워크 레이어를 통과하면 다음은 애플리케이션이다. SQL Injection, XSS, Command Injection은 1990년대 말부터 지금까지 웹 공격의 핵심이다. 입력값이 그대로 명령어로 해석될 때 발생하는 인젝션 공격의 원리와 방어를 분석한다."
@@ -12,7 +11,6 @@ draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 3
 ---
-
 ## 배경
 
 네트워크 방어가 강화되면서 공격자는 **애플리케이션 레이어**로 이동했다.

@@ -4,14 +4,12 @@ date: 2026-02-24T10:00:00+09:00
 summary: "이론을 봤으니 실제 환경을 보자. 4노드 베어메탈 클러스터에서 Gateway, VirtualService, DestinationRule, AuthorizationPolicy를 어떻게 구성했는지, YAML과 함께 살펴본다."
 tags: ["istio", "service-mesh", "kubernetes", "homelab", "virtualservice", "gateway", "destinationrule"]
 categories:
-  - study
   - Service Mesh
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true
 draft: false
 ---
-
 ## 배경 — 왜 실제 환경을 먼저 보는가
 
 [#2 Istio 아키텍처](/study/2026-01-22-istio-service-mesh-architecture/)에서 Istio의 구조를 이론으로 봤다. Control Plane(istiod)이 설정을 배포하고, Data Plane(Envoy)이 트래픽을 처리한다는 것까지.

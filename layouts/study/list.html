@@ -283,78 +283,6 @@
 
   </main>
 
-  {{/* ===== 오른쪽 사이드바: 시리즈 목록 ===== */}}
-  <aside class="study-sidebar-right">
-    <div class="sidebar-sticky">
-      <div class="sidebar-section">
-        <h3 class="sidebar-title">시리즈</h3>
-        <ul class="series-list">
-
-          {{/* 시리즈 순서 고정 (중요도/그룹별) */}}
-          {{- $orderedSeries := slice
-            "Cilium 시리즈"
-            "Istio 실전 시리즈"
-            "ArgoCD/GitOps 시리즈"
-            "Falco/Wazuh 시리즈"
-            "DevSecOps 시리즈"
-            "Kyverno 시리즈"
-            "공격자의 시선 시리즈"
-            "Argo Rollouts 시리즈"
-            "Elasticsearch 시리즈"
-            "Longhorn 시리즈"
-          }}
-
-          {{- $seriesIcons := dict
-            "Cilium 시리즈" "🌐"
-            "Istio 실전 시리즈" "🕸️"
-            "ArgoCD/GitOps 시리즈" "♾️"
-            "Falco/Wazuh 시리즈" "🦅"
-            "DevSecOps 시리즈" "🛡️"
-            "Kyverno 시리즈" "📋"
-            "공격자의 시선 시리즈" "👾"
-            "Argo Rollouts 시리즈" "🚀"
-            "Elasticsearch 시리즈" "🔍"
-            "Longhorn 시리즈" "💾"
-          }}
-
-          {{/* orderedSeries 순서대로 먼저 표시 */}}
-          {{- range $orderedSeries }}
-            {{- $series := . }}
-            {{- $seriesSlug := $series | urlize }}
-            {{- $termPages := index $.Site.Taxonomies.series $seriesSlug }}
-            {{- if $termPages }}
-            <li class="series-item">
-              <button class="series-btn" data-series="{{ $series }}">
-                <span class="series-icon">{{ index $seriesIcons $series | default "📖" }}</span>
-                <span class="series-label">{{ $series }}</span>
-                <span class="series-count">{{ len $termPages }}</span>
-              </button>
-            </li>
-            {{- end }}
-          {{- end }}
-
-          {{/* orderedSeries에 없는 나머지 시리즈 표시 */}}
-          {{- range $slug, $termPages := $.Site.Taxonomies.series }}
-            {{- $seriesTitle := ($.Site.GetPage (printf "series/%s" $slug)).Title | default $slug }}
-            {{- $isOrdered := false }}
-            {{- range $orderedSeries }}
-              {{- if eq . $seriesTitle }}{{- $isOrdered = true }}{{- end }}
-            {{- end }}
-            {{- if not $isOrdered }}
-            <li class="series-item">
-              <button class="series-btn" data-series="{{ $seriesTitle }}">
-                <span class="series-icon">📖</span>
-                <span class="series-label">{{ $seriesTitle }}</span>
-                <span class="series-count">{{ len $termPages }}</span>
-              </button>
-            </li>
-            {{- end }}
-          {{- end }}
-
-        </ul>
-      </div>
-    </div>
-  </aside>
 
 </div>{{/* end study-layout-wrapper */}}
 
@@ -363,13 +291,11 @@
 document.addEventListener('DOMContentLoaded', function() {
   const articles = document.querySelectorAll('article[data-categories]');
   const treeBtns = document.querySelectorAll('.tree-btn');
-  const seriesBtns = document.querySelectorAll('.series-btn');
   const pagination = document.querySelector('.page-footer');
 
   // URL 파라미터에서 초기 상태 복원
   const urlParams = new URLSearchParams(window.location.search);
   const initCategory = urlParams.get('category') || 'all';
-  const initSeries = urlParams.get('series') || '';
   const initSeriesFilter = urlParams.get('series_filter') || '';
 
   // Security 서브카테고리 시리즈 매핑
@@ -395,9 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // 필터 적용 함수
-  function applyFilter(category, seriesName, seriesFilterKey) {
-    let visibleCount = 0;
-
+  function applyFilter(category, seriesFilterKey) {
     articles.forEach(function(article) {
       const cats = (article.getAttribute('data-categories') || '').split(',').map(function(c) { return c.trim(); });
       const articleSeries = article.getAttribute('data-series') || '';
@@ -405,10 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let show = false;
 
-      if (seriesName) {
-        // 시리즈 필터 (오른쪽 패널)
-        show = articleSeries === seriesName;
-      } else if (seriesFilterKey && category === 'Security') {
+      if (seriesFilterKey && category === 'Security') {
         // Security 서브카테고리 필터
         const filterFn = seriesFilterMap[seriesFilterKey];
         if (filterFn) {
@@ -423,43 +344,31 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       article.style.display = show ? '' : 'none';
-      if (show) visibleCount++;
     });
 
     // 페이지네이션 숨김 처리 (필터 적용 시)
     if (pagination) {
-      pagination.style.display = (category === 'all' && !seriesName && !seriesFilterKey) ? '' : 'none';
+      pagination.style.display = (category === 'all' && !seriesFilterKey) ? '' : 'none';
     }
 
     // URL 업데이트
     const newUrl = new URL(window.location);
     newUrl.searchParams.delete('category');
-    newUrl.searchParams.delete('series');
     newUrl.searchParams.delete('series_filter');
     if (category !== 'all') newUrl.searchParams.set('category', category);
-    if (seriesName) newUrl.searchParams.set('series', seriesName);
     if (seriesFilterKey) newUrl.searchParams.set('series_filter', seriesFilterKey);
     window.history.pushState({}, '', newUrl);
   }
 
   // 활성 버튼 표시 업데이트
-  function updateActiveButtons(category, seriesName, seriesFilterKey) {
+  function updateActiveButtons(category, seriesFilterKey) {
     treeBtns.forEach(function(btn) {
       const btnCat = btn.getAttribute('data-category');
       const btnSF = btn.getAttribute('data-series-filter');
       btn.classList.remove('active');
-      if (!seriesName) {
-        if (seriesFilterKey && btnSF === seriesFilterKey) {
-          btn.classList.add('active');
-        } else if (!seriesFilterKey && btnCat === category) {
-          btn.classList.add('active');
-        }
-      }
-    });
-
-    seriesBtns.forEach(function(btn) {
-      btn.classList.remove('active');
-      if (seriesName && btn.getAttribute('data-series') === seriesName) {
+      if (seriesFilterKey && btnSF === seriesFilterKey) {
+        btn.classList.add('active');
+      } else if (!seriesFilterKey && btnCat === category) {
         btn.classList.add('active');
       }
     });
@@ -492,29 +401,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const isOpen = children && children.style.display !== 'none';
         toggleSecurityChildren(!isOpen);
         if (!btn.classList.contains('active') || sf) {
-          applyFilter('Security', '', '');
-          updateActiveButtons('Security', '', '');
+          applyFilter('Security', '');
+          updateActiveButtons('Security', '');
         }
         return;
       }
 
-      applyFilter(cat, '', sf || '');
-      updateActiveButtons(cat, '', sf || '');
-    });
-  });
-
-  // 오른쪽 시리즈 버튼 이벤트
-  seriesBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      const series = btn.getAttribute('data-series');
-      applyFilter('all', series, '');
-      updateActiveButtons('all', series, '');
+      applyFilter(cat, sf || '');
+      updateActiveButtons(cat, sf || '');
     });
   });
 
   // 초기 필터 적용
-  applyFilter(initCategory, initSeries, initSeriesFilter);
-  updateActiveButtons(initCategory, initSeries, initSeriesFilter);
+  applyFilter(initCategory, initSeriesFilter);
+  updateActiveButtons(initCategory, initSeriesFilter);
 });
 </script>
 

@@ -2,7 +2,6 @@
 title: "공격자의 시선으로 보는 보안: 5편 - WAF 우회 기법"
 date: 2026-02-22T20:00:00+09:00
 categories:
-  - study
   - Security
 tags: ["security", "waf", "waf-bypass", "encoding", "owasp", "web-security"]
 summary: "WAF(Web Application Firewall)는 SQL Injection, XSS 등의 공격을 차단하는 장치다. 하지만 공격자는 다양한 우회 기법으로 WAF를 피해간다. WAF의 동작 원리와 우회 기법을 이해해야 제대로 된 방어 설계가 가능하다."
@@ -12,7 +11,6 @@ draft: false
 series: ["공격자의 시선으로 보는 보안"]
 series_order: 5
 ---
-
 ## 배경
 
 앞의 4편에서 다양한 공격 기법을 살펴봤다.

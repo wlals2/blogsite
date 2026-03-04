@@ -3,11 +3,9 @@ title: "Java 빌드와 Tomcat 운영 완벽 가이드"
 date: 2025-12-02
 draft: false
 tags: ["Java", "Tomcat", "Build", "DevOps", "트러블슈팅"]
-categories: ["study", "트러블슈팅"]
-series: ["Other"]
+categories: ["Troubleshooting"]
 description: "Java 개발자가 아니어도 이해할 수 있는 빌드 프로세스와 Tomcat 운영 방식 완벽 정리"
 ---
-
 ## 들어가며
 
 Java 애플리케이션을 운영하다 보면 빌드 과정이나 Tomcat 서버 관리에서 문제가 발생하곤 합니다.

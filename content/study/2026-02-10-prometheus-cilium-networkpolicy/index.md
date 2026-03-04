@@ -3,7 +3,6 @@ title: "Prometheus Targets DOWN 문제 해결: Cilium NetworkPolicy Cross-Namesp
 date: 2026-02-10T15:30:00+09:00
 draft: false
 categories:
-  - study
   - Troubleshooting
 tags:
   - Prometheus
@@ -14,7 +13,6 @@ tags:
   - Monitoring
 series: ["Prometheus/Observability 시리즈"]
 ---
-
 Prometheus가 Istio Proxy 메트릭을 수집하지 못하는 문제가 발생했다. Targets 페이지를 확인하니 7개 중 4개가 DOWN 상태였다. "context deadline exceeded" 에러와 함께 blog-system namespace의 Pod들이 모두 실패하고 있었다.
 
 ## 문제 상황

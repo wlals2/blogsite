@@ -2,13 +2,11 @@
 title: "Terraform State S3 마이그레이션 실전 가이드"
 date: 2025-12-31
 tags: ["Terraform", "Infrastructure as Code", "S3", "DynamoDB", "State Management"]
-categories: ["study", "Cloud & Terraform"]
-series: ["Other"]
+categories: ["Cloud & Terraform"]
 description: "로컬에 저장된 Terraform State 파일을 S3 Backend로 마이그레이션했어요. 파일 손실과 팀원 간 충돌 문제를 완벽하게 해결한 과정을 공유합니다."
 showToc: true
 draft: false
 ---
-
 ## 로컬 State 파일의 불안함
 
 Terraform으로 Azure DR 환경을 구축하고 나니, `terraform.tfstate` 파일이 로컬에 저장돼 있는 게 불안했어요.

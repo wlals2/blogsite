@@ -2,7 +2,7 @@
 title: "nginx와 친해지기"
 date: 2025-11-17T09:09:15+09:00
 draft: false
-categories: ["study", "Networking"]
+categories: ["Networking"]
 tags: ["nginx","명령어","명령어 정리"]
 description: "nginx와 친해지기"
 author: "늦찌민"

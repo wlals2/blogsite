@@ -2,11 +2,9 @@
 title: "블로그 접속 불가 트러블슈팅: Cloudflare Proxy vs Tunnel 완벽 이해"
 date: 2025-11-16T10:35:00+09:00
 draft: false
-categories: ["study", "트러블슈팅"]
+categories: ["Troubleshooting"]
 tags: ["cloudflare", "tunnel", "proxy", "dns", "nginx", "troubleshooting"]
-series: ["트러블슈팅"]
 ---
-
 ## 문제 상황
 
 어느 날 갑자기 블로그에 접속이 안 되는 거예요. 당황스러웠죠. 로컬에서는 잘 되는데 외부에서 접속하면 **공유기 관리 페이지**가 표시되거나 **522 에러**가 발생하더라구요.

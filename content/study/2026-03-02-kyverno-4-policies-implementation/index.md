@@ -2,7 +2,6 @@
 title: "[Kyverno 시리즈 #2] 4개 ClusterPolicy 구현기 — latest 태그부터 root 실행까지"
 date: 2026-03-02T14:00:00+09:00
 categories:
-  - study
   - Security
 tags: ["kubernetes", "kyverno", "clusterpolicy", "securitycontext", "policy-as-code", "argocd", "devsecops"]
 summary: "latest 태그 차단, CPU/Memory limits 강제, 특권 컨테이너 금지, root 실행 차단 — 4개의 ClusterPolicy를 YAML로 구현하고 ArgoCD로 GitOps 배포한 과정을 정리한다. 각 정책이 막는 공격 시나리오와 예외를 둔 이유를 함께 설명한다."
@@ -11,7 +10,6 @@ showtoc: true
 tocopen: true
 draft: false
 ---
-
 ## 배경: 어떤 정책이 필요한가
 
 [Part 1](/study/2026-03-02-kyverno-admission-controller-concept/)에서 Kyverno의 원리를 살펴봤다. 이제 실제로 어떤 정책을 구현했는지 하나씩 살펴본다.

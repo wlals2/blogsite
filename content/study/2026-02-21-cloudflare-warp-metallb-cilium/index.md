@@ -2,7 +2,7 @@
 title: "Cloudflare WARP + MetalLB + Cilium Host Firewall: 홈랩 네트워크 보안 설계"
 date: 2026-02-21T18:00:00+09:00
 draft: false
-categories: ["study", "Security"]
+categories: ["Security"]
 tags: ["cloudflare", "warp", "metallb", "cilium", "firewall", "ssh", "homelab", "kubernetes"]
 series: ["홈랩 보안 시리즈"]
 ---

@@ -2,7 +2,6 @@
 title: "[Kyverno 시리즈 #1] Kubernetes Admission Controller와 Kyverno — 배포 전에 차단하는 정책 엔진"
 date: 2026-03-02T10:00:00+09:00
 categories:
-  - study
   - Security
 tags: ["kubernetes", "kyverno", "admission-controller", "policy-as-code", "webhook", "devsecops"]
 summary: "CI/CD를 거치지 않고 kubectl로 직접 배포하면 보안 검사가 빠진다. Kubernetes Admission Controller가 이 빈 구간을 어떻게 막는지, 그리고 Kyverno가 어떻게 YAML만으로 정책을 정의하는지 원리부터 설명한다."
@@ -11,7 +10,6 @@ showtoc: true
 tocopen: true
 draft: false
 ---
-
 ## 배경: CI/CD만으로 충분한가?
 
 DevSecOps 파이프라인을 구축하면 코드 변경부터 배포까지 보안 검사가 자동으로 이루어진다.
