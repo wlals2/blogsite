@@ -1,0 +1,114 @@
+{{- define "main" }}
+
+<div class="post-with-toc">
+<article class="post-single">
+  <header class="post-header">
+    {{ partial "breadcrumbs.html" . }}
+    <h1 class="post-title entry-hint-parent">
+      {{ .Title }}
+      {{- if .Draft }}
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+      {{- end }}
+    </h1>
+    {{- if .Description }}
+    <div class="post-description">{{ .Description }}</div>
+    {{- end }}
+    {{- if not (.Param "hideMeta") }}
+    <div class="post-meta">
+      {{- partial "post_meta.html" . -}}
+      {{- partial "translation_list.html" . -}}
+      {{- partial "edit_post.html" . -}}
+      {{- partial "post_canonical.html" . -}}
+    </div>
+    {{- end }}
+  </header>
+
+  {{- $isHidden := (.Param "cover.hiddenInSingle") | default (.Param "cover.hidden") | default false }}
+  {{- partial "cover.html" (dict "cxt" . "IsSingle" true "isHidden" $isHidden) }}
+
+  {{- if .Content }}
+  <div class="post-content">
+    {{- if not (.Param "disableAnchoredHeadings") }}
+    {{- partial "anchored_headings.html" .Content -}}
+    {{- else }}{{ .Content }}{{ end }}
+  </div>
+  {{- end }}
+
+  <footer class="post-footer">
+    {{- $tags := .Language.Params.Taxonomies.tag | default "tags" }}
+    <ul class="post-tags">
+      {{- range ($.GetTerms $tags) }}
+      <li><a href="{{ .Permalink }}">{{ .LinkTitle }}</a></li>
+      {{- end }}
+    </ul>
+    {{- if (.Param "ShowPostNavLinks") }}
+    {{- partial "post_nav_links.html" . }}
+    {{- end }}
+    {{- if (and site.Params.ShowShareButtons (ne .Params.disableShare true)) }}
+    {{- partial "share_icons.html" . -}}
+    {{- end }}
+  </footer>
+
+  {{- if (.Param "comments") }}
+  {{- partial "comments.html" . }}
+  {{- end }}
+</article>
+
+{{/* ===== 오른쪽 floating TOC ===== */}}
+{{- $headers := findRE "<h[1-3].*?>(.|\n])+?</h[1-3]>" .Content }}
+{{- if ge (len $headers) 2 }}
+<aside class="toc-floating" id="toc-floating">
+  <nav>
+    <p class="toc-title">목차</p>
+    <ul class="toc-list">
+    {{- range $headers }}
+      {{- $level := index (findRE "[1-3]" . 1) 0 }}
+      {{- $id := index (findRE "id=\"(.*?)\"" . 1) 0 }}
+      {{- $id := replace (replace $id "id=\"" "") "\"" "" }}
+      {{- $text := replaceRE "<h[1-3].*?>((.|\n])+?)</h[1-3]>" "$1" . }}
+      {{- $text := $text | plainify }}
+      <li class="toc-h{{ $level }}">
+        <a href="#{{ $id }}">{{ $text }}</a>
+      </li>
+    {{- end }}
+    </ul>
+  </nav>
+</aside>
+{{- end }}
+
+</div>{{/* end post-with-toc */}}
+
+<script>
+(function() {
+  const toc = document.getElementById('toc-floating');
+  if (!toc) return;
+
+  const links = toc.querySelectorAll('a');
+  const headings = Array.from(document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3'));
+
+  function activate() {
+    let current = '';
+    const scrollY = window.scrollY + 100;
+
+    headings.forEach(function(h) {
+      if (h.offsetTop <= scrollY) current = h.id;
+    });
+
+    links.forEach(function(a) {
+      a.classList.remove('active');
+      if (a.getAttribute('href') === '#' + current) {
+        a.classList.add('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', activate, { passive: true });
+  activate();
+})();
+</script>
+
+{{- end }}{{/* end main */}}

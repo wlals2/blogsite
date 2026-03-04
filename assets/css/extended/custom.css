@@ -997,3 +997,114 @@ code {
     font-size: 1.6rem;
   }
 }
+
+/* ============================================
+   단일 글 페이지: 오른쪽 floating TOC
+   Why: 본문 읽는 중에도 현재 위치 파악 + 빠른 섹션 이동
+   ============================================ */
+
+/* 글+TOC 래퍼 — 상대 위치 기준 */
+.post-with-toc {
+  position: relative;
+}
+
+/* TOC 컨테이너 */
+.toc-floating {
+  position: fixed;
+  top: 90px;
+  right: calc((100vw - var(--main-width)) / 2 - 220px);
+  width: 200px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: var(--entry);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  z-index: 10;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.toc-floating::-webkit-scrollbar {
+  width: 3px;
+}
+.toc-floating::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* TOC 제목 */
+.toc-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--secondary);
+  margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* TOC 목록 */
+.toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc-list li {
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+/* H1 */
+.toc-h1 > a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+  padding-left: 0;
+}
+
+/* H2 */
+.toc-h2 > a {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--primary);
+  padding-left: 10px;
+}
+
+/* H3 */
+.toc-h3 > a {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--secondary);
+  padding-left: 20px;
+}
+
+.toc-list a {
+  display: block;
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 2px 6px 2px 0;
+  transition: color 0.15s, background 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toc-list a:hover {
+  color: var(--accent-color, #0ea5e9);
+}
+
+/* 현재 위치 강조 */
+.toc-list a.active {
+  color: var(--accent-color, #0ea5e9);
+  font-weight: 600;
+}
+
+/* 창이 좁으면 TOC 숨김 */
+@media (max-width: 1400px) {
+  .toc-floating {
+    display: none;
+  }
+}
