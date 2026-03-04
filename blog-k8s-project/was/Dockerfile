@@ -21,9 +21,11 @@ COPY .mvn .mvn
 COPY mvnw .
 COPY pom.xml .
 
-# 의존성 다운로드 (캐싱 레이어)
-# pom.xml이 변경되지 않으면 이 레이어 재사용
-RUN ./mvnw dependency:go-offline
+# 의존성 다운로드 (BuildKit cache mount)
+# Why: --mount=type=cache → /root/.m2 를 빌드 간 호스트에 유지
+#      GHA layer cache miss와 무관하게 동작 → 42분 → 수분으로 단축
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    ./mvnw dependency:go-offline
 
 # 소스 코드 복사
 COPY src ./src
@@ -31,7 +33,8 @@ COPY src ./src
 # Maven 빌드 (테스트 스킵)
 # -DskipTests: Docker 빌드 환경에 MySQL 없음 → 통합 테스트 실패 방지
 # 테스트는 별도 CI 단계에서 testcontainers 또는 H2로 실행 권장
-RUN ./mvnw clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    ./mvnw clean package -DskipTests
 
 # ==============================================================================
 # Stage 2: Runtime - JAR 실행
