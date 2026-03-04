@@ -247,6 +247,10 @@ jobs:
             mv /mnt/data/ci/cache/trivy-db/trivy "$TRIVY_BIN"
           fi
 
+          # Why: 이전 버전 바이너리 삭제 (trivy-0.68.x 등 구버전 누적 방지)
+          #      현재 버전(TRIVY_BIN)은 유지, 나머지 trivy-* 파일만 제거
+          find /mnt/data/ci/cache/trivy-db -maxdepth 1 -name 'trivy-*' ! -name "trivy-${TRIVY_VERSION}" -delete
+
           # Why: fanal/ = 이미지 레이어 분석 캐시 → 이미지 교체 시 이전 레이어는 유령 데이터
           #      야간 스캔 전에 매일 초기화 → trivy.db(CVE DB)는 유지, fanal만 제거
           rm -rf /mnt/data/ci/cache/trivy-db/fanal/
