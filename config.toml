@@ -12,7 +12,7 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   date = ["date", "publishDate", ":git", ":fileModTime", "lastmod"]
 
 [pagination]
-  pagerSize = 100  # 카테고리 필터를 위해 모든 포스트를 한 페이지에 렌더링
+  pagerSize = 500  # Why: 카테고리 JavaScript 필터가 DOM에 없는 글을 못 봄 → 전체 글 수(130+)보다 크게 설정
 
 [minify]
   minifyOutput = true
@@ -117,10 +117,16 @@ enableGitInfo = false  # Docker 빌드 시 git 불필요
   weight = 4
 
 [[menu.main]]
+  identifier = "status"
+  name = "Status"
+  url = "/status/"
+  weight = 5
+
+[[menu.main]]
   identifier = "tags"
   name = "Tags"
   url = "/tags/"
-  weight = 5
+  weight = 6
 
 
 buildFuture = true
