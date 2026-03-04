@@ -141,10 +141,11 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE_NAME }}:latest
-          # Why: type=gha → Docker 레이어 캐싱 (이미지 레이어 단위)
-          #      Maven 의존성은 Dockerfile --mount=type=cache로 별도 처리
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Why: type=local → self-hosted runner 로컬 디스크에 BuildKit 레이어 캐시 저장
+          #      type=gha는 10GB 한도 초과(현재 9.54GB)로 매번 evict → 캐시 miss
+          #      로컬 캐시는 용량 제한 없음, runner 재시작 간에도 유지됨
+          cache-from: type=local,src=/tmp/buildkit-cache/was
+          cache-to: type=local,dest=/tmp/buildkit-cache/was,mode=max
 
       - name: Verify Build
         run: |
