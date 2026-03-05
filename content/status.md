@@ -9,14 +9,13 @@ tocopen: false
 ---
 # Daily Report: 2026-03-05
 > 기간: 2026-03-02 ~ 2026-03-05 (3일간)
-> 생성: 2026-03-05 16:18:06
+> 생성: 2026-03-05 16:21:44
 
 ---
 
 ## 🔴 Critical Summary
 
 
-- 🔴 Falco CRITICAL 247건 발생
 - 🟡 SLO 30d 89.2% (목표 99%)
 
 ---
@@ -25,19 +24,17 @@ tocopen: false
 
 | Priority | 건수 |
 |----------|------|
-| CRITICAL | 247건 |
-| WARNING  | 74건 |
-| ERROR    | 179건 |
+| CRITICAL | 0건 |
+| WARNING  | 0건 |
+| ERROR    | 0건 |
 
 ### Rule별 상세
 
 #### Critical
-- `Drop and execute new binary in container`: 247건
+- 없음
 
 #### Warning (상위 10개)
-- `Read sensitive file untrusted`: 65건
-- `Launch Package Management Process in Container`: 7건
-- `Clear Log Activities`: 2건
+- 없음
 
 > 📌 노이즈 주의: `Read sensitive file untrusted` 중 gdm/PAM 관련은 로그인 정상 동작
 
@@ -66,7 +63,7 @@ tocopen: false
 
 | 기간 | Availability | 목표 |
 |------|-------------|------|
-| 24h  | 86.5% | 99% |
+| 24h  | 86.4% | 99% |
 | 30d  | 89.2% | 99% |
 
 ---
@@ -81,6 +78,7 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- 🔄 `03-05 07:19` Deploy WEB to Kubernetes
 - ✅ `03-05 05:45` Deploy WAS to Kubernetes
 - ❌ `03-05 05:45` Deploy WAS to Kubernetes
 - ✅ `03-05 05:01` Deploy WEB to Kubernetes
@@ -100,7 +98,6 @@ tocopen: false
 - ✅ `03-04 11:22` Deploy WAS to Kubernetes
 - ✅ `03-04 11:22` Deploy WEB to Kubernetes
 - ✅ `03-04 10:36` Deploy WAS to Kubernetes
-- ✅ `03-04 10:36` Deploy WEB to Kubernetes
 
 ---
 
