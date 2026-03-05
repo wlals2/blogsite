@@ -107,8 +107,9 @@ jobs:
         run: |
           echo "🔍 Verifying Docker image..."
 
-          # 1. 이미지 pull (buildx push 방식은 로컬 daemon에 저장되지 않으므로 필수)
-          docker pull ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+          # Why: load: true로 이미지가 이미 로컬 daemon에 있으므로 pull 불필요
+          #      docker pull은 runner 재연결 후 auth context 초기화 시 unauthorized 실패
+          docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} > /dev/null
 
           # 2. 이미지 크기 확인
           IMAGE_SIZE=$(docker image inspect ${{ env.IMAGE_NAME }}:v${{ github.run_number }} \
