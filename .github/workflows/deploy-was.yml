@@ -81,18 +81,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Why: pom.xml 변경 없으면 캐시에서 의존성 로드 → 다운로드 2-3분 → 0초
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: maven-${{ hashFiles('blog-k8s-project/was/pom.xml') }}
-          restore-keys: |
-            maven-
-
       - name: Run Unit Tests (H2 In-Memory DB)
         working-directory: ./blog-k8s-project/was
         run: |
+          # Why: --mount=type=cache로 Maven 의존성을 빌드 간 로컬에 유지
+          #      GHA Cache(GitHub 서버 200MB 다운로드) 제거 → 네트워크 없이 디스크 직접 읽기
+          MAVEN_OPTS="-Dmaven.repo.local=/mnt/data/ci/cache/maven" \
           ./mvnw test -Dspring.profiles.active=test \
             --no-transfer-progress \
             -q
