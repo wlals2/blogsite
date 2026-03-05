@@ -102,6 +102,9 @@ jobs:
           context: ./blog-k8s-project/was
           file: ./blog-k8s-project/was/Dockerfile
           push: true
+          load: true
+          # Why: runner 재연결 후 docker login 컨텍스트 초기화 시 docker pull이 unauthorized 실패
+          #      로컬 daemon에 저장해두면 Verify Build step에서 pull 불필요
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE_NAME }}:latest
