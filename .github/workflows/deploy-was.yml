@@ -27,24 +27,22 @@ env:
 # ==============================================================================
 #
 # git push → main
-#   ├─[병렬] secrets-scan   ~30초   GitLeaks: Git 히스토리 전체 Secrets 탐지
-#   └─[병렬] build-push      ~1-2분  Docker Build + Push (레이어 캐싱)
-#           │
-#           └─(2개 Job 모두 성공 시) deploy  ~1분
+#   secrets-scan (~30초) → build-push (~1분 30초) → deploy (~1분)
+#   [직렬]
+#   Why: runner 2개(k8s-cp, k8s-cp-2)지만 secrets-scan 먼저 통과해야
+#        오염된 이미지가 GHCR에 올라가지 않음 (보안 게이트)
+#        build-push와 deploy는 서로 다른 runner에서 겹치지 않게 실행
 #
 # schedule (매일 02:00):
 #   └─ trivy-nightly  OS 패키지 + Java 라이브러리 CVE 스캔 → Discord 알림
-#                     (매일 새로 발표되는 CVE도 다음날 새벽 탐지)
 #
-# 총 Push CI 시간: max(30초, 1분) + 1분 ≈ 2-3분
-# Why: test job 제거 - contextLoads() 1개뿐 (실제 비즈니스 로직 테스트 없음)
-#      build-push의 Docker 컴파일이 컴파일 오류를 동일하게 탐지함
+# 총 Push CI 시간: 30초 + 1분 30초 + 1분 ≈ 3분
 jobs:
 
   # ============================================================================
-  # Job 1: Secrets 스캔 (병렬)
+  # Job 1: Secrets 스캔 (보안 게이트 - 첫 번째 실행)
   # ============================================================================
-  # Why: Trivy/SonarQube 모두 Git 히스토리 전체 순회 불가
+  # Why: Secrets 발견 시 build-push 자체를 막음 → 오염된 이미지 GHCR 업로드 방지
   #      GitLeaks만 "이전 커밋에서 지운 Secrets"까지 탐지 가능
   #      탐지 예시: DISCORD_TOKEN, DB_PASSWORD 하드코딩 후 삭제해도 히스토리에 남음
   secrets-scan:
@@ -71,11 +69,12 @@ jobs:
           $GITLEAKS_BIN detect --source=. -v --exit-code=2 --log-opts="HEAD~1..HEAD"
 
   # ============================================================================
-  # Job 2: Docker 빌드 & 푸시 (병렬)
+  # Job 2: Docker 빌드 & 푸시 (secrets-scan 성공 후 실행)
   # ============================================================================
-  # Why: 스캔과 병렬로 실행 → 전체 CI 시간 단축
+  # Why: secrets-scan 통과 후에만 빌드 → 오염된 이미지 GHCR 업로드 방지
   build-push:
     if: github.event_name != 'schedule'
+    needs: [secrets-scan]
     runs-on: self-hosted
     outputs:
       image-tag: ${{ steps.meta.outputs.tag }}
@@ -124,13 +123,12 @@ jobs:
           fi
 
   # ============================================================================
-  # Job 4: GitOps 배포 (직렬 - 3개 Job 모두 성공 시)
+  # Job 3: GitOps 배포 (build-push 성공 후 실행)
   # ============================================================================
   deploy:
     if: github.event_name != 'schedule'
     runs-on: self-hosted
-    # Why: Secrets 탐지 + 빌드 모두 통과해야 배포 (2중 안전 게이트)
-    needs: [secrets-scan, build-push]
+    needs: [build-push]
     steps:
       - name: Update Kubernetes Manifest (GitOps)
         env:
