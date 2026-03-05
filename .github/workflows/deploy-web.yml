@@ -3,6 +3,18 @@ name: Deploy WEB to Kubernetes
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'content/**'
+      - 'static/**'
+      - 'layouts/**'
+      - 'themes/**'
+      - 'config.toml'
+      - 'data/**'
+      - 'Dockerfile'
+      - 'nginx.conf'
+      - '.github/workflows/deploy-web.yml'
+      # Why: WAS 소스/workflow 변경은 WEB 빌드 불필요
+      #      update-metrics.yml의 data/metrics.yaml 커밋은 data/** 포함
   workflow_dispatch:  # 수동 실행 가능
 
 env:

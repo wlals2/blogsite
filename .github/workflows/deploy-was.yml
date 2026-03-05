@@ -28,16 +28,17 @@ env:
 #
 # git push → main
 #   ├─[병렬] secrets-scan   ~30초   GitLeaks: Git 히스토리 전체 Secrets 탐지
-#   ├─[병렬] test            ~30-60초 H2 단위 테스트 (Maven 캐싱)
 #   └─[병렬] build-push      ~1-2분  Docker Build + Push (레이어 캐싱)
 #           │
-#           └─(3개 Job 모두 성공 시) deploy  ~1분
+#           └─(2개 Job 모두 성공 시) deploy  ~1분
 #
 # schedule (매일 02:00):
 #   └─ trivy-nightly  OS 패키지 + Java 라이브러리 CVE 스캔 → Discord 알림
 #                     (매일 새로 발표되는 CVE도 다음날 새벽 탐지)
 #
-# 총 Push CI 시간: max(30초, 1분, 2분) + 1분 ≈ 2-3분
+# 총 Push CI 시간: max(30초, 1분) + 1분 ≈ 2-3분
+# Why: test job 제거 - contextLoads() 1개뿐 (실제 비즈니스 로직 테스트 없음)
+#      build-push의 Docker 컴파일이 컴파일 오류를 동일하게 탐지함
 jobs:
 
   # ============================================================================
@@ -70,39 +71,9 @@ jobs:
           $GITLEAKS_BIN detect --source=. -v --exit-code=2 --log-opts="HEAD~1..HEAD"
 
   # ============================================================================
-  # Job 2: 단위 테스트 (병렬)
+  # Job 2: Docker 빌드 & 푸시 (병렬)
   # ============================================================================
-  # Why: Docker 빌드와 병렬 실행 → 전체 CI 시간 단축
-  #      H2 In-Memory DB → MySQL 없이 CI 환경에서 테스트 가능
-  test:
-    if: github.event_name != 'schedule'
-    runs-on: self-hosted
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run Unit Tests (H2 In-Memory DB)
-        working-directory: ./blog-k8s-project/was
-        run: |
-          # Why: --mount=type=cache로 Maven 의존성을 빌드 간 로컬에 유지
-          #      GHA Cache(GitHub 서버 200MB 다운로드) 제거 → 네트워크 없이 디스크 직접 읽기
-          MAVEN_OPTS="-Dmaven.repo.local=/mnt/data/ci/cache/maven" \
-          ./mvnw test -Dspring.profiles.active=test \
-            --no-transfer-progress \
-            -q
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: blog-k8s-project/was/target/surefire-reports/
-          retention-days: 7
-
-  # ============================================================================
-  # Job 3: Docker 빌드 & 푸시 (병렬)
-  # ============================================================================
-  # Why: 테스트/스캔과 병렬로 실행 → 전체 CI 시간 단축
+  # Why: 스캔과 병렬로 실행 → 전체 CI 시간 단축
   build-push:
     if: github.event_name != 'schedule'
     runs-on: self-hosted
@@ -158,8 +129,8 @@ jobs:
   deploy:
     if: github.event_name != 'schedule'
     runs-on: self-hosted
-    # Why: Secrets 탐지 + 테스트 + 빌드 모두 통과해야 배포 (3중 안전 게이트)
-    needs: [secrets-scan, test, build-push]
+    # Why: Secrets 탐지 + 빌드 모두 통과해야 배포 (2중 안전 게이트)
+    needs: [secrets-scan, build-push]
     steps:
       - name: Update Kubernetes Manifest (GitOps)
         env:
@@ -195,7 +166,7 @@ jobs:
           echo "### ✅ WAS Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Image**: ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Security Gates**: Secrets ✅ | Tests ✅ | Build ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Gates**: Secrets ✅ | Build ✅" >> $GITHUB_STEP_SUMMARY
           echo "- **Namespace**: ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Send Discord Notification
@@ -209,7 +180,7 @@ jobs:
             **이미지**: ${{ env.IMAGE_NAME }}:${{ needs.build-push.outputs.image-tag }}
             **커밋**: ${{ github.event.head_commit.message }}
             **작성자**: ${{ github.event.head_commit.author.name }}
-            **보안 게이트**: Secrets ✅ | Tests ✅ | Build ✅
+            **보안 게이트**: Secrets ✅ | Build ✅
             **URL**: https://blog.jiminhome.shop/
             **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           color: ${{ job.status == 'success' && 0x00FF00 || 0xFF0000 }}
