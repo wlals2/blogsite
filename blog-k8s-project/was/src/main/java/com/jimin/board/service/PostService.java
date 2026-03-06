@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
 
@@ -128,10 +129,12 @@ public class PostService {
         // 1. DTO → Entity 변환
         //    request에는 title, content, author만 있음
         //    id, viewCount, createdAt은 자동 설정됨
+        // Why HtmlUtils.htmlEscape: <script> → &lt;script&gt; 변환
+        // → DB에 안전한 형태로 저장, 프론트엔드에서 렌더링 시 XSS 방지
         Post post = new Post();
-        post.setTitle(request.title());     // record의 getter는 title() (get 없음)
-        post.setContent(request.content());
-        post.setAuthor(request.author());
+        post.setTitle(HtmlUtils.htmlEscape(request.title()));
+        post.setContent(request.content() != null ? HtmlUtils.htmlEscape(request.content()) : null);
+        post.setAuthor(request.author() != null ? HtmlUtils.htmlEscape(request.author()) : null);
 
         // 2. 비즈니스 로직: 작성자가 비어있으면 기본값 설정
         //    제목은 @NotBlank로 검증되므로 여기서 체크 불필요
@@ -155,17 +158,15 @@ public class PostService {
         // 1. 기존 게시글 조회
         Post existingPost = getPostById(id);
 
-        // 2. Partial Update (부분 수정)
-        //    null인 필드는 건너뜀 → 기존 값 유지
-        //    예: {"title": "새 제목"} → title만 변경, content와 author는 그대로
+        // 2. Partial Update (부분 수정) + XSS 방어
         if (request.title() != null) {
-            existingPost.setTitle(request.title());
+            existingPost.setTitle(HtmlUtils.htmlEscape(request.title()));
         }
         if (request.content() != null) {
-            existingPost.setContent(request.content());
+            existingPost.setContent(HtmlUtils.htmlEscape(request.content()));
         }
         if (request.author() != null) {
-            existingPost.setAuthor(request.author());
+            existingPost.setAuthor(HtmlUtils.htmlEscape(request.author()));
         }
 
         // 3. 저장 → Entity → DTO 변환 후 반환

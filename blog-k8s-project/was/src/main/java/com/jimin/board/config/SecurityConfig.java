@@ -2,6 +2,7 @@ package com.jimin.board.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -31,10 +32,16 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // Why GET만 공개: POST/PUT/DELETE를 permitAll하면
+                // 인증 없이 글 작성/수정/삭제 가능 (IDOR 취약점)
+                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/posts/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/posts/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
+
                 // 인증 없이 접근 가능한 경로
                 .requestMatchers(
                     "/api/auth/**",       // 회원가입, 로그인
-                    "/api/posts/**",      // 게시판 (일단 전체 공개, 이후 단계에서 조정)
                     "/auth/**",           // GitHub OAuth (기존 Decap CMS용)
                     "/actuator/health",   // K8s Health Check
                     "/actuator/prometheus", // Prometheus 메트릭 수집 (인증 없이 허용)
