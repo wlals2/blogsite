@@ -1,7 +1,7 @@
 homelab:
   # 기본 정보
   start_date: "2025-07-01"
-  uptime_days: 464
+  uptime_days: 465
   # 클러스터 규모
   total_nodes: 5
   control_plane: 1
@@ -10,4 +10,4 @@ homelab:
   # 애플리케이션 Pod
   blog_pods: 6
   # 업데이트 정보
-  updated_at: "2026-03-06T11:00:20+09:00"
+  updated_at: "2026-03-07T10:52:26+09:00"
