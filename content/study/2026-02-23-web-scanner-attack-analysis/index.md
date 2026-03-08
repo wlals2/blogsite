@@ -1,15 +1,14 @@
 ---
 title: "SSH 공격 대응 중 발견한 것: 웹 스캐너도 왔다 갔다"
 date: 2026-02-23T23:00:00+09:00
-categories:
-  - Security
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Security"
 tags: ["security", "web-security", "wazuh", "istio", "cloudflare", "nginx", "attack-analysis", "env-scan", "linux-hardening"]
 summary: "SSH Brute Force 대응 완료 직후, Istio 액세스 로그를 확인했다. 4개 IP에서 17건의 웹 공격이 시도되어 있었다. .env 탈취, .git/config 노출, PHP RCE까지. 그리고 Wazuh는 아무것도 탐지하지 못했다."
 showtoc: true
 tocopen: true
 draft: false
-series: ["홈랩 보안 시리즈"]
----
 ## 배경
 
 SSH Brute Force 대응(238,903건)을 마무리하고, 같은 날 Istio 액세스 로그를 확인했다.

@@ -5,7 +5,6 @@ categories:
   - study
   - Security
 tags: ["falco", "wazuh", "false-positive", "cronjob", "runtime-security", "defense-in-depth"]
-series: ["Falco/Wazuh 시리즈"]
 summary: "MySQL 백업 CronJob이 Wazuh Level 15 Reverse Shell 알림을 유발한 근본 원인을 분석하고, Falco container.name 기반 예외와 Wazuh 상관분석 룰 분리로 오탐 0건 + 미탐 방지를 달성한 과정"
 showtoc: true
 tocopen: true

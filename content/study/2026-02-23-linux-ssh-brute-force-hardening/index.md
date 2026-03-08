@@ -1,15 +1,14 @@
 ---
 title: "K8s 보안은 완벽했다, 그런데 리눅스가 뚫릴 뻔했다"
 date: 2026-02-23T22:00:00+09:00
-categories:
-  - Security
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Security"
 tags: ["security", "ssh", "brute-force", "fail2ban", "ufw", "wazuh", "linux-hardening", "kubernetes"]
 summary: "Wazuh SIEM이 238,903건의 SSH Brute Force 공격을 탐지했다. Istio mTLS, Cilium NetworkPolicy는 정상이었다. 문제는 예상치 못한 곳에 있었다 — 사용하지 않는 USB 랜 어댑터에 공인 IP가 붙어있었다."
 showtoc: true
 tocopen: true
 draft: false
-series: ["홈랩 보안 시리즈"]
----
 ## 배경: K8s 보안은 충분하다고 생각했다
 
 홈랩 K8s 클러스터에는 여러 보안 레이어가 구성되어 있다.

@@ -2,13 +2,13 @@
 title: "홈랩 Kubernetes 보안 아키텍처 — 6계층 Defense in Depth 설계와 구현"
 date: 2026-03-06T19:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["kubernetes", "devsecops", "defense-in-depth", "security-architecture", "homelab"]
 summary: "코드 커밋부터 런타임까지 6계층으로 나눠 설계한 홈랩 보안 아키텍처. 각 계층이 왜 필요하고, 하나가 뚫리면 다음 계층이 어떻게 받는지를 실제 공격 시나리오로 설명한다."
 showtoc: true
 tocopen: true
-draft: false
----
+draft: false---
 
 ## 이 글의 목적
 

@@ -1,9 +1,10 @@
 ---
-title: "Kubernetes Service와 Pod는 어떻게 연결되는가"
+title: "[Kubernetes 기초 시리즈 #4] Kubernetes Service와 Pod는 어떻게 연결되는가"
 date: 2026-02-06T17:00:00+09:00
 draft: false
-categories:
-  - Kubernetes
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Kubernetes"
 tags:
   - kubernetes
   - service

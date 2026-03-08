@@ -1,15 +1,14 @@
 ---
-title: "[Falco/Wazuh 시리즈 #8] Wazuh SIEM — K8s 컨테이너에서 OS 직접 설치로 전환한 이유"
+title: "Wazuh를 K8s StatefulSet에서 OS 직접 설치로 전환한 이유"
 date: 2026-02-24T10:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["wazuh", "kubernetes", "siem", "troubleshooting", "architecture"]
 summary: "Wazuh를 K8s에서 운영하며 겪은 불안정성 문제와, OS 직접 설치로 전환하면서 해결한 과정을 정리한다."
 showtoc: true
 tocopen: true
 draft: false
-series: ["Falco/Wazuh 시리즈"]
----
 ## 배경: K8s Wazuh의 불안정성
 
 Wazuh를 Kubernetes에 Kustomize로 배포하여 운영했다. Manager(master 1 + worker 2), Indexer 3대, Dashboard, Agent DaemonSet 5대 — 총 12개 Pod가 security namespace에서 실행되었다.

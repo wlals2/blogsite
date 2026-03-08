@@ -1,12 +1,11 @@
 ---
-title: "kubernetes PVC 삭제뿌시기"
+title: "Kubernetes PVC 강제 삭제 — Finalizer와 삭제 순서"
 date: 2025-11-23T16:04:52+09:00
 draft: false
-categories: ["Storage"]
+categories: ["study", "Storage"]
 tags: ["k8s","pvc","migrade","storageclass","pvc binding"]
 description: "kubernetes PVC 삭제뿌시기"
 author: "늦찌민"
-series: ["Kubernetes 기초 시리즈"]
 ---
 
 # Kubernetes PVC 마이그레이션 가이드

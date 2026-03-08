@@ -2,15 +2,15 @@
 title: "공격자의 시선으로 보는 보안: 2편 - 네트워크 레이어 공격"
 date: 2026-02-22T14:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["security", "arp-poisoning", "ip-spoofing", "dns-poisoning", "syn-flood", "network", "legacy-attacks"]
 summary: "정찰이 끝나면 실제 공격이 시작된다. L2/L3/L4 레이어에서 작동하는 고전적인 네트워크 공격 - ARP Poisoning, IP Spoofing, DNS Poisoning, SYN Flood의 원리와 방어 방법을 분석한다."
 showtoc: true
 tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
-series_order: 2
----
+series_order: 2---
 ## 배경
 
 1편에서 공격자가 어떻게 대상 환경을 파악하는지 살펴봤다.

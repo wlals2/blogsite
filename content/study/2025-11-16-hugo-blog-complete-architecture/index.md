@@ -2,9 +2,8 @@
 title: "Hugo 블로그 완벽 가이드: 구조부터 배포까지"
 date: 2025-11-16T22:00:00+09:00
 draft: false
-categories: ["Networking"]
+categories: ["study", "Networking"]
 tags: ["Hugo", "GitHub Actions", "Nginx", "자동화", "Other", "정적 사이트"]
-series: ["Hugo 시리즈"]
 description: "Hugo 블로그의 전체 구조와 작동 원리를 처음부터 끝까지 상세히 알아봅니다. 설정 파일 분석, Git 워크플로우, GitHub Actions 자동 배포까지!"
 author: "늦찌민"
 ---
@@ -220,8 +219,7 @@ buildFuture = true
 ```yaml
 ---
 tags: ["Hugo", "DevOps"]
-categories: ["Tutorial"]
-series: ["Hugo 시리즈"]
+categories: ["study", "Tutorial"]
 ---
 ```
 
@@ -285,8 +283,7 @@ draft: false
 author: "작성자명"
 description: "Hugo로 블로그를 시작하는 완벽 가이드"
 tags: ["Hugo", "블로그", "정적사이트"]
-categories: ["Tutorial"]
-series: ["Hugo 시리즈"]
+categories: ["study", "Tutorial"]
 weight: 1  # 시리즈 내 순서
 cover:
   image: "/images/hugo-cover.jpg"

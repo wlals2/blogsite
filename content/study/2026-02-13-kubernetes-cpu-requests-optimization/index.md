@@ -1,9 +1,10 @@
 ---
-title: "Kubernetes CPU Requests 최적화: 정책 기반 접근으로 클러스터 리소스 16 Core 절약하기"
+title: "Kubernetes CPU Requests 최적화 — 정책 기반 접근으로 16 Core 절약하기"
 date: 2026-02-13T16:30:00+09:00
 draft: false
-categories:
-  - Kubernetes
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Kubernetes"
 tags:
   - Kubernetes
   - Resource Management
@@ -12,8 +13,6 @@ tags:
   - Policy
   - GitOps
 summary: "Kubernetes 클러스터에서 CPU Requests가 과도하게 설정되어 k8s-worker3 노드가 99%에 달하는 문제를 발견했다. 임의 조정 대신 일관된 정책을 수립하여 16.15 Core를 절약하고, 모든 워크로드에 재현 가능한 리소스 관리 방법론을 적용한 과정을 공유한다."
-series: ["Kubernetes 기초 시리즈"]
----
 ## 1. 문제 발견
 
 ### 1.1 k8s-worker3 노드 CPU Requests 99%

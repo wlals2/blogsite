@@ -1,12 +1,11 @@
 ---
-title: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결"
+title: "Prometheus KubernetesNode 메트릭 수집 에러 해결"
 date: 2025-11-05T19:54:41+09:00
 draft: false
-categories: ["Observability"]
+categories: ["study", "Observability"]
 tags: ["k8s","prometheus","monitoring","rbac","troubleshooting","tls"]
 description: "Prometheus에서 KubernetesNOde 메트릭 수집시 에러 해결"
 author: "늦찌민"
-series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## 문제 상황

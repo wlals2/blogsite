@@ -1,9 +1,9 @@
 ---
-title: "[Istio 시리즈 #4] VirtualService & DestinationRule — Istio L7 라우팅의 두 축"
+title: "[Istio 시리즈 #5] VirtualService & DestinationRule — Istio L7 라우팅의 두 축"
 date: 2026-01-17T10:00:00+09:00
 summary: "VirtualService는 '어디로 보낼지'를 결정하고, DestinationRule은 '어떻게 연결할지'를 결정한다. 이 둘이 왜 분리되어 있는지, 실제로 어떤 역할을 하는지를 살펴본다."
 tags: ["istio", "virtualservice", "destinationrule", "service-mesh", "kubernetes", "traffic-management", "mtls", "gateway"]
-categories: ["Service Mesh"]
+categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true

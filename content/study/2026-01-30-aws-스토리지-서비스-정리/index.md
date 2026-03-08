@@ -7,7 +7,8 @@ tags:
   - AWS
   - 기초공부문서
 categories:
-  - Cloud & Terraform
+  - "study"
+  - "Cloud & Terraform"
 ---
 # AWS Stroage Service
 ---

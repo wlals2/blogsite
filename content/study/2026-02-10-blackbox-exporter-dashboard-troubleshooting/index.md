@@ -1,9 +1,10 @@
 ---
-title: "Blackbox Exporter 대시보드 복구: 메트릭이 수집되지 않는 문제"
+title: "Blackbox Exporter 대시보드 복구 — 메트릭이 수집되지 않는 문제"
 date: 2026-02-10T09:30:00+09:00
 draft: false
-categories:
-  - Troubleshooting
+categories: ["study", "Observability"]
+  - "study"
+  - "Observability"
 tags:
   - Prometheus
   - Blackbox Exporter
@@ -13,8 +14,6 @@ tags:
   - Istio
   - Cilium
 description: "Blackbox Exporter 대시보드에 데이터가 표시되지 않는 문제를 해결한 과정. Prometheus Operator의 Probe CRD, Istio AuthorizationPolicy, Cilium NetworkPolicy의 계층적 보안 구조를 이해하고 적용."
-series: ["Prometheus/Observability 시리즈"]
----
 ## 문제 상황
 
 Grafana에 Blackbox Exporter 대시보드를 배포했지만, 모든 패널에 "No data"가 표시되었다. WEB, WAS, MySQL 서비스의 가용성을 모니터링하기 위해 구축한 대시보드였지만, 실제로는 어떤 메트릭도 수집되지 않고 있었다.

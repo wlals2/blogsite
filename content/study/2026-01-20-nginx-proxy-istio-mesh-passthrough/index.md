@@ -1,10 +1,9 @@
 ---
-title: "[Istio 시리즈 #8] PassthroughCluster 문제 해결: nginx proxy → Istio mesh 통합"
+title: "PassthroughCluster 문제 해결 — nginx proxy와 Istio mesh 통합"
 date: 2026-01-20T16:00:00+09:00
 description: "Kiali에서 검정색 연결 (mesh 우회) 문제를 Host 헤더와 DestinationRule로 해결"
 tags: ["kubernetes", "istio", "service-mesh", "nginx", "mtls", "kiali", "troubleshooting"]
-categories: ["Service Mesh"]
-series: ["Istio 실전 시리즈"]
+categories: ["study", "Service Mesh"]
 showtoc: true
 tocopen: true
 ---

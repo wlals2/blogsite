@@ -5,7 +5,6 @@ categories:
   - study
   - Security
 tags: ["falco", "wazuh", "siem", "false-positive", "tuning", "runtime-security"]
-series: ["Falco/Wazuh 시리즈"]
 summary: "Wazuh SIEM alerts.json 분석으로 Falco 오탐 원인을 특정하고, 3차에 걸쳐 일 ~1,800건 오탐을 제거한 과정"
 showtoc: true
 tocopen: true

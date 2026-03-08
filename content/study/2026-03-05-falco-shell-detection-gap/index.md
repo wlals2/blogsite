@@ -1,5 +1,5 @@
 ---
-title: "[Falco/Wazuh 시리즈 #10] Falco 커스텀 규칙의 탐지 사각지대 — proc.pname 조건이 놓치는 공격 경로"
+title: "[Falco/Wazuh 시리즈 #6] Falco 커스텀 규칙의 탐지 사각지대"
 date: 2026-03-05T14:00:00+09:00
 description: "Falco 커스텀 규칙이 kubectl exec 기반 shell 실행을 탐지하지 못한 원인을 분석하고, 부모 프로세스와 무관하게 모든 shell 실행을 잡는 규칙을 설계하여 탐지→자동 대응 1초 이내 파이프라인을 완성한 과정"
 tags: ["falco", "runtime-security", "kubernetes", "ids", "ips", "talon", "shell-detection", "proc-pname", "immutable-container"]

@@ -1,12 +1,11 @@
 ---
-title: "Kubernetes securityContext 완벽가이드:Nextcloud 80번 포트 문제해결"
+title: "Kubernetes securityContext — Nextcloud 80번 포트 문제 해결"
 date: 2025-11-04T20:21:31+09:00
 draft: false
-categories: ["Security"]
+categories: ["study", "Security"]
 tags: ["k8s","securityContext","runAsuser","yaml","pod","troubleshooting","apache","fsGroup"]
 description: "Kubernetes securityContext 완벽가이드:Nextcloud 80번 포트 문제해결"
 author: "늦찌민"
-series: ["Kubernetes 기초 시리즈"]
 ---
 
 ## 문제 상황

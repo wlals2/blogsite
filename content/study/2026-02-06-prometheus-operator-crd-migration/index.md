@@ -1,10 +1,9 @@
 ---
 title: "Prometheus 모니터링을 Raw ConfigMap에서 CRD 기반으로 전환하기"
 date: 2026-02-06T10:00:00+09:00
-categories: ["Observability"]
+categories: ["study", "Observability"]
 tags: ["prometheus", "kubernetes", "gitops", "servicemonitor", "prometheusrule", "argocd", "operator"]
 summary: "ArgoCD OutOfSync 문제를 해결하기 위해 Prometheus 모니터링 시스템을 Raw ConfigMap 방식에서 Prometheus Operator CRD 기반으로 전환한 과정"
-series: ["Prometheus/Observability 시리즈"]
 ---
 
 ## 1. Background: 왜 CRD 기반 모니터링이 필요한가?

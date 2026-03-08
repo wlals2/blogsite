@@ -1,9 +1,10 @@
 ---
-title: "[ArgoCD/GitOps 시리즈 #6] ArgoCD ignoreDifferences — GitOps에서 동적 필드를 관리하는 방법"
+title: "ArgoCD ignoreDifferences — GitOps에서 동적 필드를 관리하는 방법"
 date: 2026-02-05T13:00:00+09:00
 draft: false
-categories:
-  - Kubernetes
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Kubernetes"
 tags:
   - argocd
   - gitops
@@ -11,8 +12,6 @@ tags:
   - argo-rollouts
   - istio
   - troubleshooting
-series: ["ArgoCD/GitOps 시리즈"]
----
 ## 문제 발견
 
 ArgoCD로 GitOps를 운영하다 보면 피할 수 없는 상황이 있다. Git에 정의한 리소스와 클러스터의 실제 상태가 계속 달라지는 경우다.

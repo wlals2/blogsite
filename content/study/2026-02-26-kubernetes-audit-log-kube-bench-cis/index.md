@@ -2,7 +2,8 @@
 title: "[DevSecOps 시리즈 #2] kube-bench CIS Benchmark — Kubernetes Audit Log 구현과 .bak 파일 트러블슈팅"
 date: 2026-02-26T10:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["kubernetes", "audit-log", "kube-bench", "cis-benchmark", "kube-apiserver", "static-pod", "kubelet"]
 summary: "kube-bench CIS Benchmark에서 FAIL이 난 Audit Log 4개 항목을 구현하면서 마주친 kubelet static pod 트러블슈팅을 정리한다. manifest 디렉토리의 .bak 파일이 8가지 시도를 모두 무력화한 원인이었다."
 showtoc: true

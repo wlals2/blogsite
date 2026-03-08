@@ -1,5 +1,5 @@
 ---
-title: "[ArgoCD/GitOps 시리즈 #5] GitOps로 K8s 매니페스트 관리하기 — Helm Wrapper Chart와 App of Apps"
+title: "GitOps로 K8s 매니페스트 관리하기 — Helm Wrapper Chart와 App of Apps"
 date: 2026-01-31T17:06:00+09:00
 draft: false
 description: apps/ configs/ services/ 구분
@@ -8,10 +8,9 @@ tags:
   - kubernetes
   - manifest
   - argoCD
-categories:
-  - Kubernetes
-series: ["ArgoCD/GitOps 시리즈"]
----
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Kubernetes"
 ### 1. 매니페스트 파일들은 어떻게 관리해야하는가 ? \
 
 홈을 구축하면서 istio 설정을 건드리고 있었다. 또 정책을 잘못 건드렸는지 블로그가 안 나오네.. \

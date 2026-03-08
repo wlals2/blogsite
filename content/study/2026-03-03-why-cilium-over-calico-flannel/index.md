@@ -1,5 +1,5 @@
 ---
-title: "[Cilium 시리즈 #0] 왜 Flannel도 Calico도 아닌 Cilium인가 — CNI 선택의 기준"
+title: "[Cilium 시리즈 #1] 왜 Flannel도 Calico도 아닌 Cilium인가 — CNI 선택의 기준"
 date: 2026-03-03T08:00:00+09:00
 description: "Flannel, Calico, Cilium 세 CNI를 실제로 비교해보고, 홈랩 Kubernetes에 Cilium을 선택한 구체적인 이유를 기술한다"
 tags: ["cilium", "calico", "flannel", "kubernetes", "cni", "networking", "ebpf"]

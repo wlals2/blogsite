@@ -1,9 +1,9 @@
 ---
-title: "[Istio 실전 시리즈 #0] 왜 Linkerd도 Consul도 아닌 Istio인가 — Service Mesh 선택의 기준"
+title: "[Istio 시리즈 #1] 왜 Linkerd도 Consul도 아닌 Istio인가 — Service Mesh 선택의 기준"
 date: 2026-03-03T08:30:00+09:00
 description: "Linkerd, Consul Connect, Istio 세 Service Mesh를 직접 비교하고, 홈랩에서 Istio를 선택한 구체적인 이유를 기술한다"
 tags: ["istio", "linkerd", "consul", "service-mesh", "kubernetes", "mtls", "envoy"]
-categories: ["Service Mesh"]
+categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 draft: false
 ---

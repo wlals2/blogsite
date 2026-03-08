@@ -1,10 +1,9 @@
 ---
-title: "[Istio 시리즈 #5] Istio Traffic Management 실전 가이드"
+title: "Istio Traffic Management 실전 — 카나리 배포와 트래픽 분산 적용기"
 date: 2026-01-22T10:00:00+09:00
 description: "VirtualService와 DestinationRule을 활용한 Retry, Timeout, Circuit Breaking, Traffic Mirroring 구현"
 tags: ["istio", "kubernetes", "traffic-management", "circuit-breaking", "canary"]
-categories: ["Service Mesh"]
-series: ["Istio 실전 시리즈"]
+categories: ["study", "Service Mesh"]
 showtoc: true
 tocopen: true
 ---

@@ -2,7 +2,8 @@
 title: "[DevSecOps 시리즈 #3] kube-bench 오탐 분석 + kubelet CA 취약점 개선 + Kyverno Policy as Code"
 date: 2026-02-26T15:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["kubernetes", "kube-bench", "cis-benchmark", "kyverno", "admission-controller", "policy-as-code", "devsecops", "kubelet"]
 summary: "kube-bench 재실행으로 FAIL 5개 중 4개가 오탐임을 규명하고 실제 취약점인 kubelet CA 미검증을 개선했다. 이후 Kyverno Admission Controller로 kubectl 직접 배포 시에도 정책을 강제하는 Policy as Code를 구현했다."
 showtoc: true

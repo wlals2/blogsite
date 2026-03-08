@@ -2,11 +2,10 @@
 title: "Cloudflare WARP vs Tunnel: NAT 개념으로 이해하는 홈랩 보안 설계"
 date: 2026-02-23T14:00:00+09:00
 draft: false
-categories:
-  - Networking
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Security"
 tags: ["cloudflare", "warp", "tunnel", "nat", "dnat", "snat", "cilium", "firewall", "wireguard", "proxy", "homelab"]
-series: ["홈랩 보안 시리즈"]
----
 ## 배경
 
 홈랩 Kubernetes 클러스터를 운영하면서 두 가지 요구사항이 충돌했다.

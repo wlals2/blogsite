@@ -1,15 +1,14 @@
 ---
 title: "Kubernetes 리소스 낭비 찾기 — VPA 41일 데이터로 WAS 메모리를 두 배 늘린 이야기"
 date: 2026-03-03T16:00:00+09:00
-categories:
-  - Kubernetes
+categories: ["study", "Kubernetes"]
+  - "study"
+  - "Kubernetes"
 tags: ["kubernetes", "vpa", "resource", "tuning", "prometheus", "etcd", "alertmanager", "argo-rollouts"]
 summary: "kubectl top, Prometheus PromQL, VPA 세 가지 방법으로 홈랩 클러스터의 리소스 낭비를 찾고 조정한 과정. WAS CPU 10배 증가, etcd 메모리 5배 증가, 총 세 가지 컴포넌트 튜닝."
 showtoc: true
 tocopen: true
 draft: false
-series: ["홈랩 Kubernetes 운영 시리즈"]
----
 ## 왜 리소스를 점검했는가
 
 Longhorn orphan 볼륨 202Gi를 정리한 날, 자연스럽게 다음 질문이 생겼다.

@@ -1,5 +1,5 @@
 ---
-title: '"too many open files" 에러 - 근본 원인 분석'
+title: ""too many open files" 에러 — inotify limit과 근본 원인 분석"
 date: 2026-02-03T20:42:00+09:00
 draft: false
 description: k8s 운영 중에 한 노드 장애를 겪은 트러블 슈팅내용 feat. File Descriptor(FD)
@@ -9,10 +9,9 @@ tags:
   - FileDescriptor
   - versioning
   - log
-categories:
-  - Kubernetes
-series: ["Kubernetes 기초 시리즈"]
----
+categories: ["study", "Troubleshooting"]
+  - "study"
+  - "Kubernetes"
 ## 배경지식: Linux File Descriptor 란?
 ---
 ### 📖 File Descriptor (FD)의 개념

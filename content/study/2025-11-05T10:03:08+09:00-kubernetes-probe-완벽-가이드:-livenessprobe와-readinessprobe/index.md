@@ -1,8 +1,8 @@
 ---
-title: "Kubernetes Probe 완벽 가이드: livenessProbe와 readinessProbe"
+title: "[Kubernetes 기초 시리즈 #2] Probe 완벽 가이드 — livenessProbe와 readinessProbe"
 date: 2025-11-05T10:03:08+09:00
 draft: false
-categories: ["Kubernetes"]
+categories: ["study", "Kubernetes"]
 tags: ["k8s","probe","troubleshooting","study","health-check","nextcloud","error"]
 description: "Kubernetes Probe 완벽 가이드: livenessProbe와 readinessProbe"
 author: "늦찌민"

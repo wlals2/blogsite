@@ -1,12 +1,11 @@
 ---
-title: "Kubernetes ReplicationContoller 트러블 슈팅 가이드"
+title: "Kubernetes ReplicationController 트러블슈팅 가이드"
 date: 2025-11-05T14:38:54+09:00
 draft: false
-categories: ["Kubernetes"]
+categories: ["study", "Kubernetes"]
 tags: ["k8s","ReplicationContoller","트러블슈팅"]
 description: "Kubernetes ReplicationContoller 트러블 슈팅 가이드"
 author: "늦찌민"
-series: ["Kubernetes 기초 시리즈"]
 ---
 
 # Kubernetes ReplicationController 트러블슈팅 가이드

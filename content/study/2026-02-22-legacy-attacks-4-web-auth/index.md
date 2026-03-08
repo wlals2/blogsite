@@ -2,15 +2,15 @@
 title: "공격자의 시선으로 보는 보안: 4편 - 웹 공격 Part 2 (인증/세션/접근 제어)"
 date: 2026-02-22T18:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["security", "csrf", "session-hijacking", "directory-traversal", "file-inclusion", "owasp", "web-security"]
 summary: "코드 한 줄을 고쳐도 안 되는 공격이 있다. CSRF, Session Hijacking, Directory Traversal, File Inclusion은 인증과 접근 제어 설계 자체의 문제를 공격한다. 구조적 취약점의 원리와 방어를 분석한다."
 showtoc: true
 tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
-series_order: 4
----
+series_order: 4---
 ## 배경
 
 3편에서 다룬 인젝션 공격은 "입력값 처리 코드 한 줄"을 고치면 해결된다.

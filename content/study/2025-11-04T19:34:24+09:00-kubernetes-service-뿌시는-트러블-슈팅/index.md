@@ -1,12 +1,11 @@
 ---
-title: "Kubernetes Service 뿌시는 트러블 슈팅"
+title: "Kubernetes Service 트러블슈팅 — ClusterIP/NodePort/LoadBalancer 문제 해결"
 date: 2025-11-04T19:34:24+09:00
 draft: false
-categories: ["Kubernetes"]
+categories: ["study", "Kubernetes"]
 tags: ["k8s","데이터 영속성","longhorn","service","nodeport","네트워크","deployment","k9s"]
 description: "Kubernetes Service 뿌시는 트러블 슈팅 Service 완벽 정복(?)"
 author: "늦찌민"
-series: ["Kubernetes 기초 시리즈"]
 ---
 
 >NodePort Service를 만들었는데 외부에서 접속이 안 된다면?  

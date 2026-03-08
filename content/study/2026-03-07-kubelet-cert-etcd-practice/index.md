@@ -1,14 +1,13 @@
 ---
 title: "22일간 멈춘 Backup CronJob 복구기 — kubelet 인증서, etcd 814MB, Alpine MariaDB"
 date: 2026-03-07T15:00:00+09:00
-categories:
+categories: ["study", "Kubernetes"]
   - Troubleshooting
 tags: ["kubernetes", "etcd", "kubelet", "tls", "backup", "cronjob", "troubleshooting", "kyverno"]
 summary: "Backup CronJob 3개가 22일간 실패한 원인을 하나씩 파헤친 기록. kubelet 인증서 IP SAN 누락, etcd 814MB, Alpine MariaDB 호환성, Kyverno 차단까지 5개의 문제를 해결한다."
 showtoc: true
 tocopen: true
 draft: false
-series: ["홈랩 Kubernetes 운영 시리즈"]
 ---
 
 > 이 글은 실습편입니다. 배경지식이 필요하면 [이론편](/study/2026-03-07-kubelet-cert-etcd-theory/)을 먼저 읽어주세요.

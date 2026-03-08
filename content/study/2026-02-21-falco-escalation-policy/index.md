@@ -1,9 +1,10 @@
 ---
-title: "[Falco/Wazuh 시리즈 #7] Falco 에스컬레이션 정책 — WARNING 반복 시 CRITICAL 자동 격상"
+title: "[Falco/Wazuh 시리즈 #4] Falco 에스컬레이션 정책"
 date: 2026-02-21T10:00:00+09:00
 draft: false
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags:
   - Falco
   - Wazuh

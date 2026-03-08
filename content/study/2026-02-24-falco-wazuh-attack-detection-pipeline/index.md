@@ -1,8 +1,9 @@
 ---
-title: "[Falco/Wazuh 시리즈 #9] Falco + Wazuh 공격 탐지 파이프라인 — 구축과 실전 검증"
+title: "[Falco/Wazuh 시리즈 #5] Falco + Wazuh 공격 탐지 파이프라인"
 date: 2026-02-24T14:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["falco", "wazuh", "siem", "attack-detection", "mitre-attack", "defense-in-depth"]
 summary: "Falco의 컨테이너 런타임 이벤트를 Wazuh SIEM으로 수집하는 파이프라인을 구축하고, 5가지 공격 시나리오로 탐지 성능을 검증한 과정을 정리한다."
 showtoc: true

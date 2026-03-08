@@ -1,9 +1,9 @@
 ---
-title: "[Istio 시리즈 #1] Service Mesh는 왜 탄생했나 — 마이크로서비스의 숨겨진 복잡성"
+title: "[Istio 시리즈 #2] Service Mesh는 왜 탄생했나 — 마이크로서비스의 숨겨진 복잡성"
 date: 2026-01-15T10:00:00+09:00
 summary: "모놀리스에서 마이크로서비스로 넘어가면 비즈니스 로직 외에 해결해야 할 문제들이 쏟아진다. 재시도, 타임아웃, 인증, 관측성. Service Mesh는 이 문제들을 애플리케이션 밖에서 해결한다."
 tags: ["service-mesh", "microservices", "istio", "kubernetes", "architecture"]
-categories: ["Service Mesh"]
+categories: ["study", "Service Mesh"]
 series: ["Istio 실전 시리즈"]
 showtoc: true
 tocopen: true

@@ -1,9 +1,10 @@
 ---
-title: "[Falco/Wazuh 시리즈 #6] Falco + Talon으로 IDS/IPS 구축 — 컨테이너 위협 자동 차단"
+title: "[Falco/Wazuh 시리즈 #3] Falco + Talon으로 IDS/IPS 구축"
 date: 2026-02-19T14:00:00+09:00
 draft: false
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags:
   - Kubernetes
   - Falco

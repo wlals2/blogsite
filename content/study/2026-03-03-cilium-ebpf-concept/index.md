@@ -1,5 +1,5 @@
 ---
-title: "[Cilium 시리즈 #1] eBPF란 무엇인가 — 커널을 바꾸지 않고 커널을 프로그래밍하다"
+title: "[Cilium 시리즈 #2] eBPF란 무엇인가 — 커널을 바꾸지 않고 커널을 프로그래밍하다"
 date: 2026-03-03T09:00:00+09:00
 description: "eBPF가 Linux 커널에서 어떻게 동작하는지, 왜 Cilium이 eBPF를 선택했는지, 그리고 kube-proxy와 iptables 방식과 무엇이 다른지 개념부터 이해한다"
 tags: ["cilium", "ebpf", "kubernetes", "cni", "networking", "linux-kernel"]
