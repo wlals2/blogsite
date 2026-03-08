@@ -69,6 +69,16 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # ======================================================================
+      # Step 2.5: 비고정 태그 베이스 이미지 최신화
+      # ======================================================================
+      - name: Pull base images
+        run: |
+          # Why: nginx:alpine은 버전 비고정 태그 → 로컬 캐시가 있으면 Docker Hub를 확인하지 않음
+          #      명시적 pull로 보안 패치 포함된 최신 nginx 이미지를 보장
+          #      hugomods/hugo:0.146.0은 버전 고정 태그 → Dockerfile 수정 시 자동 캐시 무효화되므로 pull 불필요
+          docker pull nginx:alpine
+
+      # ======================================================================
       # Step 3: GHCR 로그인
       # ======================================================================
       - name: Login to GHCR
@@ -93,9 +103,12 @@ jobs:
             ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
             ${{ env.IMAGE_NAME }}:latest
           load: true
-          # Why: GHA 캐시 제거
-          #      self-hosted runner에서 GHA 캐시는 GitHub 서버와 왕복 → 20분 소요
-          #      hugomods 이미지로 전환으로 Hugo 레이어 제거 → 캐시 없어도 빠름
+          # Why: 로컬 영구 디스크 캐시 사용 (WAS와 동일 전략)
+          #      GHA 캐시(GitHub 서버 왕복)는 self-hosted에서 20분 소요 → 로컬이 빠름
+          #      /tmp는 재부팅 시 삭제 → /mnt/data/ci/cache가 재부팅 후에도 유지
+          #      콘텐츠(.md)만 변경 시: hugomods 레이어 캐시 히트 → COPY 이후만 재빌드
+          cache-from: type=local,src=/mnt/data/ci/cache/buildkit-web
+          cache-to: type=local,dest=/mnt/data/ci/cache/buildkit-web,mode=max
           # Why: load: true
           #      runner 재연결 후 docker login 컨텍스트 초기화 시 docker pull이 unauthorized 실패
           #      로컬 daemon에 저장해두면 Verify Build step에서 pull 불필요
