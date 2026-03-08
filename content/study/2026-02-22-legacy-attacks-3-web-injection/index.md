@@ -10,7 +10,8 @@ showtoc: true
 tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
-series_order: 3---
+series_order: 3
+---
 ## 배경
 
 네트워크 방어가 강화되면서 공격자는 **애플리케이션 레이어**로 이동했다.

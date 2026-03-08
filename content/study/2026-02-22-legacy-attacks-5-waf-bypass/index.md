@@ -10,7 +10,8 @@ showtoc: true
 tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
-series_order: 5---
+series_order: 5
+---
 ## 배경
 
 앞의 4편에서 다양한 공격 기법을 살펴봤다.

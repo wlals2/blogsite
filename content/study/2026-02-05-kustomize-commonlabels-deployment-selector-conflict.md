@@ -6,7 +6,8 @@ categories:
   - "study"
   - "Kubernetes"
 tags: ["kubernetes", "kustomize", "cilium", "networkpolicy", "gitops", "argocd", "mysql", "prometheus"]
-description: "Kustomize commonLabels 도입 시 Deployment selector 불변성 충돌 문제와 NetworkPolicy 문법 오류를 해결하는 과정. 기술적 가능성보다 엔지니어링적 올바름을 우선하는 의사결정 사례."---
+description: "Kustomize commonLabels 도입 시 Deployment selector 불변성 충돌 문제와 NetworkPolicy 문법 오류를 해결하는 과정. 기술적 가능성보다 엔지니어링적 올바름을 우선하는 의사결정 사례."
+---
 
 ## 들어가며
 

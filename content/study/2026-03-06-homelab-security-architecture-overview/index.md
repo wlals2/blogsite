@@ -8,7 +8,8 @@ tags: ["kubernetes", "devsecops", "defense-in-depth", "security-architecture", "
 summary: "코드 커밋부터 런타임까지 6계층으로 나눠 설계한 홈랩 보안 아키텍처. 각 계층이 왜 필요하고, 하나가 뚫리면 다음 계층이 어떻게 받는지를 실제 공격 시나리오로 설명한다."
 showtoc: true
 tocopen: true
-draft: false---
+draft: false
+---
 
 ## 이 글의 목적
 

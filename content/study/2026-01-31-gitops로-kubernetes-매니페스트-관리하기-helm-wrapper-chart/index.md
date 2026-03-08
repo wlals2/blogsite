@@ -9,8 +9,8 @@ tags:
   - manifest
   - argoCD
 categories: ["study", "Kubernetes"]
-  - "study"
-  - "Kubernetes"
+---
+
 ### 1. 매니페스트 파일들은 어떻게 관리해야하는가 ? \
 
 홈을 구축하면서 istio 설정을 건드리고 있었다. 또 정책을 잘못 건드렸는지 블로그가 안 나오네.. \

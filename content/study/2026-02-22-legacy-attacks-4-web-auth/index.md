@@ -10,7 +10,8 @@ showtoc: true
 tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
-series_order: 4---
+series_order: 4
+---
 ## 배경
 
 3편에서 다룬 인젝션 공격은 "입력값 처리 코드 한 줄"을 고치면 해결된다.

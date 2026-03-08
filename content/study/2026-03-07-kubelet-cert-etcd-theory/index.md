@@ -2,13 +2,12 @@
 title: "kubelet 인증서와 etcd 데이터 관리 — 백업 CronJob이 실패하기 전에 알아야 할 것들"
 date: 2026-03-07T14:00:00+09:00
 categories: ["study", "Kubernetes"]
-  - "study"
-  - "Kubernetes"
 tags: ["kubernetes", "kubelet", "tls", "certificate", "etcd", "compaction", "defrag", "csr"]
 summary: "kube-apiserver와 kubelet은 어떻게 통신하는가? kubelet 인증서의 IP SAN은 왜 중요한가? etcd는 왜 점점 커지는가? Backup CronJob 복구 실습 전에 필요한 배경지식을 정리한다."
 showtoc: true
 tocopen: true
 draft: false
+---
 
 > 이 글은 이론편입니다. 실제 트러블슈팅 과정은 [실습편](/study/2026-03-07-kubelet-cert-etcd-practice/)에서 다룹니다.
 

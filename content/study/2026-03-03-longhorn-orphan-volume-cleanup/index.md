@@ -2,13 +2,13 @@
 title: "Longhorn 디스크 88% → 38%로 줄인 방법 — Orphan 볼륨 정리와 자동화"
 date: 2026-03-03T14:00:00+09:00
 categories: ["study", "Kubernetes"]
-  - "study"
-  - "Storage"
 tags: ["longhorn", "kubernetes", "pv", "pvc", "orphan", "storage", "cleanup", "automation"]
 summary: "Kubernetes Longhorn 스토리지에서 orphan 볼륨 202Gi를 발견하고 정리한 과정. PV/PVC 생명주기 이해부터 자동 감지 스크립트, 재발 방지 정책까지."
 showtoc: true
 tocopen: true
 draft: false
+---
+
 ## 왜 디스크가 88%였는가
 
 Grafana 대시보드에서 worker2 노드의 Longhorn 디스크 사용률이 88%를 찍고 있었다.

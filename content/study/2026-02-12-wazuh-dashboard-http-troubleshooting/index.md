@@ -2,9 +2,7 @@
 title: "Wazuh Dashboard 외부 접근 트러블슈팅 (upstream connect error → HTTP 전환)"
 date: 2026-02-12T18:30:00+09:00
 draft: false
-categories: ["study", "Kubernetes"]
-  - "study"
-  - "Security"
+categories: ["study", "Security"]
 tags:
   - Wazuh
   - Istio
@@ -15,6 +13,7 @@ tags:
   - Service
   - Troubleshooting
 summary: "Wazuh Dashboard 외부 접근 시 발생한 upstream connect error를 5번의 시도 끝에 해결한 과정. Port 매핑, Protocol 불일치, TLS Origination 실패, Config 우선순위 문제를 순차적으로 해결했다."
+---
 ## 문제 상황
 
 Wazuh Dashboard에 `http://wazuh.jiminhome.shop`로 접근 시 다음 에러가 발생했다:

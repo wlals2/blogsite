@@ -2,13 +2,12 @@
 title: "Kyverno Incident Report — 정책 변경과 네트워크 장애가 빚어낸 연쇄 배포 실패"
 date: 2026-03-02T18:00:00+09:00
 categories: ["study", "Security"]
-  - "study"
-  - "Security"
 tags: ["kubernetes", "kyverno", "incident-report", "exponential-backoff", "admission-controller", "troubleshooting", "istio"]
 summary: "3일 전 배포된 Kyverno 정책이 잠복해 있다가, 노드 장애 → Istio Webhook 실패 → Exponential Backoff → Kyverno 차단으로 연쇄 장애가 터졌다. Kubernetes의 Admission Controller 체인이 실전에서 어떻게 맞물리는지를 사고 보고서 형식으로 기록한다."
 showtoc: true
 tocopen: true
-draft: false---
+draft: false
+---
 ## 사고 요약 (Executive Summary)
 
 | 항목 | 내용 |

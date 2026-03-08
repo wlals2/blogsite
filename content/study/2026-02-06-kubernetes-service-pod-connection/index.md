@@ -3,8 +3,6 @@ title: "[Kubernetes 기초 시리즈 #4] Kubernetes Service와 Pod는 어떻게 
 date: 2026-02-06T17:00:00+09:00
 draft: false
 categories: ["study", "Kubernetes"]
-  - "study"
-  - "Kubernetes"
 tags:
   - kubernetes
   - service

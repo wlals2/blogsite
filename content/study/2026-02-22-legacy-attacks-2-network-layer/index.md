@@ -10,7 +10,8 @@ showtoc: true
 tocopen: true
 draft: false
 series: ["공격자의 시선으로 보는 보안"]
-series_order: 2---
+series_order: 2
+---
 ## 배경
 
 1편에서 공격자가 어떻게 대상 환경을 파악하는지 살펴봤다.

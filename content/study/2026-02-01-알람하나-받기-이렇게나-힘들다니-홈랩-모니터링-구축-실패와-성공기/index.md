@@ -11,7 +11,8 @@ tags:
   - slack
 categories:
   - "study"
-  - "Observability"---
+  - "Observability"
+---
 ## 알람이 오지 않는다.
 
 Alaram 시스템은 있었다 그러나 발동하지 않았다. 반나절이나 블로그가 죽어있었으나 몰랐다.. \
