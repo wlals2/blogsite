@@ -17,22 +17,20 @@
 #      alpine:latest + apk add hugo 방식은 매 빌드마다 Hugo 바이너리를 인터넷에서 다운로드
 FROM hugomods/hugo:0.146.0 AS builder
 
-# Git commit SHA를 받아서 캐시 무효화
-ARG GIT_COMMIT=unknown
-RUN echo "Building from commit: $GIT_COMMIT"
-
 WORKDIR /src
 
 # Hugo 소스 복사
+# Why: COPY를 ARG GIT_COMMIT 앞에 배치
+#      ARG가 COPY 앞에 있으면 SHA가 바뀔 때마다 COPY 이후 레이어 전체 캐시 무효화
+#      COPY 이후에 ARG를 선언하면 hugomods 이미지 레이어는 캐시 HIT 유지
 COPY . .
 
-# Hugo 빌드 (public/ 디렉토리에 정적 파일 생성)
-# --minify: HTML/CSS/JS 압축
-# --gc: 사용하지 않는 캐시 정리
-# Why: --mount=type=cache → 빌드 간 Hugo 내부 캐시(템플릿 파싱 결과)를 영구 보존
-#      COPY . .가 변경돼도 이 마운트는 날아가지 않음
-#      콘텐츠 1개 추가 시: 변경된 글만 재처리, 나머지 글은 캐시 히트
+# Why: ARG는 COPY 이후 선언 → hugomods 이미지 레이어 캐시 보호
+#      --mount=type=cache → Hugo 내부 캐시(템플릿 파싱 결과)를 빌드 간 영구 보존
+#      콘텐츠 변경 시: COPY 레이어만 MISS, Hugo 내부 캐시는 유지
+ARG GIT_COMMIT=unknown
 RUN --mount=type=cache,target=/tmp/hugo_cache \
+    echo "Building from commit: $GIT_COMMIT" && \
     hugo --minify --gc --cacheDir /tmp/hugo_cache
 
 # ==============================================================================
