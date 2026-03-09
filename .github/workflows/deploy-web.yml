@@ -74,6 +74,11 @@ jobs:
       # ======================================================================
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # Why: name 고정 → 매 빌드마다 새 BuildKit 컨테이너 생성 방지
+          #      docker-container driver는 컨테이너가 바뀌면 type=local 캐시 매칭 실패
+          #      동일 name이면 기존 컨테이너 재사용 → 캐시 HIT율 대폭 향상
+          name: buildkit-web
 
       # ======================================================================
       # Step 2.5: 비고정 태그 베이스 이미지 최신화
