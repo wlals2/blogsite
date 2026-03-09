@@ -2,7 +2,7 @@
 title: "YAML 중복 키 함정 — 280줄의 설정이 13줄에 의해 무효화된 사건"
 date: 2026-02-11T14:00:00+09:00
 draft: false
-categories: ["study", "Troubleshooting"]
+categories: ["study", "Development"]
 tags:
   - YAML
   - Helm

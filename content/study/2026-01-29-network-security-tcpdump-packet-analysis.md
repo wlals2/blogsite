@@ -4,7 +4,7 @@ date: 2026-01-29T00:00:00+09:00
 draft: false
 description: "UTM 경험을 클라우드/K8s 보안으로 확장하기 - tcpdump 실습"
 tags: ["tcpdump", "packet-analysis", "network-security", "wireshark", "security", "troubleshooting"]
-categories: ["study", "Security", "Troubleshooting"]
+categories: ["study", "Security"]
 ---
 
 ## 학습 목표

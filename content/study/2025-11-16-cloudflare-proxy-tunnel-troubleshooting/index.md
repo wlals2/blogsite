@@ -2,7 +2,7 @@
 title: "블로그 접속 불가 트러블슈팅: Cloudflare Proxy vs Tunnel 완벽 이해"
 date: 2025-11-16T10:35:00+09:00
 draft: false
-categories: ["Troubleshooting"]
+categories: ["study", "Networking"]
 tags: ["cloudflare", "tunnel", "proxy", "dns", "nginx", "troubleshooting"]
 ---
 ## 문제 상황

@@ -2,7 +2,8 @@
 title: "공격자의 시선으로 보는 보안: 1편 - 정찰과 스캐닝"
 date: 2026-02-22T10:00:00+09:00
 categories:
-  - Security
+  - "study"
+  - "Security"
 tags: ["security", "reconnaissance", "port-scan", "nmap", "network", "legacy-attacks"]
 summary: "모든 공격은 상대방을 아는 것에서 시작한다. 공격자가 첫 번째로 하는 정찰과 스캐닝 기법을 분석하고, 방어자 관점에서 어떻게 탐지하고 차단할 수 있는지 정리한다."
 showtoc: true

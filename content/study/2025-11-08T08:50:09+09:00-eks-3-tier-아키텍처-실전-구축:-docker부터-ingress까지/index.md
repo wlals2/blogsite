@@ -2,7 +2,7 @@
 title: "EKS 3-Tier 아키텍처 실전 구축: Docker부터 Ingress까지"
 date: 2025-11-08T08:50:09+09:00
 draft: false
-categories: ["Cloud & Terraform"]
+categories: ["study", "Cloud & Terraform"]
 tags: ["aws","eks","3tier","docker","CICD"]
 description: "EKS 3-Tier 아키텍처 실전 구축: Docker부터 Ingress까지"
 author: "늦찌민"

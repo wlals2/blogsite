@@ -29,7 +29,11 @@ COPY . .
 # Hugo 빌드 (public/ 디렉토리에 정적 파일 생성)
 # --minify: HTML/CSS/JS 압축
 # --gc: 사용하지 않는 캐시 정리
-RUN hugo --minify --gc
+# Why: --mount=type=cache → 빌드 간 Hugo 내부 캐시(템플릿 파싱 결과)를 영구 보존
+#      COPY . .가 변경돼도 이 마운트는 날아가지 않음
+#      콘텐츠 1개 추가 시: 변경된 글만 재처리, 나머지 글은 캐시 히트
+RUN --mount=type=cache,target=/tmp/hugo_cache \
+    hugo --minify --gc --cacheDir /tmp/hugo_cache
 
 # ==============================================================================
 # Stage 2: Runtime - nginx

@@ -6,7 +6,7 @@ author: "늦찌민"
 tags: ["Kubernetes", "Helm", "EFK", "ELK", "Fluent Bit", "Troubleshooting"]
 categories:
   - "study"
-  - "Kubernetes"
+  - "Elasticsearch"
 series: ["좀 더 고급으로 변하는 인프라 구조"]
 ---
 

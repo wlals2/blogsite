@@ -9,7 +9,7 @@ tags:
   - FileDescriptor
   - versioning
   - log
-categories: ["study", "Troubleshooting"]
+categories: ["study", "Kubernetes"]
 ---
 
 ## 배경지식: Linux File Descriptor 란?
