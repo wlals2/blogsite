@@ -17,6 +17,13 @@ on:
       #      update-metrics.yml의 data/metrics.yaml 커밋은 data/** 포함
   workflow_dispatch:  # 수동 실행 가능
 
+# Why: 연속 push 시 이전 빌드가 캐시 쓰는 중에 새 빌드가 같은 폴더를 접근하면
+#      BuildKit lock 충돌 → 캐시 저장 실패 → 매 빌드마다 이미지 다운로드 반복
+#      cancel-in-progress: true = 새 push가 오면 이전 빌드 취소 후 새 것만 실행
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   IMAGE_NAME: ghcr.io/wlals2/blog-web
   NAMESPACE: blog-system

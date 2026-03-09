@@ -17,6 +17,11 @@ on:
   schedule:
     - cron: '0 17 * * *'  # 매일 새벽 02:00 KST (UTC 17:00 = KST 02:00)
 
+# Why: 연속 push 시 BuildKit 로컬 캐시 lock 충돌 방지 (buildkit-was 폴더 동시 접근)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   IMAGE_NAME: ghcr.io/wlals2/board-was
   NAMESPACE: blog-system
