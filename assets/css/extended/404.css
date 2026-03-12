@@ -1,0 +1,351 @@
+/* ============================================
+   404 Not Found Page - Custom Styling
+   ============================================ */
+
+.not-found-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.not-found-content {
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  max-width: 600px;
+  animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Error Code Animation
+   ============================================ */
+.error-code {
+  font-size: 8rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.error-code .digit {
+  display: inline-block;
+  animation: popIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.error-code .digit:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.error-code .digit:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.error-code .digit:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.error-code .digit.spinning {
+  animation: popIn 0.6s cubic-bezier(0.4, 0, 0.2, 1), spin 2s linear 0.6s infinite;
+}
+
+/* ============================================
+   Error Title & Message
+   ============================================ */
+.error-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--primary);
+  line-height: 1.4;
+}
+
+.error-message {
+  font-size: 1.1rem;
+  color: var(--secondary);
+  margin-bottom: 2.5rem;
+  opacity: 0.85;
+  line-height: 1.6;
+}
+
+/* ============================================
+   Action Buttons
+   ============================================ */
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.btn-home,
+.btn-projects {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.btn-home {
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-home:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-projects {
+  background: var(--card-bg);
+  color: var(--accent-color);
+  border-color: var(--card-border);
+}
+
+.btn-projects:hover {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.btn-home .icon,
+.btn-projects .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================
+   Navigation Tips Grid
+   ============================================ */
+.error-tips {
+  padding-top: 2rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.tips-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--secondary);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.tip-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  text-decoration: none;
+  color: var(--secondary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tip-link:hover {
+  background: var(--accent-gradient);
+  color: white;
+  border-color: var(--accent-color);
+  transform: translateY(-4px);
+}
+
+.tip-icon {
+  font-size: 1.75rem;
+  display: block;
+}
+
+.tip-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* ============================================
+   Background Decorations
+   ============================================ */
+.decoration-elements {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.decoration {
+  position: absolute;
+  opacity: 0.05;
+  border-radius: 50%;
+}
+
+.dark .decoration {
+  opacity: 0.02;
+}
+
+.decoration-1 {
+  width: 400px;
+  height: 400px;
+  background: var(--accent-color);
+  top: -100px;
+  right: -100px;
+  animation: float 6s ease-in-out infinite;
+}
+
+.decoration-2 {
+  width: 300px;
+  height: 300px;
+  background: #8b5cf6;
+  bottom: -50px;
+  left: -50px;
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+.decoration-3 {
+  width: 250px;
+  height: 250px;
+  background: var(--accent-color);
+  top: 50%;
+  left: 10%;
+  animation: float 7s ease-in-out infinite;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+  .error-code {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+  }
+
+  .error-title {
+    font-size: 1.5rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-home,
+  .btn-projects {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tips-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .decoration-1,
+  .decoration-2,
+  .decoration-3 {
+    opacity: 0.02 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-code {
+    font-size: 3.5rem;
+  }
+
+  .error-title {
+    font-size: 1.25rem;
+  }
+
+  .error-message {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .error-tips {
+    padding-top: 1.5rem;
+  }
+
+  .tips-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .tip-link {
+    padding: 0.75rem;
+  }
+}
