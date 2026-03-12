@@ -1,0 +1,66 @@
+{{- define "main" }}
+<div class="not-found-container">
+  <div class="not-found-content">
+    <!-- 404 애니메이션 텍스트 -->
+    <div class="error-code">
+      <span class="digit">4</span>
+      <span class="digit spinning">0</span>
+      <span class="digit">4</span>
+    </div>
+    
+    <!-- 에러 메시지 -->
+    <h1 class="error-title">페이지를 찾을 수 없습니다</h1>
+    <p class="error-message">
+      요청하신 페이지가 존재하지 않거나 이동되었습니다.
+    </p>
+    
+    <!-- 검색/탐색 섹션 -->
+    <div class="error-actions">
+      <a href="/" class="btn-home">
+        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        홈으로 돌아가기
+      </a>
+      <a href="/projects/" class="btn-projects">
+        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6l4 2"></path>
+        </svg>
+        프로젝트 둘러보기
+      </a>
+    </div>
+    
+    <!-- 추가 탐색 팁 -->
+    <div class="error-tips">
+      <p class="tips-title">다른 곳을 탐색해보세요:</p>
+      <div class="tips-grid">
+        <a href="/study/" class="tip-link">
+          <span class="tip-icon">📚</span>
+          <span class="tip-text">Study</span>
+        </a>
+        <a href="/about/" class="tip-link">
+          <span class="tip-icon">👤</span>
+          <span class="tip-text">About</span>
+        </a>
+        <a href="/tags/" class="tip-link">
+          <span class="tip-icon">🏷️</span>
+          <span class="tip-text">Tags</span>
+        </a>
+        <a href="https://github.com/wlals2" class="tip-link">
+          <span class="tip-icon">🔗</span>
+          <span class="tip-text">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 배경 장식 -->
+  <div class="decoration-elements">
+    <div class="decoration decoration-1"></div>
+    <div class="decoration decoration-2"></div>
+    <div class="decoration decoration-3"></div>
+  </div>
+</div>
+{{- end }}
