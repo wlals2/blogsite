@@ -3,7 +3,10 @@ title: "단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Clust
 date: 2026-03-14T10:00:00+09:00
 draft: false
 categories: ["study", "Kubernetes"]
+series: ["홈랩 K8s 아키텍처 시리즈"]
 summary: "홈랩 Kubernetes에서 단일 MySQL Pod 장애 시 10분+이 걸리던 복구 시간을, Percona XtraDB Cluster(PXC) 3노드 + HAProxy 구성으로 수초 자동 Failover로 줄인 과정"
+showtoc: true
+tocopen: true
 ---
 
 > **이론 배경**: [MySQL HA: Galera Replication부터 Percona XtraDB Cluster까지](/study/2026-03-14-mysql-ha-concept/)
