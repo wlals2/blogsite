@@ -6,6 +6,10 @@ categories: ["study", "Kubernetes"]
 summary: "홈랩 Kubernetes에서 단일 MySQL Pod 장애 시 10분+이 걸리던 복구 시간을, Percona XtraDB Cluster(PXC) 3노드 + HAProxy 구성으로 수초 자동 Failover로 줄인 과정"
 ---
 
+> **이론 배경**: [MySQL HA: Galera Replication부터 Percona XtraDB Cluster까지](/study/2026-03-14-mysql-ha-concept/)
+
+---
+
 ## 배경 — 단일 MySQL의 복구 시간 문제
 
 홈랩 Kubernetes에서 MySQL을 단일 Pod Deployment로 운영하고 있었다. 단일 Pod 구성에서 Worker 노드가 죽으면 복구까지 얼마나 걸릴까?
