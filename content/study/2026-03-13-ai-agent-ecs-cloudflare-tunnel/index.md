@@ -12,7 +12,7 @@ tocopen: true
 
 > **시리즈**: [AI Agent 시리즈]
 > - 이전 글: [AI Agent로 스타트업급 팀 구성하기 #1](/study/2026-03-12-ai-agent-startup-team/)
-> - 다음 글: (예정)
+> - 다음 글: [자율 장애 대응 — Lambda 헬스체크에서 Agent 자동 기동까지 #3](/study/2026-03-14-ai-agent-autonomous-fault-response/)
 
 ## 배경
 
