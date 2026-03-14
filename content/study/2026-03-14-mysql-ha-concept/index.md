@@ -1,15 +1,17 @@
 ---
 title: "[홈랩 K8s 아키텍처 시리즈 #1] MySQL HA: Galera Replication부터 Percona XtraDB Cluster까지"
 date: 2026-03-14T09:00:00+09:00
-draft: false
+description: "단일 MySQL의 한계와 HA 솔루션 비교, Galera Cluster 동기 복제 원리, Percona XtraDB Cluster 아키텍처를 설명하고 홈랩 Kubernetes에 실제 적용한 구성을 소개한다"
+tags: ["mysql", "pxc", "galera", "kubernetes", "ha", "percona", "haproxy", "homelab"]
 categories: ["study", "Kubernetes"]
 series: ["홈랩 K8s 아키텍처 시리즈"]
-summary: "단일 MySQL의 한계와 HA 솔루션 비교, Galera Cluster 동기 복제 원리, Percona XtraDB Cluster 아키텍처를 설명하고 홈랩 Kubernetes에 실제 적용한 구성을 소개한다"
 showtoc: true
 tocopen: true
+draft: false
 ---
 
-> **관련 실습**: [단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Cluster 전환기](/study/2026-03-14-mysql-ha-pxc/)
+> **시리즈**: [홈랩 K8s 아키텍처 시리즈]
+> - 다음 글: [단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Cluster 전환기 #2](/study/2026-03-14-mysql-ha-pxc/)
 
 ---
 
@@ -310,5 +312,8 @@ kubectl get pods -n blog-system -l app.kubernetes.io/instance=mysql-pxc
 
 ## 다음 단계
 
-- **관련 실습**: [단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Cluster 전환기](/study/2026-03-14-mysql-ha-pxc/)
-- mysql-exporter 추가로 Galera 메트릭 (wsrep_cluster_size 등)을 Prometheus에서 모니터링하는 방법
+- mysql-exporter 추가: `wsrep_cluster_size`, `wsrep_ready` 메트릭을 Prometheus에서 수집해 클러스터 이상 감지
+
+---
+
+> **다음 글 →** [[홈랩 K8s 아키텍처 시리즈 #2] 단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Cluster 전환기](/study/2026-03-14-mysql-ha-pxc/)

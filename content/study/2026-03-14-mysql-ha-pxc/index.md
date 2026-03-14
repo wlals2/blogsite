@@ -1,15 +1,17 @@
 ---
-title: "단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Cluster 전환기"
+title: "[홈랩 K8s 아키텍처 시리즈 #2] 단일 MySQL의 10분 다운타임을 수초로 — Percona XtraDB Cluster 전환기"
 date: 2026-03-14T10:00:00+09:00
-draft: false
+description: "홈랩 Kubernetes에서 단일 MySQL Pod 장애 시 10분+이 걸리던 복구 시간을, Percona XtraDB Cluster(PXC) 3노드 + HAProxy 구성으로 수초 자동 Failover로 줄인 과정"
+tags: ["mysql", "pxc", "galera", "kubernetes", "ha", "percona", "haproxy", "homelab", "kustomize", "argocd"]
 categories: ["study", "Kubernetes"]
 series: ["홈랩 K8s 아키텍처 시리즈"]
-summary: "홈랩 Kubernetes에서 단일 MySQL Pod 장애 시 10분+이 걸리던 복구 시간을, Percona XtraDB Cluster(PXC) 3노드 + HAProxy 구성으로 수초 자동 Failover로 줄인 과정"
 showtoc: true
 tocopen: true
+draft: false
 ---
 
-> **이론 배경**: [MySQL HA: Galera Replication부터 Percona XtraDB Cluster까지](/study/2026-03-14-mysql-ha-concept/)
+> **시리즈**: [홈랩 K8s 아키텍처 시리즈]
+> - 이전 글: [MySQL HA: Galera Replication부터 Percona XtraDB Cluster까지 #1](/study/2026-03-14-mysql-ha-concept/)
 
 ---
 
@@ -205,3 +207,7 @@ wsrep_ready           ON
 - **mysql-exporter 추가**: PXC 전용 메트릭 수집 (현재 미설정)
 - **pxc_strict_mode 완화 검토**: 현재 `ENFORCING` → `PERMISSIVE`로 낮추면 일부 호환성 향상 가능하나 보안 trade-off 존재
 - **읽기/쓰기 분리**: HAProxy 3309 포트(읽기 전용)를 활용한 읽기 부하 분산
+
+---
+
+> **이전 글 →** [[홈랩 K8s 아키텍처 시리즈 #1] MySQL HA: Galera Replication부터 Percona XtraDB Cluster까지](/study/2026-03-14-mysql-ha-concept/)
