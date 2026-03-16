@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-03-16
+date: 2026-03-17
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-03-16
-> 기간: 2026-03-13 ~ 2026-03-16 (3일간)
-> 생성: 2026-03-16 07:03:10
+# Daily Report: 2026-03-17
+> 기간: 2026-03-14 ~ 2026-03-17 (3일간)
+> 생성: 2026-03-17 07:03:11
 
 ---
 
@@ -44,24 +44,68 @@ tocopen: false
 
 - **노드**: 1/5 정상
 - **비정상 Pod**:
+  - argocd/argocd-application-controller-0 (Terminating)
+  - argocd/argocd-applicationset-controller-6f7d847ddc-hx95t (Pending)
+  - argocd/argocd-applicationset-controller-6f7d847ddc-vvwhr (Terminating)
+  - argocd/argocd-repo-server-856df98bfd-llm5n (Terminating)
+  - argocd/argocd-repo-server-856df98bfd-mc2mr (Pending)
+  - blog-system/mysql-pxc-haproxy-0 (Terminating)
   - blog-system/mysql-pxc-pxc-0 (Terminating)
-  - blog-system/was-f9858654d-26zbv (Terminating)
+  - blog-system/was-f9858654d-vnxsf (Terminating)
+  - blog-system/web-7dd4476b5c-ng9ff (Terminating)
+  - cert-manager/cert-manager-cainjector-f4d9bd564-mrb49 (Pending)
+  - cert-manager/cert-manager-cainjector-f4d9bd564-sltsg (Terminating)
+  - cert-manager/cert-manager-webhook-644f5f74fb-d27t5 (Pending)
+  - cert-manager/cert-manager-webhook-644f5f74fb-jpsbd (Terminating)
+  - falco/falco-falcosidekick-bbb8468f8-khj4w (Pending)
+  - falco/falco-falcosidekick-bbb8468f8-m5r2b (Terminating)
   - falco/falco-falcosidekick-ui-redis-0 (Terminating)
+  - falco/falco-talon-656bb9d8f5-pwcmg (Terminating)
+  - falco/falco-talon-656bb9d8f5-r78wc (Pending)
+  - istio-system/istio-ingressgateway-5dbff5cbd5-szl49 (Pending)
+  - istio-system/istio-ingressgateway-5dbff5cbd5-twq2f (Terminating)
+  - kyverno/kyverno-background-controller-6674dc69f5-5mmph (Pending)
+  - kyverno/kyverno-background-controller-6674dc69f5-drpvv (Terminating)
+  - local-path-storage/local-path-provisioner-5b7668cc5b-7j44c (Terminating)
+  - local-path-storage/local-path-provisioner-5b7668cc5b-8f6ms (Pending)
+  - longhorn-system/csi-attacher-74657df76b-gp64z (Pending)
+  - longhorn-system/csi-attacher-74657df76b-stz6j (Terminating)
+  - longhorn-system/csi-provisioner-55c9cb4745-4bd26 (Terminating)
+  - longhorn-system/csi-provisioner-55c9cb4745-7dsp7 (Pending)
+  - longhorn-system/csi-resizer-ffb7b57c9-46nfn (Pending)
+  - longhorn-system/csi-resizer-ffb7b57c9-sjqgh (Terminating)
+  - longhorn-system/csi-snapshotter-d4584fdbf-4mfsq (Pending)
+  - longhorn-system/csi-snapshotter-d4584fdbf-r7h7v (Terminating)
   - longhorn-system/instance-manager-4336265ce20c5c2419edac9e081210a6 (Terminating)
+  - longhorn-system/longhorn-driver-deployer-5c69c6c4d6-h5dkx (Pending)
+  - longhorn-system/longhorn-driver-deployer-5c69c6c4d6-tc95l (Terminating)
+  - longhorn-system/longhorn-ui-84d97876df-24g9m (Pending)
+  - longhorn-system/longhorn-ui-84d97876df-dfbtq (Terminating)
+  - monitoring/alertmanager-kube-prometheus-stack-alertmanager-0 (Terminating)
+  - monitoring/blackbox-exporter-746fd95696-rzmgx (Terminating)
+  - monitoring/blackbox-exporter-746fd95696-xs6z9 (Pending)
+  - monitoring/kube-prometheus-stack-grafana-764b566c99-vnd7j (Pending)
+  - monitoring/kube-prometheus-stack-grafana-764b566c99-wsr8b (Terminating)
+  - monitoring/kube-prometheus-stack-grafana-image-renderer-bf584649d-7rbth (Terminating)
+  - monitoring/kube-prometheus-stack-grafana-image-renderer-bf584649d-q84fv (Pending)
+  - monitoring/kube-prometheus-stack-kube-state-metrics-54c6589d9c-msdf8 (Terminating)
+  - monitoring/kube-prometheus-stack-kube-state-metrics-54c6589d9c-skd7g (Pending)
+  - monitoring/kube-state-metrics-5c4979bbf8-qrxqb (Terminating)
+  - monitoring/kube-state-metrics-5c4979bbf8-rpqpr (Pending)
   - monitoring/loki-stack-0 (Terminating)
-  - monitoring/tempo-5977d45fd8-dmwtg (Terminating)
-  - monitoring/tempo-5977d45fd8-x8tgw (Pending)
+  - monitoring/tempo-5977d45fd8-f4875 (Pending)
+  - monitoring/tempo-5977d45fd8-ltp6k (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
-  - blog-system/mysql-pxc-haproxy-0 재시작:239회
-  - blog-system/mysql-pxc-haproxy-1 재시작:254회
-  - blog-system/was-f9858654d-sr4p4 재시작:165회
+  - blog-system/was-f9858654d-8dd6p 재시작:10회
+  - blog-system/was-f9858654d-vnxsf 재시작:12회
+  - falco/falco-7qdpd 재시작:6회
+  - falco/falco-zrjxg 재시작:6회
+  - kube-system/cilium-8zcqf 재시작:5회
+  - kube-system/cilium-envoy-n2w2s 재시작:6회
+  - kube-system/cilium-envoy-xc7q9 재시작:5회
   - kube-system/cilium-operator-69f67c-pfrx9 재시작:6회
+  - kube-system/cilium-rvqbd 재시작:6회
   - kube-system/kube-controller-manager-k8s-cp 재시작:119회
-  - kube-system/kube-scheduler-k8s-cp 재시작:117회
-  - longhorn-system/engine-image-ei-3154f3aa-6rdg2 재시작:10회
-  - longhorn-system/engine-image-ei-3154f3aa-84t8n 재시작:11회
-  - longhorn-system/engine-image-ei-3154f3aa-d6xh6 재시작:36회
-  - longhorn-system/engine-image-ei-3154f3aa-hb5wh 재시작:26회
 
 ---
 
@@ -96,6 +140,8 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `03-16 18:00` Deploy WAS to Kubernetes
+- ✅ `03-16 02:22` Update Homepage Metrics
 - ✅ `03-15 17:29` Deploy WAS to Kubernetes
 - ✅ `03-15 02:12` Update Homepage Metrics
 - ✅ `03-14 22:00` Deploy WEB to Kubernetes
@@ -104,11 +150,6 @@ tocopen: false
 - ✅ `03-14 03:26` Deploy WEB to Kubernetes
 - ✅ `03-14 01:56` Update Homepage Metrics
 - ✅ `03-13 22:04` Deploy WEB to Kubernetes
-- ✅ `03-13 19:18` Deploy WEB to Kubernetes
-- ✅ `03-13 18:50` Deploy WEB to Kubernetes
-- ✅ `03-13 17:36` Deploy WAS to Kubernetes
-- ✅ `03-13 05:43` Deploy WEB to Kubernetes
-- ✅ `03-13 01:58` Update Homepage Metrics
 
 ---
 
