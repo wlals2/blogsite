@@ -73,7 +73,6 @@ Worker2: Replica B ✅
 
 노드가 NotReady 상태가 지속되면 Longhorn이 해당 노드의 volume을 강제 detach한다. detach된 볼륨의 replica가 재연결되지 못하면 stopped 상태로 남는다.
 
-> 📌 **[사진 위치 1]** Longhorn Volume 상태 전이 다이어그램
 > - healthy → degraded: replica 부족/UUID mismatch/노드 NotReady
 > - degraded → healthy: replica 재생성 + 동기화 완료
 > - degraded → faulted: 남은 replica마저 실패

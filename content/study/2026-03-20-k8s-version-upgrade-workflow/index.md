@@ -55,7 +55,6 @@ etcd에는 암호화된 Secret이 있는데, kube-apiserver는 평문(identity) 
 
 재생성이란 **기존 파일을 덮어쓴다**는 의미다. 수동으로 추가한 설정이 전부 사라진다.
 
-> 📌 **[사진 위치 1]** kubeadm upgrade apply 흐름 다이어그램
 > - kubeadm → kube-apiserver.yaml 재생성 (기존 설정 소실)
 > - kubelet이 변경 감지 → kube-apiserver 자동 재시작
 > - 수동 추가 설정 (encryption-config, audit-log 등) → 모두 날아감
@@ -219,7 +218,6 @@ ssh k8s-worker1 "sudo kubeadm upgrade node && sudo systemctl restart kubelet"
 kubectl uncordon k8s-worker1
 ```
 
-> 📌 **[사진 위치 2]** K8s 업그레이드 워크플로우 다이어그램
 > - 백업(etcd + manifest) → CP upgrade → manifest 재적용 확인 → 워커 순차 업그레이드
 
 ---
