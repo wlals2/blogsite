@@ -15,7 +15,8 @@
 │
 ├── content/                       # 콘텐츠 (Markdown 파일)
 │   ├── about.md                   # About 페이지
-│   ├── architecture.md            # 아키텍처 설명 페이지 (신규)
+│   ├── architecture.md            # 아키텍처 설명 페이지
+│   ├── status.md                  # 인프라 일일 상태 보고서 (daily-report.sh가 매일 덮어씀)
 │   ├── projects/                  # 프로젝트 글
 │   │   ├── _index.md              # 프로젝트 메인 페이지
 │   │   ├── phase1-ec2/            # Phase 1: Terraform 3-Tier
@@ -628,6 +629,37 @@ EKS에서만 배울 수 있는 것:
 
 ---
 
+### Status 페이지 (content/status.md)
+
+**추가일**: 2026-03-04
+**URL**: `blog.jiminhome.shop/status/`
+**목적**: 홈랩 인프라 일일 상태를 블로그에서 실시간 확인
+
+**특이사항**: 이 파일은 `scripts/daily-report.sh`가 **매일 07:00 cron으로 자동 덮어씀**.
+직접 편집해도 다음날 아침 덮어써지므로, 내용 변경은 `daily-report.sh`를 수정해야 함.
+
+**포함 내용**:
+```
+- 보안 이벤트 (Falco): CRITICAL/WARNING/ERROR 건수 + Rule별 상세
+- 클러스터 상태: 노드 수, 비정상 Pod, 재시작 횟수
+- SLO: 24h/30d Availability
+- 이미지 보안 스캔 (Trivy): CVE 목록
+- CI/CD 이력: 최근 3일 배포 성공/실패
+- TODO: P0/P1 작업 목록
+```
+
+**자동화 흐름**:
+```
+cron 07:00 → daily-report.sh
+  → Prometheus/Loki/GitHub API 데이터 수집
+  → /home/jimin/reports/YYYY-MM-DD.md 생성
+  → Discord 전송
+  → content/status.md 덮어쓰기 (frontmatter 유지, body 교체)
+  → git commit & push → Hugo 빌드 → blog.jiminhome.shop/status/ 반영
+```
+
+---
+
 ## 🔧 설정 파일 (config.toml)
 
 ### 메인 메뉴 구조
@@ -660,8 +692,14 @@ EKS에서만 배울 수 있는 것:
 [[menu.main]]
   identifier = "docs"
   name = "Docs"
-  url = "/docs/"
-  weight = 5
+  url = "https://github.com/wlals2/blogsite/tree/main/docs"
+  weight = 4
+
+[[menu.main]]
+  identifier = "status"
+  name = "Status"
+  url = "/status/"
+  weight = 5  # ← 2026-03-04 추가 (daily-report.sh 연동 인프라 상태 페이지)
 
 [[menu.main]]
   identifier = "tags"
