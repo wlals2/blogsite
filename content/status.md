@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-03-19
+date: 2026-03-21
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-03-19
-> 기간: 2026-03-16 ~ 2026-03-19 (3일간)
-> 생성: 2026-03-19 07:02:10
+# Daily Report: 2026-03-21
+> 기간: 2026-03-18 ~ 2026-03-21 (3일간)
+> 생성: 2026-03-21 07:02:11
 
 ---
 
@@ -44,19 +44,22 @@ tocopen: false
 
 - **노드**: 1/5 정상
 - **비정상 Pod**:
-  - argocd/argocd-dex-server-676c5dd554-jjj69 (Error)
+  - falco/falco-8jl6c (CrashLoopBackOff)
+  - falco/falco-kcqml (CrashLoopBackOff)
+  - falco/falco-l6mlt (CrashLoopBackOff)
+  - falco/falco-m79hf (CrashLoopBackOff)
   - monitoring/loki-report-query (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
-  - argo-rollouts/argo-rollouts-95dd6b7f7-945h8 재시작:5회
-  - blog-system/mysql-pxc-haproxy-0 재시작:21회
-  - blog-system/mysql-pxc-haproxy-1 재시작:18회
-  - blog-system/was-f9858654d-zjj8f 재시작:8회
-  - istio-system/prometheus-5fb677579f-mxshp 재시작:6회
-  - kube-system/cilium-8zcqf 재시작:7회
-  - kube-system/cilium-envoy-5mgnl 재시작:6회
-  - kube-system/cilium-envoy-n2w2s 재시작:9회
-  - kube-system/cilium-envoy-xc7q9 재시작:7회
-  - kube-system/cilium-envoy-xlkn4 재시작:6회
+  - falco/falco-8jl6c 재시작:154회
+  - falco/falco-kcqml 재시작:158회
+  - falco/falco-l6mlt 재시작:249회
+  - falco/falco-m79hf 재시작:149회
+  - kube-system/cilium-8zcqf 재시작:11회
+  - kube-system/cilium-envoy-5mgnl 재시작:11회
+  - kube-system/cilium-envoy-n2w2s 재시작:14회
+  - kube-system/cilium-envoy-xc7q9 재시작:11회
+  - kube-system/cilium-envoy-xlkn4 재시작:16회
+  - kube-system/cilium-operator-69f67c-pfrx9 재시작:17회
 
 ---
 
@@ -77,27 +80,33 @@ tocopen: false
 
 | 대상 | 타입 | 취약점 수 | Secrets |
 |------|------|----------|---------|
-| `ghcr.io/wlals2/board-was:latest (alpine 3.23.3)` | alpine | 3 | - |
+| `ghcr.io/wlals2/board-was:latest (alpine 3.23.3)` | alpine | 4 | - |
 | `app/app.jar` | jar | 8 | - |
 
-**발견된 취약점**: CRITICAL=1,HIGH=1
+**발견된 취약점**: CRITICAL=1,HIGH=2
 
 | Severity | Library | CVE |
 |----------|---------|-----|
 | 🟠 HIGH | gnutls | CVE-2026-1584 |
-| 🔴 CRITICAL | zlib | CVE-2026-22184 |
+| 🔴 CRITICAL | libexpat | CVE-2026-32767 |
+| 🟠 HIGH | libpng | CVE-2026-25646 |
 
 ---
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `03-20 17:36` Deploy WAS to Kubernetes
+- ✅ `03-20 14:19` Deploy WEB to Kubernetes
+- ✅ `03-20 14:19` Deploy WAS to Kubernetes
+- ✅ `03-20 12:44` Deploy WEB to Kubernetes
+- ✅ `03-20 10:52` Deploy WEB to Kubernetes
+- ✅ `03-20 08:26` Deploy WEB to Kubernetes
+- ✅ `03-20 08:26` Deploy WAS to Kubernetes
+- ✅ `03-20 02:00` Update Homepage Metrics
+- ✅ `03-19 17:53` Deploy WAS to Kubernetes
+- ✅ `03-19 02:06` Update Homepage Metrics
 - ✅ `03-18 18:00` Deploy WAS to Kubernetes
 - ✅ `03-18 02:05` Update Homepage Metrics
-- ✅ `03-17 17:59` Deploy WAS to Kubernetes
-- ✅ `03-17 04:07` Deploy WEB to Kubernetes
-- ✅ `03-17 02:01` Update Homepage Metrics
-- ✅ `03-16 18:00` Deploy WAS to Kubernetes
-- ✅ `03-16 02:22` Update Homepage Metrics
 
 ---
 
