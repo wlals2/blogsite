@@ -202,7 +202,8 @@ jobs:
   #      매일 새벽 최신 CVE DB로 스캔 → 오늘 발표된 CVE도 내일 새벽 탐지
   #      Push 시 실행하지 않아 빌드 시간 영향 없음
   trivy-nightly:
-    if: github.event_name == 'schedule'
+    # Why: workflow_dispatch 허용 → 수동으로 Trivy 스캔 테스트 가능
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: self-hosted
     steps:
       # Why: trivy-action 대신 직접 실행 (setup-trivy가 aquasecurity/trivy main 브랜치 clone 실패 문제)
