@@ -255,9 +255,23 @@ jobs:
           HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' /tmp/trivy-result.json)
           TOTAL=$((CRITICAL + HIGH))
 
+          # Why: Discord에서 Actions 로그를 열지 않고도 어떤 CVE인지 바로 확인하기 위해
+          VULN_SUMMARY=$(jq -r '
+            [.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL" or .Severity=="HIGH")]
+            | sort_by(if .Severity=="CRITICAL" then 0 else 1 end)
+            | .[]
+            | "• \(.Severity) | \(.PkgName) \(.InstalledVersion) → \(.FixedVersion) | \(.VulnerabilityID)"
+          ' /tmp/trivy-result.json)
+
           echo "vuln_total=$TOTAL" >> "$GITHUB_OUTPUT"
           echo "vuln_critical=$CRITICAL" >> "$GITHUB_OUTPUT"
           echo "vuln_high=$HIGH" >> "$GITHUB_OUTPUT"
+          # Why: multiline output → delimiter 방식 (EOF 구분자로 줄바꿈 보존)
+          {
+            echo "vuln_summary<<TRIVY_EOF"
+            echo "$VULN_SUMMARY"
+            echo "TRIVY_EOF"
+          } >> "$GITHUB_OUTPUT"
         continue-on-error: true
 
       - name: Send Trivy Scan Result to Discord
@@ -272,7 +286,92 @@ jobs:
             **스캔 대상**: ${{ env.IMAGE_NAME }}:latest
             **스캔 범위**: CRITICAL, HIGH CVE (OS 패키지 + Java 라이브러리)
             **결과**: ${{ steps.trivy.outcome == 'failure' && '❌ 스캔 실행 실패 - 워크플로우 확인 필요' || steps.trivy.outputs.vuln_total == '0' && '✅ 취약점 없음' || format('⚠️ {0}개 취약점 발견 (Critical: {1}, High: {2})', steps.trivy.outputs.vuln_total, steps.trivy.outputs.vuln_critical, steps.trivy.outputs.vuln_high) }}
+            ${{ steps.trivy.outputs.vuln_total != '0' && steps.trivy.outputs.vuln_summary || '' }}
             **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           color: ${{ steps.trivy.outcome == 'failure' && 0xFF0000 || steps.trivy.outputs.vuln_total != '0' && 0xFF6600 || 0x00FF00 }}
           username: Trivy Scanner
           avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+
+      # Why: 취약점 발견 시 GitHub Issue로 이력 관리 + 조치 추적
+      #      Discord는 흘러가지만, Issue는 해결까지 열려 있으므로 추적 가능
+      - name: Create GitHub Issue for vulnerabilities
+        if: steps.trivy.outcome == 'success' && steps.trivy.outputs.vuln_total != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+
+          # Why: 같은 날 중복 Issue 방지 (야간 스캔은 하루 1회지만, 수동 재실행 대비)
+          EXISTING=$(gh issue list --search "Trivy 야간 스캔 ${TODAY}" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "이미 오늘자 Issue #${EXISTING} 존재 → 스킵"
+            exit 0
+          fi
+
+          # Why: OS 패키지와 Java 라이브러리는 조치 방법이 다르므로 분리
+          OS_VULNS=$(jq -r '
+            [.Results[]? | select(.Type != "jar") | .Vulnerabilities[]? | select(.Severity=="CRITICAL" or .Severity=="HIGH")]
+            | sort_by(if .Severity=="CRITICAL" then 0 else 1 end)
+            | .[]
+            | "| \(.Severity) | \(.PkgName) | \(.InstalledVersion) | \(.FixedVersion) | \(.VulnerabilityID) |"
+          ' /tmp/trivy-result.json)
+
+          JAVA_VULNS=$(jq -r '
+            [.Results[]? | select(.Type == "jar") | .Vulnerabilities[]? | select(.Severity=="CRITICAL" or .Severity=="HIGH")]
+            | sort_by(if .Severity=="CRITICAL" then 0 else 1 end)
+            | .[]
+            | "| \(.Severity) | \(.PkgName) | \(.InstalledVersion) | \(.FixedVersion) | \(.VulnerabilityID) |"
+          ' /tmp/trivy-result.json)
+
+          # Why: security label이 없으면 gh issue create --label 실패
+          gh api repos/${{ github.repository }}/labels \
+            -f name="security" -f color="e11d48" -f description="보안 취약점 관련" \
+            2>/dev/null || true
+
+          # Why: --body-file 사용 → heredoc 들여쓰기 문제 회피
+          cat > /tmp/trivy-issue.md <<EOF
+          ## 스캔 결과
+
+          - **스캔 대상**: \`${{ env.IMAGE_NAME }}:latest\`
+          - **발견일**: ${TODAY}
+          - **총 취약점**: ${{ steps.trivy.outputs.vuln_total }}개 (Critical: ${{ steps.trivy.outputs.vuln_critical }}, High: ${{ steps.trivy.outputs.vuln_high }})
+          - **워크플로우**: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ## OS 패키지 취약점
+
+          | Severity | Package | Installed | Fixed | CVE |
+          |----------|---------|-----------|-------|-----|
+          ${OS_VULNS:-| - | 없음 | - | - | - |}
+
+          **조치 방법**: Dockerfile의 베이스 이미지 업데이트
+          \`\`\`dockerfile
+          # 현재: FROM eclipse-temurin:21-jre-alpine
+          # 조치: alpine 패키지 업데이트 추가
+          RUN apk update && apk upgrade --no-cache
+          \`\`\`
+
+          ## Java 라이브러리 취약점
+
+          | Severity | Package | Installed | Fixed | CVE |
+          |----------|---------|-----------|-------|-----|
+          ${JAVA_VULNS:-| - | 없음 | - | - | - |}
+
+          **조치 방법**: \`build.gradle\` 또는 \`pom.xml\`에서 의존성 버전 업그레이드
+          - Spring Boot 버전 업: 취약한 tomcat-embed, spring-security, spring-core가 함께 패치됨
+          - 개별 라이브러리: Fixed Version 컬럼 참조
+
+          ## 조치 체크리스트
+
+          - [ ] OS 패키지 취약점 조치 (베이스 이미지 또는 apk upgrade)
+          - [ ] Java 라이브러리 취약점 조치 (의존성 버전 업그레이드)
+          - [ ] 변경 후 \`git push\` → CI 빌드 → Trivy 재스캔으로 해소 확인
+          - [ ] 확인 완료 후 이 Issue 닫기
+          EOF
+
+          # Why: sed로 YAML 들여쓰기(10칸)를 제거 → Issue 본문이 깔끔하게 렌더링
+          sed -i 's/^          //' /tmp/trivy-issue.md
+
+          gh issue create \
+            --title "🔒 Trivy 야간 스캔: ${{ steps.trivy.outputs.vuln_total }}개 취약점 발견 (${TODAY})" \
+            --label "security" \
+            --body-file /tmp/trivy-issue.md
