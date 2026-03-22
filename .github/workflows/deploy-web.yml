@@ -158,37 +158,8 @@ jobs:
 
           echo "✅ Build verification passed"
 
-      # ======================================================================
-      # Step 4.6: Trivy 이미지 보안 스캔 (DevSecOps)
-      # ======================================================================
-      # Why: trivy-action 대신 직접 실행
-      #      trivy-action 내부의 setup-trivy가 aquasecurity/trivy 레포를 main 브랜치로
-      #      clone 시도하지만 실제 기본 브랜치가 main이 아니므로 항상 실패.
-      #      GitLeaks와 동일하게 바이너리를 직접 다운로드하여 이 문제를 회피.
-      - name: Scan image with Trivy
-        run: |
-          TRIVY_VERSION="0.69.2"
-          # Why: /mnt/data/ci/cache/trivy-db → 재부팅 후에도 유지되는 영구 디스크
-          #      WAS trivy-nightly와 DB를 공유 → 두 워크플로가 같은 DB 갱신본 사용
-          TRIVY_BIN="/mnt/data/ci/cache/trivy-db/trivy-${TRIVY_VERSION}"
-
-          if [ ! -f "$TRIVY_BIN" ]; then
-            curl -sSfL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
-              | tar -xz -C "/mnt/data/ci/cache/trivy-db" trivy
-            mv /mnt/data/ci/cache/trivy-db/trivy "$TRIVY_BIN"
-          fi
-
-          # Why: --cache-dir /mnt/data/ci/cache/trivy-db → Trivy 자체 갱신 기능 활용
-          #      Trivy는 기존 DB 있으면 delta만 업데이트 → 항상 859MB 유지
-          #      GHA Cache 미사용 → 10GB 한도 문제 완전 해소
-          # Why: exit-code 0 → CRITICAL/HIGH 발견해도 빌드 실패 안 함 (경고만)
-          $TRIVY_BIN image \
-            --cache-dir /mnt/data/ci/cache/trivy-db \
-            --severity CRITICAL,HIGH \
-            --exit-code 0 \
-            --format table \
-            --timeout 5m \
-            ${{ env.IMAGE_NAME }}:v${{ github.run_number }}
+      # Why: Trivy 스캔은 trivy-nightly.yml로 분리 (09-cicd-workflow 원칙 1~3)
+      #      야간에 WAS + WEB 모두 스캔 → Discord + Issue로 통합 알림
 
       # ======================================================================
       # Step 5: GitOps - Update Kubernetes Manifest (Stateless)
