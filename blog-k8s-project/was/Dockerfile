@@ -41,6 +41,9 @@ RUN --mount=type=cache,target=/root/.m2,sharing=locked \
 # ==============================================================================
 FROM eclipse-temurin:21-jre-alpine
 
+# Why: 베이스 이미지 발행 이후 나온 보안 패치 적용 (libexpat, gnutls, zlib 등)
+RUN apk upgrade --no-cache
+
 # Non-Root User 생성 (보안 강화)
 # - 컨테이너 탈출 시 호스트 root 접근 방지
 # - PodSecurityStandard 준수

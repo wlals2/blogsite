@@ -38,6 +38,9 @@ RUN --mount=type=cache,target=/tmp/hugo_cache \
 # ==============================================================================
 FROM nginx:alpine
 
+# Why: 베이스 이미지 발행 이후 나온 보안 패치 적용 (libexpat, zlib 등)
+RUN apk upgrade --no-cache
+
 # Builder에서 생성된 정적 파일만 복사
 COPY --from=builder /src/public /usr/share/nginx/html
 
