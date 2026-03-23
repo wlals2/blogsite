@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-03-23
+date: 2026-03-24
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-03-23
-> 기간: 2026-03-20 ~ 2026-03-23 (3일간)
-> 생성: 2026-03-23 07:02:10
+# Daily Report: 2026-03-24
+> 기간: 2026-03-21 ~ 2026-03-24 (3일간)
+> 생성: 2026-03-24 07:00:08
 
 ---
 
@@ -44,7 +44,9 @@ tocopen: false
 
 - **노드**: 1/5 정상
 - **비정상 Pod**:
+  - monitoring/grafana-render-query (Terminating)
   - monitoring/loki-report-query (Terminating)
+  - monitoring/prom-report-query (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
   - argo-rollouts/argo-rollouts-95dd6b7f7-59xcz 재시작:20회
   - argocd/argocd-application-controller-0 재시작:5회
@@ -72,12 +74,15 @@ tocopen: false
 
 > 스캔 범위: CRITICAL + HIGH / 최근 nightly 결과
 
-⚠️ **수집 실패**: job not found
+⚠️ **수집 실패**: no WAS run
 
 ---
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `03-23 17:50` Trivy Security Scan
+- ✅ `03-23 02:07` Update Homepage Metrics
+- ✅ `03-22 22:03` Deploy WEB to Kubernetes
 - ✅ `03-22 17:23` Trivy Security Scan
 - ✅ `03-22 12:46` Trivy Security Scan
 - ✅ `03-22 12:25` Deploy WEB to Kubernetes
@@ -95,9 +100,6 @@ tocopen: false
 - ✅ `03-21 17:39` Deploy WAS to Kubernetes
 - 🔄 `03-21 17:38` Deploy WAS to Kubernetes
 - ✅ `03-21 17:26` Deploy WAS to Kubernetes
-- ✅ `03-21 01:54` Update Homepage Metrics
-- ✅ `03-20 22:03` Deploy WEB to Kubernetes
-- ✅ `03-20 17:36` Deploy WAS to Kubernetes
 
 ---
 
@@ -107,7 +109,6 @@ tocopen: false
 - 없음
 
 ### ⚠️ P1 (단기)
-- [ ] MySQL HA 구성
 - [ ] Control Plane HA
 
 > 전체 목록: /home/jimin/docs/00-TODO.md
