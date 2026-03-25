@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-03-25
+date: 2026-03-26
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-03-25
-> 기간: 2026-03-22 ~ 2026-03-25 (3일간)
-> 생성: 2026-03-25 07:02:07
+# Daily Report: 2026-03-26
+> 기간: 2026-03-23 ~ 2026-03-26 (3일간)
+> 생성: 2026-03-26 07:02:08
 
 ---
 
@@ -46,16 +46,16 @@ tocopen: false
 - **비정상 Pod**:
   - monitoring/loki-report-query (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
-  - argocd/argocd-application-controller-0 재시작:6회
-  - argocd/argocd-applicationset-controller-6f7d847ddc-h7fr6 재시작:5회
-  - argocd/argocd-dex-server-676c5dd554-t8ldq 재시작:5회
-  - argocd/argocd-notifications-controller-b5bc6998f-5smst 재시작:6회
-  - argocd/argocd-redis-6574878d7b-l22gs 재시작:6회
-  - argocd/argocd-repo-server-856df98bfd-zdsjw 재시작:8회
-  - argocd/argocd-server-6557d867f-8nmbp 재시작:6회
-  - blog-system/mysql-pxc-haproxy-0 재시작:29회
-  - blog-system/mysql-pxc-haproxy-1 재시작:30회
-  - cert-manager/cert-manager-85f97d9b4c-prk5l 재시작:58회
+  - argocd/argocd-application-controller-0 재시작:8회
+  - argocd/argocd-applicationset-controller-6f7d847ddc-h7fr6 재시작:7회
+  - argocd/argocd-dex-server-676c5dd554-t8ldq 재시작:7회
+  - argocd/argocd-notifications-controller-b5bc6998f-5smst 재시작:8회
+  - argocd/argocd-redis-6574878d7b-l22gs 재시작:8회
+  - argocd/argocd-repo-server-856df98bfd-zdsjw 재시작:10회
+  - argocd/argocd-server-6557d867f-8nmbp 재시작:8회
+  - blog-system/mysql-pxc-haproxy-0 재시작:36회
+  - blog-system/mysql-pxc-haproxy-1 재시작:37회
+  - cert-manager/cert-manager-85f97d9b4c-prk5l 재시작:60회
 
 ---
 
@@ -78,22 +78,13 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `03-25 17:56` Trivy Security Scan
+- ✅ `03-25 02:05` Update Homepage Metrics
 - ✅ `03-24 17:54` Trivy Security Scan
 - ✅ `03-24 01:59` Update Homepage Metrics
 - ✅ `03-23 17:50` Trivy Security Scan
 - ✅ `03-23 02:07` Update Homepage Metrics
 - ✅ `03-22 22:03` Deploy WEB to Kubernetes
-- ✅ `03-22 17:23` Trivy Security Scan
-- ✅ `03-22 12:46` Trivy Security Scan
-- ✅ `03-22 12:25` Deploy WEB to Kubernetes
-- ✅ `03-22 12:25` Deploy WAS to Kubernetes
-- ✅ `03-22 06:49` Trivy Security Scan
-- ✅ `03-22 05:29` Trivy Security Scan
-- ✅ `03-22 04:48` Deploy WEB to Kubernetes
-- ✅ `03-22 03:05` Deploy WAS to Kubernetes
-- ✅ `03-22 02:25` Deploy WAS to Kubernetes
-- ✅ `03-22 02:07` Update Homepage Metrics
-- ✅ `03-21 22:03` Deploy WEB to Kubernetes
 
 ---
 
