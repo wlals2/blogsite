@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-03-30
+date: 2026-03-31
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-03-30
-> 기간: 2026-03-27 ~ 2026-03-30 (3일간)
-> 생성: 2026-03-30 07:02:07
+# Daily Report: 2026-03-31
+> 기간: 2026-03-28 ~ 2026-03-31 (3일간)
+> 생성: 2026-03-31 07:00:25
 
 ---
 
@@ -17,6 +17,7 @@ tocopen: false
 
 
 - 🔴 비정상 Pod 존재
+- 🟡 SLO 30d 89.4% (목표 99%)
 
 ---
 
@@ -25,7 +26,7 @@ tocopen: false
 | Priority | 건수 |
 |----------|------|
 | CRITICAL | 0건 |
-| WARNING  | 0건 |
+| WARNING  | 500건 |
 | ERROR    | 0건 |
 
 ### Rule별 상세
@@ -34,7 +35,8 @@ tocopen: false
 - 없음
 
 #### Warning (상위 10개)
-- 없음
+- `Shell Spawned in Application Container`: 496건
+- `Clear Log Activities`: 4건
 
 > 📌 노이즈 주의: `Read sensitive file untrusted` 중 gdm/PAM 관련은 로그인 정상 동작
 
@@ -42,20 +44,21 @@ tocopen: false
 
 ## 🖥️ 클러스터 상태
 
-- **노드**: 1/5 정상
+- **노드**: 5/5 정상
 - **비정상 Pod**:
-  - monitoring/loki-report-query (Terminating)
+  - trivy-system/node-collector-7746c489cc-9r6zx (Pending)
+  - trivy-system/scan-vulnerabilityreport-6d77568fd5-d7qbx (Init:0/1)
 - **재시작 많은 Pod (5회 이상)**:
-  - argo-rollouts/argo-rollouts-95dd6b7f7-2q5vf 재시작:13회
-  - argocd/argocd-application-controller-0 재시작:15회
-  - argocd/argocd-applicationset-controller-6f7d847ddc-h7fr6 재시작:14회
-  - argocd/argocd-dex-server-676c5dd554-t8ldq 재시작:14회
-  - argocd/argocd-notifications-controller-b5bc6998f-5smst 재시작:15회
-  - argocd/argocd-redis-6574878d7b-l22gs 재시작:15회
-  - argocd/argocd-repo-server-856df98bfd-zdsjw 재시작:47회
-  - argocd/argocd-server-6557d867f-8nmbp 재시작:23회
-  - blog-system/mysql-pxc-haproxy-0 재시작:7회
-  - blog-system/mysql-pxc-haproxy-1 재시작:8회
+  - argo-rollouts/argo-rollouts-95dd6b7f7-2q5vf 재시작:16회
+  - argocd/argocd-application-controller-0 재시작:17회
+  - argocd/argocd-applicationset-controller-6f7d847ddc-h7fr6 재시작:16회
+  - argocd/argocd-dex-server-676c5dd554-t8ldq 재시작:16회
+  - argocd/argocd-notifications-controller-b5bc6998f-5smst 재시작:17회
+  - argocd/argocd-redis-6574878d7b-l22gs 재시작:17회
+  - argocd/argocd-repo-server-856df98bfd-zdsjw 재시작:49회
+  - argocd/argocd-server-6557d867f-8nmbp 재시작:25회
+  - blog-system/mysql-pxc-haproxy-0 재시작:16회
+  - blog-system/mysql-pxc-haproxy-1 재시작:20회
 
 ---
 
@@ -63,8 +66,8 @@ tocopen: false
 
 | 기간 | Availability | 목표 |
 |------|-------------|------|
-| 24h  | N/A% | 99% |
-| 30d  | N/A% | 99% |
+| 24h  | 98.8% | 99% |
+| 30d  | 89.4% | 99% |
 
 ---
 
@@ -78,12 +81,14 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `03-30 17:53` Trivy Security Scan
+- ✅ `03-30 02:25` Update Homepage Metrics
+- ✅ `03-29 22:55` Deploy WEB to Kubernetes
+- ✅ `03-29 22:03` Deploy WEB to Kubernetes
 - ✅ `03-29 17:27` Trivy Security Scan
 - ✅ `03-29 02:23` Update Homepage Metrics
 - ✅ `03-28 17:26` Trivy Security Scan
 - ✅ `03-28 02:03` Update Homepage Metrics
-- ✅ `03-27 17:48` Trivy Security Scan
-- ✅ `03-27 02:12` Update Homepage Metrics
 
 ---
 
