@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-04-01
+date: 2026-04-02
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-04-01
-> 기간: 2026-03-29 ~ 2026-04-01 (3일간)
-> 생성: 2026-04-01 07:02:08
+# Daily Report: 2026-04-02
+> 기간: 2026-03-30 ~ 2026-04-02 (3일간)
+> 생성: 2026-04-02 07:00:08
 
 ---
 
@@ -48,7 +48,9 @@ tocopen: false
   - kyverno/kyverno-admission-controller-fdb6dfcfb-8drq2 (Terminating)
   - kyverno/kyverno-cleanup-controller-5bb56f66f4-rt84p (Terminating)
   - kyverno/kyverno-reports-controller-647dd56678-m4hj9 (Terminating)
+  - monitoring/grafana-render-query (Terminating)
   - monitoring/loki-report-query (Terminating)
+  - monitoring/prom-report-query (Terminating)
   - pxc-operator/pxc-operator-5b7fbb5bfc-mmmkq (CrashLoopBackOff)
 - **재시작 많은 Pod (5회 이상)**:
   - argo-rollouts/argo-rollouts-95dd6b7f7-2q5vf 재시작:26회
@@ -83,14 +85,14 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `04-01 17:48` Trivy Security Scan
+- ✅ `04-01 02:30` Update Homepage Metrics
 - ✅ `03-31 17:54` Trivy Security Scan
 - ✅ `03-31 02:12` Update Homepage Metrics
 - ✅ `03-30 17:53` Trivy Security Scan
 - ✅ `03-30 02:25` Update Homepage Metrics
 - ✅ `03-29 22:55` Deploy WEB to Kubernetes
 - ✅ `03-29 22:03` Deploy WEB to Kubernetes
-- ✅ `03-29 17:27` Trivy Security Scan
-- ✅ `03-29 02:23` Update Homepage Metrics
 
 ---
 
