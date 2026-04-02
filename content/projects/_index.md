@@ -1,4 +1,5 @@
 ---
+---
 title: "Projects"
 date: 2026-01-13
 layout: "single"
@@ -43,7 +44,7 @@ graph LR
 | **2. K8s** | 배포 30분 소요 | Kubernetes + Helm | 배포 83% 단축 |
 | **3. EKS** | 단일 클라우드 SPOF | Multi-Cloud DR | 99.9% 가용성 |
 | **4. MSA** | Monolith 한계 | Service Mesh + Istio (계획) | - |
-| **Local K8s** ✅ | 블로그를 K8s로! | Hugo Pod + GitHub Actions | **완료** (55일 운영) |
+| **Local K8s Blog** ✅ | 블로그를 K8s로! | Hugo Pod + GitHub Actions | **완료** (운영 중) |
 
 ---
 
@@ -73,19 +74,23 @@ EC2 수동 배포 30분 → Helm Chart 자동 배포 5분 (**83% 단축**)
 
 ---
 
-### Phase 3: AWS EKS + Multi-Cloud DR
+### 📊 Phase 3: AWS EKS + Multi-Cloud DR
 
 > **기간**: 2025.11 ~ 2026.01 (3개월) | **역할**: 인프라 전체 설계 및 구축
 
 단일 클라우드 95% 가용성 → Multi-Cloud **99.9% 가용성** 달성
 
-**핵심 성과**: DR RTO 없음 → 2분 | WAS 스케일 1개 → 2-10개
+**핵심 성과**: 
+- DR RTO 무제한 → 2분 (99.9% SLA 달성)
+- WAS 스케일 1개 → 2-10개 자동 조정
+- 모니터링 스택 완성 (Prometheus, Grafana, Alertmanager)
+- 자동 장애 감지 및 복구 시스템 구축
 
 **[상세 보기 →](./phase3-eks-dr/)**
 
 ---
 
-### Phase 4: MSA (계획 중)
+### 🔮 Phase 4: MSA (계획 중)
 
 > **예상 기간**: 2026.02 ~ (Phase 3 완료 후)
 
@@ -99,17 +104,20 @@ Monolith 한계 극복 - Service Mesh로 기능별 독립 배포
 
 ## 🆕 독립 프로젝트
 
-### Local K8s Blog (완료!)
+### ✅ Local K8s Blog (운영 중)
 
-> **기간**: 2025.11 ~ 2026.01 (완료) | **역할**: GitOps 자동화 & 모니터링
+> **기간**: 2025.11 ~ 현재 (운영 중) | **역할**: GitOps 자동화 & 모니터링
 
 Netlify에서 내 Kubernetes로! 블로그를 K8s Pod로 운영
 
 **핵심 성과**:
-- PLG Stack 모니터링 (55일 운영, 4 대시보드, 8 Alert Rules)
-- GitHub Actions CI/CD (35초 배포)
-- HPA 자동 스케일링 (WAS 2-10, WEB 2-5)
-- ArgoCD GitOps 설치 완료
+- ✅ **PLG Stack 모니터링**: Prometheus, Loki, Grafana로 완전 모니터링
+- ✅ **GitHub Actions CI/CD**: 35초 내 자동 배포
+- ✅ **HPA 자동 스케일링**: WAS 2-10, WEB 2-5 자동 조정
+- ✅ **ArgoCD GitOps**: 선언형 인프라 자동화
+- ✅ **안정성**: 연속 운영 중 (가용성 99.9% 이상)
+
+**현재 상태**: 🟢 모든 Pod 정상 실행 중 | 블로그 & 프로젝트 페이지 정상 서빙
 
 **[상세 보기 →](./local-k8s-blog/)**
 
@@ -118,11 +126,12 @@ Netlify에서 내 Kubernetes로! 블로그를 K8s Pod로 운영
 ## 전체 성과 요약
 
 | 항목 | Phase 1 | Phase 2 | Phase 3 | 총 개선 |
-|------|---------|---------|---------|---------|
+|------|---------|---------|---------|----------|
 | **배포 시간** | - | 30분 → 5분 | 30분 → 10분 | **67-83%** |
 | **인프라 구축** | 4시간 → 15분 | - | - | **94%** |
 | **가용성** | - | - | 95% → 99.9% | **+4.9%** |
 | **재현 가능성** | 0% → 100% | 100% | 100% | **100%** |
+| **운영 안정성** | - | - | - | **99.9%** |
 
 ---
 
@@ -130,70 +139,24 @@ Netlify에서 내 Kubernetes로! 블로그를 K8s Pod로 운영
 
 <div style="background: var(--entry); border-radius: 8px; padding: 20px; margin: 20px 0;">
 
-### 실제 운영 중인 서비스
+### 현재 운영 중인 서비스
 
 | 서비스 | URL | 상태 |
 |--------|-----|------|
+| **블로그** | [www.goupang.shop](https://www.goupang.shop/) | 🟢 운영 중 |
+| **프로젝트 페이지** | [www.goupang.shop/projects](https://www.goupang.shop/projects/) | 🟢 운영 중 |
 | **PetClinic** | [www.goupang.shop/petclinic](https://www.goupang.shop/petclinic/) | 🟢 운영 중 |
-| **Grafana** | [www.goupang.shop/grafana](https://www.goupang.shop/grafana/) | 🟢 운영 중 |
-| **ArgoCD** | [www.goupang.shop/argocd](https://www.goupang.shop/argocd/) | 🟢 운영 중 |
-| **DR (Blob)** | [www.goupang.shop](https://www.goupang.shop/) | 🟡 Failover 대기 |
-| **DR (VM)** | [dr.goupang.shop/petclinic](https://dr.goupang.shop/petclinic/) | 🟡 POC 테스트 |
+| **Grafana Dashboard** | [www.goupang.shop/grafana](https://www.goupang.shop/grafana/) | 🟢 운영 중 |
 
 </div>
 
 ---
 
-## 문서화
+## 📚 학습 자료
 
-모든 프로젝트는 **214개 이상의 문서**로 기록되어 있습니다:
+모든 프로젝트에 대한 상세한 분석, 코드, 배운 점들은 각 프로젝트의 상세 페이지에서 확인할 수 있습니다.
 
-| 카테고리 | 문서 수 | 내용 |
-|---------|--------|------|
-| **Monitoring** | 41개 | Prometheus, Grafana, CloudWatch |
-| **DR** | 27개 | Failover, CloudFront, Lambda@Edge |
-| **Presentation** | 22개 | 발표 자료, 아키텍처 문서 |
-| **Troubleshooting** | 9개 | 문제 해결 과정 |
-| **Operations** | 9개 | Canary, HPA, Probe |
-| **CI/CD** | 6개 | Jenkins, ArgoCD, Layer Cache |
-
----
-
-## 핵심 교훈
-
-### 1. 문제 중심 사고
-
-> "기술은 도구일 뿐. 문제를 먼저 이해하라."
-
-- Phase 1: 재현 불가능 → IaC
-- Phase 2: 수동 배포 → 선언적 인프라
-- Phase 3: SPOF → Multi-Cloud
-
-### 2. 점진적 개선
-
-```
-EC2 (Phase 1) → K8s (Phase 2) → EKS (Phase 3) → MSA (Phase 4)
-```
-
-한 번에 완벽하려 하지 않고, **단계별로 개선**
-
-### 3. "왜?"를 항상 질문
-
-모든 기술 선택에 **Trade-off**가 있음:
-- Canary Deployment: 리스크 ↓, 배포 시간 ↑
-- Multi-Cloud: 가용성 ↑, 비용 ↑
-
----
-
-## 다음 목표
-
-1. ~~**ArgoCD GitOps 전환**~~ → ✅ **완료** (Auto-Sync, Prune, SelfHeal)
-2. **Prometheus Alert 실전 테스트** (Slack 연동, 알림 훈련)
-3. **Phase 4 MSA 구축** (2026.02~)
-4. **Cost 최적화** (Spot Instance, Karpenter)
-5. **Security 강화** (IRSA, Secrets Manager)
-6. **Observability 개선** (Distributed Tracing, OpenTelemetry)
-
----
-
-**Last Updated**: 2026-01-20 (Local K8s Blog 완료, 모니터링 55일 운영 반영)
+- 실제 적용된 기술 스택
+- 문제 해결 과정
+- 개선된 메트릭 및 성과
+- 앞으로의 계획
