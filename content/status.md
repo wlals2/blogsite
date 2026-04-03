@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-04-03
+date: 2026-04-04
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-04-03
-> 기간: 2026-03-31 ~ 2026-04-03 (3일간)
-> 생성: 2026-04-03 07:02:07
+# Daily Report: 2026-04-04
+> 기간: 2026-04-01 ~ 2026-04-04 (3일간)
+> 생성: 2026-04-04 07:00:07
 
 ---
 
@@ -76,10 +76,12 @@ tocopen: false
   - monitoring/alertmanager-kube-prometheus-stack-alertmanager-0 (Terminating)
   - monitoring/blackbox-exporter-746fd95696-6sw4n (Terminating)
   - monitoring/blackbox-exporter-746fd95696-bg84x (Pending)
+  - monitoring/grafana-render-query (Terminating)
   - monitoring/kube-prometheus-stack-grafana-764b566c99-55jlq (Terminating)
   - monitoring/kube-prometheus-stack-grafana-764b566c99-5zj84 (Pending)
   - monitoring/loki-report-query (Terminating)
   - monitoring/loki-stack-0 (Terminating)
+  - monitoring/prom-report-query (Terminating)
   - monitoring/prometheus-kube-prometheus-stack-prometheus-0 (Terminating)
   - pxc-operator/pxc-operator-5b7fbb5bfc-mmmkq (Terminating)
   - pxc-operator/pxc-operator-5b7fbb5bfc-nvjwn (Pending)
@@ -116,13 +118,13 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `04-03 17:32` Trivy Security Scan
+- ✅ `04-03 02:10` Update Homepage Metrics
 - ✅ `04-02 17:48` Trivy Security Scan
 - ✅ `04-02 13:13` Deploy WEB to Kubernetes
 - ✅ `04-02 02:09` Update Homepage Metrics
 - ✅ `04-01 17:48` Trivy Security Scan
 - ✅ `04-01 02:30` Update Homepage Metrics
-- ✅ `03-31 17:54` Trivy Security Scan
-- ✅ `03-31 02:12` Update Homepage Metrics
 
 ---
 
