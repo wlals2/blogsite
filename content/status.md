@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-04-07
+date: 2026-04-08
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-04-07
-> 기간: 2026-04-04 ~ 2026-04-07 (3일간)
-> 생성: 2026-04-07 07:02:08
+# Daily Report: 2026-04-08
+> 기간: 2026-04-05 ~ 2026-04-08 (3일간)
+> 생성: 2026-04-08 07:00:06
 
 ---
 
@@ -44,7 +44,9 @@ tocopen: false
 
 - **노드**: 1/5 정상
 - **비정상 Pod**:
+  - monitoring/grafana-render-query (Terminating)
   - monitoring/loki-report-query (Terminating)
+  - monitoring/prom-report-query (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
   - argo-rollouts/argo-rollouts-95dd6b7f7-2q5vf 재시작:153회
   - argocd/argocd-application-controller-0 재시작:22회
@@ -78,12 +80,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `04-07 17:57` Trivy Security Scan
+- ✅ `04-07 02:13` Update Homepage Metrics
 - ✅ `04-06 17:41` Trivy Security Scan
 - ✅ `04-06 02:26` Update Homepage Metrics
 - ✅ `04-05 17:28` Trivy Security Scan
 - ✅ `04-05 02:24` Update Homepage Metrics
-- ✅ `04-04 17:27` Trivy Security Scan
-- ✅ `04-04 02:03` Update Homepage Metrics
 
 ---
 
