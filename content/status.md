@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-04-12
+date: 2026-04-13
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-04-12
-> 기간: 2026-04-09 ~ 2026-04-12 (3일간)
-> 생성: 2026-04-12 07:00:06
+# Daily Report: 2026-04-13
+> 기간: 2026-04-10 ~ 2026-04-13 (3일간)
+> 생성: 2026-04-13 07:00:06
 
 ---
 
@@ -44,20 +44,12 @@ tocopen: false
 
 - **노드**: 1/5 정상
 - **비정상 Pod**:
-  - monitoring/grafana-render-query (Terminating)
-  - monitoring/loki-report-query (Terminating)
-  - monitoring/prom-report-query (Terminating)
+  - calico-apiserver/calico-apiserver-d6d78c54b-95l99 (ContainerCreating)
+  - calico-apiserver/calico-apiserver-d6d78c54b-hlf6m (ContainerCreating)
+  - calico-system/calico-kube-controllers-c89744dfd-xv7x9 (ContainerCreating)
+  - calico-system/csi-node-driver-7nzck (ContainerCreating)
 - **재시작 많은 Pod (5회 이상)**:
-  - argo-rollouts/argo-rollouts-95dd6b7f7-2q5vf 재시작:153회
-  - argocd/argocd-application-controller-0 재시작:22회
-  - argocd/argocd-notifications-controller-b5bc6998f-5smst 재시작:22회
-  - argocd/argocd-redis-6574878d7b-l22gs 재시작:22회
-  - argocd/argocd-repo-server-856df98bfd-zdsjw 재시작:54회
-  - argocd/argocd-server-6557d867f-8nmbp 재시작:30회
-  - blog-system/mysql-pxc-haproxy-0 재시작:79회
-  - blog-system/mysql-pxc-haproxy-1 재시작:86회
-  - cert-manager/cert-manager-85f97d9b4c-prk5l 재시작:76회
-  - cert-manager/cert-manager-cainjector-f4d9bd564-7ndgd 재시작:22회
+  - 없음
 
 ---
 
@@ -80,12 +72,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `04-12 17:33` Trivy Security Scan
+- ✅ `04-12 02:29` Update Homepage Metrics
 - ✅ `04-11 17:29` Trivy Security Scan
 - ✅ `04-11 02:07` Update Homepage Metrics
 - ✅ `04-10 17:45` Trivy Security Scan
 - ✅ `04-10 02:27` Update Homepage Metrics
-- ✅ `04-09 17:57` Trivy Security Scan
-- ✅ `04-09 02:08` Update Homepage Metrics
 
 ---
 
