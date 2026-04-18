@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-04-18
+date: 2026-04-19
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-04-18
-> 기간: 2026-04-15 ~ 2026-04-18 (3일간)
-> 생성: 2026-04-18 07:00:06
+# Daily Report: 2026-04-19
+> 기간: 2026-04-16 ~ 2026-04-19 (3일간)
+> 생성: 2026-04-19 07:00:06
 
 ---
 
@@ -49,7 +49,12 @@ tocopen: false
   - calico-system/calico-kube-controllers-c89744dfd-xv7x9 (ContainerCreating)
   - calico-system/csi-node-driver-7nzck (ContainerCreating)
 - **재시작 많은 Pod (5회 이상)**:
-  - calico-system/csi-node-driver-nfjnn 재시작:8회
+  - calico-system/calico-node-lnqsx 재시작:5회
+  - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:5회
+  - calico-system/csi-node-driver-nfjnn 재시작:10회
+  - kube-system/kube-controller-manager-k8s-cp 재시작:5회
+  - kube-system/kube-proxy-zst92 재시작:5회
+  - kube-system/kube-scheduler-k8s-cp 재시작:5회
 
 ---
 
@@ -72,12 +77,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `04-18 17:34` Trivy Security Scan
+- ✅ `04-18 02:12` Update Homepage Metrics
 - ✅ `04-17 17:47` Trivy Security Scan
 - ✅ `04-17 02:29` Update Homepage Metrics
 - ✅ `04-16 18:06` Trivy Security Scan
 - ✅ `04-16 02:33` Update Homepage Metrics
-- ✅ `04-15 18:03` Trivy Security Scan
-- ✅ `04-15 02:26` Update Homepage Metrics
 
 ---
 
