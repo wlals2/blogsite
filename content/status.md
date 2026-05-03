@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-03
+date: 2026-05-04
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-03
-> 기간: 2026-04-30 ~ 2026-05-03 (3일간)
-> 생성: 2026-05-03 07:00:06
+# Daily Report: 2026-05-04
+> 기간: 2026-05-01 ~ 2026-05-04 (3일간)
+> 생성: 2026-05-04 07:00:05
 
 ---
 
@@ -45,16 +45,16 @@ tocopen: false
 - **비정상 Pod**:
   - 없음
 - **재시작 많은 Pod (5회 이상)**:
-  - calico-system/calico-node-4pp94 재시작:7회
-  - calico-system/calico-node-5wmmb 재시작:7회
-  - calico-system/calico-node-lnqsx 재시작:12회
-  - calico-system/calico-node-x8lbh 재시작:8회
-  - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:12회
-  - calico-system/calico-typha-ddf4dbbdd-lv6cc 재시작:7회
-  - calico-system/calico-typha-ddf4dbbdd-pgcdk 재시작:8회
-  - calico-system/csi-node-driver-5bjnz 재시작:16회
-  - calico-system/csi-node-driver-cd9sm 재시작:14회
-  - calico-system/csi-node-driver-nfjnn 재시작:24회
+  - calico-apiserver/calico-apiserver-d6d78c54b-ht2v5 재시작:73회
+  - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:74회
+  - calico-system/calico-kube-controllers-c89744dfd-4dnrv 재시작:79회
+  - calico-system/calico-node-4pp94 재시작:8회
+  - calico-system/calico-node-5wmmb 재시작:8회
+  - calico-system/calico-node-lnqsx 재시작:13회
+  - calico-system/calico-node-x8lbh 재시작:9회
+  - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:13회
+  - calico-system/calico-typha-ddf4dbbdd-lv6cc 재시작:8회
+  - calico-system/calico-typha-ddf4dbbdd-pgcdk 재시작:9회
 
 ---
 
@@ -77,12 +77,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-03 17:44` Trivy Security Scan
+- ✅ `05-03 02:47` Update Homepage Metrics
 - ✅ `05-02 17:41` Trivy Security Scan
 - ✅ `05-02 02:35` Update Homepage Metrics
 - ✅ `05-01 17:57` Trivy Security Scan
 - ✅ `05-01 02:54` Update Homepage Metrics
-- ✅ `04-30 18:07` Trivy Security Scan
-- ✅ `04-30 02:48` Update Homepage Metrics
 
 ---
 
