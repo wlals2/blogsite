@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-04
+date: 2026-05-05
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-04
-> 기간: 2026-05-01 ~ 2026-05-04 (3일간)
-> 생성: 2026-05-04 07:00:05
+# Daily Report: 2026-05-05
+> 기간: 2026-05-02 ~ 2026-05-05 (3일간)
+> 생성: 2026-05-05 07:00:07
 
 ---
 
@@ -77,12 +77,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-04 18:12` Trivy Security Scan
+- ✅ `05-04 02:44` Update Homepage Metrics
 - ✅ `05-03 17:44` Trivy Security Scan
 - ✅ `05-03 02:47` Update Homepage Metrics
 - ✅ `05-02 17:41` Trivy Security Scan
 - ✅ `05-02 02:35` Update Homepage Metrics
-- ✅ `05-01 17:57` Trivy Security Scan
-- ✅ `05-01 02:54` Update Homepage Metrics
 
 ---
 
