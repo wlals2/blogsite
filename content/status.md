@@ -1,21 +1,22 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-05
+date: 2026-05-06
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-05
-> 기간: 2026-05-02 ~ 2026-05-05 (3일간)
-> 생성: 2026-05-05 07:00:07
+# Daily Report: 2026-05-06
+> 기간: 2026-05-03 ~ 2026-05-06 (3일간)
+> 생성: 2026-05-06 07:00:07
 
 ---
 
 ## 🔴 Critical Summary
 
-✅ 특이사항 없음
+
+- 🔴 비정상 Pod 존재
 
 ---
 
@@ -41,9 +42,9 @@ tocopen: false
 
 ## 🖥️ 클러스터 상태
 
-- **노드**: 5/5 정상
+- **노드**: 5/6 정상
 - **비정상 Pod**:
-  - 없음
+  - crypto-cti/kibana-7d6c89d87b-fzjl2 (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
   - calico-apiserver/calico-apiserver-d6d78c54b-ht2v5 재시작:73회
   - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:74회
@@ -77,12 +78,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-05 18:07` Trivy Security Scan
+- ✅ `05-05 02:37` Update Homepage Metrics
 - ✅ `05-04 18:12` Trivy Security Scan
 - ✅ `05-04 02:44` Update Homepage Metrics
 - ✅ `05-03 17:44` Trivy Security Scan
 - ✅ `05-03 02:47` Update Homepage Metrics
-- ✅ `05-02 17:41` Trivy Security Scan
-- ✅ `05-02 02:35` Update Homepage Metrics
 
 ---
 
