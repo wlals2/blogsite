@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-14
+date: 2026-05-15
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-14
-> 기간: 2026-05-11 ~ 2026-05-14 (3일간)
-> 생성: 2026-05-14 07:00:06
+# Daily Report: 2026-05-15
+> 기간: 2026-05-12 ~ 2026-05-15 (3일간)
+> 생성: 2026-05-15 07:00:06
 
 ---
 
@@ -44,18 +44,21 @@ tocopen: false
 
 - **노드**: 1/6 정상
 - **비정상 Pod**:
+  - crypto-cti/elasticsearch-0 (Terminating)
   - crypto-cti/kibana-7d6c89d87b-fzjl2 (Terminating)
+  - crypto-cti/postgres-0 (Terminating)
+  - local-path-storage/local-path-provisioner-65d95f6987-pwtl5 (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
-  - calico-apiserver/calico-apiserver-d6d78c54b-ht2v5 재시작:73회
-  - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:74회
-  - calico-system/calico-kube-controllers-c89744dfd-4dnrv 재시작:79회
-  - calico-system/calico-node-4pp94 재시작:8회
-  - calico-system/calico-node-5wmmb 재시작:8회
-  - calico-system/calico-node-lnqsx 재시작:13회
-  - calico-system/calico-node-x8lbh 재시작:9회
-  - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:13회
-  - calico-system/calico-typha-ddf4dbbdd-lv6cc 재시작:8회
-  - calico-system/calico-typha-ddf4dbbdd-pgcdk 재시작:9회
+  - calico-apiserver/calico-apiserver-d6d78c54b-ht2v5 재시작:74회
+  - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:75회
+  - calico-system/calico-kube-controllers-c89744dfd-4dnrv 재시작:80회
+  - calico-system/calico-node-4pp94 재시작:9회
+  - calico-system/calico-node-5wmmb 재시작:9회
+  - calico-system/calico-node-lnqsx 재시작:14회
+  - calico-system/calico-node-x8lbh 재시작:10회
+  - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:14회
+  - calico-system/calico-typha-ddf4dbbdd-lv6cc 재시작:9회
+  - calico-system/calico-typha-ddf4dbbdd-pgcdk 재시작:10회
 
 ---
 
@@ -78,12 +81,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-14 18:52` Trivy Security Scan
+- ✅ `05-14 02:57` Update Homepage Metrics
 - ✅ `05-13 18:54` Trivy Security Scan
 - ✅ `05-13 02:54` Update Homepage Metrics
 - ✅ `05-12 18:54` Trivy Security Scan
 - ✅ `05-12 02:50` Update Homepage Metrics
-- ✅ `05-11 18:56` Trivy Security Scan
-- ✅ `05-11 02:58` Update Homepage Metrics
 
 ---
 
