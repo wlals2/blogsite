@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-21
+date: 2026-05-22
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-21
-> 기간: 2026-05-18 ~ 2026-05-21 (3일간)
-> 생성: 2026-05-21 07:00:06
+# Daily Report: 2026-05-22
+> 기간: 2026-05-19 ~ 2026-05-22 (3일간)
+> 생성: 2026-05-22 07:00:06
 
 ---
 
@@ -54,7 +54,7 @@ tocopen: false
   - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:75회
   - calico-system/calico-kube-controllers-c89744dfd-4dnrv 재시작:80회
   - calico-system/calico-node-4pp94 재시작:10회
-  - calico-system/calico-node-5wmmb 재시작:12회
+  - calico-system/calico-node-5wmmb 재시작:13회
   - calico-system/calico-node-lnqsx 재시작:14회
   - calico-system/calico-node-x8lbh 재시작:11회
   - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:14회
@@ -83,12 +83,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-21 19:00` Trivy Security Scan
+- ✅ `05-21 03:33` Update Homepage Metrics
 - ✅ `05-20 19:22` Trivy Security Scan
 - ✅ `05-20 03:27` Update Homepage Metrics
 - ✅ `05-19 18:58` Trivy Security Scan
 - ✅ `05-19 03:26` Update Homepage Metrics
-- ✅ `05-18 18:48` Trivy Security Scan
-- ✅ `05-18 03:33` Update Homepage Metrics
 
 ---
 
