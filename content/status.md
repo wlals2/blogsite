@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-24
+date: 2026-05-25
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-24
-> 기간: 2026-05-21 ~ 2026-05-24 (3일간)
-> 생성: 2026-05-24 07:00:06
+# Daily Report: 2026-05-25
+> 기간: 2026-05-22 ~ 2026-05-25 (3일간)
+> 생성: 2026-05-25 07:00:06
 
 ---
 
@@ -42,27 +42,24 @@ tocopen: false
 
 ## 🖥️ 클러스터 상태
 
-- **노드**: 3/6 정상
+- **노드**: 4/6 정상
 - **비정상 Pod**:
   - ai-bug-hunting/postgres-0 (Terminating)
   - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz (Terminating)
   - calico-system/calico-kube-controllers-c89744dfd-4dnrv (Terminating)
   - calico-system/calico-typha-ddf4dbbdd-7zxhc (Terminating)
-  - crypto-cti-poc/elasticsearch-poc-0 (Terminating)
-  - crypto-cti/bitcoind-archive-0 (Terminating)
-  - crypto-cti/crypto-cti-api-cc9dbd7b5-r9sgg (Terminating)
   - local-path-storage/helper-pod-delete-pvc-54fd143c-6575-4092-a314-75b1b892c0a6 (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
   - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:75회
   - calico-system/calico-kube-controllers-c89744dfd-4dnrv 재시작:80회
-  - calico-system/calico-node-4pp94 재시작:10회
-  - calico-system/calico-node-5wmmb 재시작:13회
+  - calico-system/calico-node-4pp94 재시작:11회
+  - calico-system/calico-node-5wmmb 재시작:14회
   - calico-system/calico-node-lnqsx 재시작:14회
-  - calico-system/calico-node-x8lbh 재시작:11회
+  - calico-system/calico-node-x8lbh 재시작:12회
+  - calico-system/calico-node-xgjt5 재시작:5회
   - calico-system/calico-typha-ddf4dbbdd-7zxhc 재시작:14회
-  - calico-system/calico-typha-ddf4dbbdd-lv6cc 재시작:10회
-  - calico-system/calico-typha-ddf4dbbdd-pgcdk 재시작:11회
-  - calico-system/csi-node-driver-5bjnz 재시작:22회
+  - calico-system/calico-typha-ddf4dbbdd-lv6cc 재시작:11회
+  - calico-system/calico-typha-ddf4dbbdd-pgcdk 재시작:12회
 
 ---
 
@@ -85,12 +82,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-24 17:57` Trivy Security Scan
+- ✅ `05-24 03:29` Update Homepage Metrics
 - ✅ `05-23 17:59` Trivy Security Scan
 - ✅ `05-23 02:50` Update Homepage Metrics
 - ✅ `05-22 18:51` Trivy Security Scan
 - ✅ `05-22 03:32` Update Homepage Metrics
-- ✅ `05-21 19:00` Trivy Security Scan
-- ✅ `05-21 03:33` Update Homepage Metrics
 
 ---
 
