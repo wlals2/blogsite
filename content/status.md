@@ -1,15 +1,15 @@
 ---
 title: "Infrastructure Status"
-date: 2026-05-25
+date: 2026-05-26
 layout: "single"
 url: "/status/"
 summary: "홈랩 인프라 일일 상태 보고서 — Falco, Trivy, SLO, CI/CD 통합"
 showtoc: true
 tocopen: false
 ---
-# Daily Report: 2026-05-25
-> 기간: 2026-05-22 ~ 2026-05-25 (3일간)
-> 생성: 2026-05-25 07:00:06
+# Daily Report: 2026-05-26
+> 기간: 2026-05-23 ~ 2026-05-26 (3일간)
+> 생성: 2026-05-26 07:00:06
 
 ---
 
@@ -42,12 +42,14 @@ tocopen: false
 
 ## 🖥️ 클러스터 상태
 
-- **노드**: 4/6 정상
+- **노드**: 1/6 정상
 - **비정상 Pod**:
   - ai-bug-hunting/postgres-0 (Terminating)
   - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz (Terminating)
   - calico-system/calico-kube-controllers-c89744dfd-4dnrv (Terminating)
   - calico-system/calico-typha-ddf4dbbdd-7zxhc (Terminating)
+  - crypto-cti-poc/elasticsearch-poc-0 (Terminating)
+  - crypto-cti/bitcoind-archive-0 (Terminating)
   - local-path-storage/helper-pod-delete-pvc-54fd143c-6575-4092-a314-75b1b892c0a6 (Terminating)
 - **재시작 많은 Pod (5회 이상)**:
   - calico-apiserver/calico-apiserver-d6d78c54b-zm2gz 재시작:75회
@@ -82,12 +84,12 @@ tocopen: false
 
 ## 🚀 CI/CD 이력 (최근 3일)
 
+- ✅ `05-25 18:23` Trivy Security Scan
+- ✅ `05-25 03:40` Update Homepage Metrics
 - ✅ `05-24 17:57` Trivy Security Scan
 - ✅ `05-24 03:29` Update Homepage Metrics
 - ✅ `05-23 17:59` Trivy Security Scan
 - ✅ `05-23 02:50` Update Homepage Metrics
-- ✅ `05-22 18:51` Trivy Security Scan
-- ✅ `05-22 03:32` Update Homepage Metrics
 
 ---
 
