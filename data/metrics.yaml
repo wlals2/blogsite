@@ -6,8 +6,8 @@ homelab:
   total_nodes: 6
   control_plane: 1
   workers: 3
-  total_pods: 67
+  total_pods: 66
   # 애플리케이션 Pod
   blog_pods: 0
   # 업데이트 정보
-  updated_at: "2026-07-03T07:44:55+09:00"
+  updated_at: "2026-07-03T11:49:31+09:00"
